@@ -104,9 +104,9 @@ export async function POST(request: NextRequest) {
       timeframe: "M15",
       signalType: "ENTRY",
       direction: "LONG",
-      entryPrice: 2742.50,
-      stopLoss: 2736.00,
-      targetPrice: 2755.00,
+      entryPrice: 3895.50,
+      stopLoss: 3881.50,
+      targetPrice: 3913.50,
       timestamp: new Date(),
       sourceEventId: "evt_sample_test_" + Date.now(),
     });

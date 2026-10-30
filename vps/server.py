@@ -280,9 +280,23 @@ class DashboardHandler(BaseHTTPRequestHandler):
             tf = payload.get("timeframe", "M15")
             sig_type = payload.get("signalType", "ENTRY")
             dir_val = payload.get("direction", "LONG")
-            entry = payload.get("entryPrice", 2742.50)
-            sl = payload.get("stopLoss", 2736.00)
-            tp = payload.get("targetPrice", 2755.00)
+
+            # Dynamic live market price detection
+            if "entryPrice" in payload:
+                entry = float(payload["entryPrice"])
+            else:
+                try:
+                    req = urllib.request.Request(
+                        "https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT",
+                        headers={"User-Agent": "StratMarket-VPS/1.0"}
+                    )
+                    with urllib.request.urlopen(req, timeout=3) as r:
+                        entry = round(float(json.loads(r.read().decode("utf-8"))["price"]), 2)
+                except Exception:
+                    entry = 3895.50
+
+            sl = float(payload.get("stopLoss", round(entry - 14.0 if dir_val == "LONG" else entry + 14.0, 2)))
+            tp = float(payload.get("targetPrice", round(entry + 18.0 if dir_val == "LONG" else entry - 18.0, 2)))
 
             # Dispatch with authentic HMAC SHA-256 signature
             result = dispatcher.dispatch_signal(
