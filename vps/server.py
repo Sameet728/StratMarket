@@ -131,6 +131,21 @@ class DashboardHandler(BaseHTTPRequestHandler):
         # 2. System status endpoint
         if path == "/api/vps/status":
             stats = get_system_stats()
+            ticks_file = os.path.join(BASE_DIR, "data", "atlas_ticks.json")
+            atlas_status = "Cloud Market Data Stream (24/7 Active)"
+            latest_tick = None
+            if os.path.exists(ticks_file):
+                try:
+                    with open(ticks_file, "r", encoding="utf-8") as f:
+                        latest_tick = json.load(f)
+                    age = time.time() - latest_tick.get("received_at", 0)
+                    if age < 60:
+                        atlas_status = f"LIVE Atlas Funded Feed (Active, {round(age)}s ago)"
+                    else:
+                        atlas_status = f"Cloud Market Data Stream (Atlas idle {round(age)}s ago)"
+                except Exception:
+                    pass
+
             resp = json.dumps({
                 "success": True,
                 "status": "ONLINE",
@@ -140,9 +155,31 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     "pine": [s["name"] for s in CONFIG.get("pineStrategies", []) if s.get("enabled", True)],
                     "python": [s["name"] for s in CONFIG.get("pythonStrategies", []) if s.get("enabled", True)],
                 },
-                "mt5": "ACTIVE (Resilient Institutional Live Feed)",
+                "mt5": atlas_status,
+                "latestAtlasTick": latest_tick,
             }).encode("utf-8")
 
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(resp)))
+            self.send_cors_headers()
+            self.end_headers()
+            self.wfile.write(resp)
+            return
+
+        # 2b. Latest tick inspection endpoint
+        if path == "/api/vps/ticks/status":
+            ticks_file = os.path.join(BASE_DIR, "data", "atlas_ticks.json")
+            data = {"status": "No ticks ingested yet", "tick": None}
+            if os.path.exists(ticks_file):
+                try:
+                    with open(ticks_file, "r", encoding="utf-8") as f:
+                        tick = json.load(f)
+                    age = round(time.time() - tick.get("received_at", 0), 1)
+                    data = {"status": "ACTIVE" if age < 60 else "STALE", "age_seconds": age, "tick": tick}
+                except Exception as e:
+                    data = {"error": str(e)}
+            resp = json.dumps(data).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(resp)))
@@ -178,6 +215,35 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = self.path.split("?")[0]
+
+        # 0. Live tick ingestion from Atlas Funded / MQL5 / Cloud Bridge
+        if path == "/api/vps/ticks":
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length) if content_length > 0 else b"{}"
+            try:
+                payload = json.loads(body.decode("utf-8")) if body else {}
+                data_dir = os.path.join(BASE_DIR, "data")
+                os.makedirs(data_dir, exist_ok=True)
+                ticks_file = os.path.join(data_dir, "atlas_ticks.json")
+                payload["received_at"] = time.time()
+                with open(ticks_file, "w", encoding="utf-8") as f:
+                    json.dump(payload, f)
+                resp = json.dumps({
+                    "success": True,
+                    "message": "Atlas tick ingested successfully",
+                    "symbol": payload.get("symbol", "XAUUSD"),
+                    "bid": payload.get("bid"),
+                    "ask": payload.get("ask"),
+                    "timestamp": payload.get("received_at")
+                }).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_cors_headers()
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                self.send_error(400, f"Error processing tick: {e}")
+            return
 
         # 1. Trigger live test signal dispatch with valid HMAC signature
         if path in ("/api/vps/test-signal", "/api/internal/signals"):

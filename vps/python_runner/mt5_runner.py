@@ -10,7 +10,9 @@ import os
 import sys
 import time
 import math
+import json
 import logging
+import urllib.request
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
@@ -87,28 +89,80 @@ class PythonMT5Runner:
 
     def get_latest_bars(self, symbol: str, timeframe_str: str, count: int = 100) -> List[Dict[str, float]]:
         """
-        Retrieves live closed bars from MT5 or generates institutional fallback bars
+        Retrieves live closed bars using:
+        1. Native MT5 (if running and connected)
+        2. Ingested live Atlas Funded ticks from /api/vps/ticks (atlas_ticks.json)
+        3. 24/7 Cloud Market Data Stream (Binance PAXGUSDT Gold Spot / TradingView feed)
+        4. Resilient algorithmic fallback
         """
+        # 1. Check native MT5
         if self.mt5_initialized and mt5:
-            tf = mt5.TIMEFRAME_M5 if timeframe_str == "5" else mt5.TIMEFRAME_M15
-            rates = mt5.copy_rates_from_pos(symbol, tf, 0, count)
-            if rates is not None and len(rates) > 0:
-                bars = []
-                for r in rates:
-                    bars.append({
-                        "time": int(r['time']) * 1000,
-                        "open": float(r['open']),
-                        "high": float(r['high']),
-                        "low": float(r['low']),
-                        "close": float(r['close']),
-                        "volume": float(r['tick_volume'])
-                    })
-                return bars
+            try:
+                tf = mt5.TIMEFRAME_M5 if timeframe_str == "5" else mt5.TIMEFRAME_M15
+                rates = mt5.copy_rates_from_pos(symbol, tf, 0, count)
+                if rates is not None and len(rates) > 0:
+                    bars = []
+                    for r in rates:
+                        bars.append({
+                            "time": int(r['time']) * 1000,
+                            "open": float(r['open']),
+                            "high": float(r['high']),
+                            "low": float(r['low']),
+                            "close": float(r['close']),
+                            "volume": float(r['tick_volume'])
+                        })
+                    return bars
+            except Exception as e:
+                logger.debug(f"MT5 copy_rates failed: {e}")
 
-        # Resilient simulation / fallback provider
+        # 2. Check for live ingested Atlas Funded ticks
+        atlas_tick = None
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        ticks_file = os.path.join(base_dir, "data", "atlas_ticks.json")
+        if os.path.exists(ticks_file):
+            try:
+                with open(ticks_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if time.time() - data.get("received_at", 0) < 120:
+                        atlas_tick = data
+            except Exception:
+                pass
+
+        # 3. Fetch live 24/7 Cloud Market Data (Real Gold Spot PAXGUSDT)
+        try:
+            url = f"https://api.binance.com/api/v3/klines?symbol=PAXGUSDT&interval=5m&limit={count}"
+            req = urllib.request.Request(url, headers={"User-Agent": "StratMarket-VPS/1.0"})
+            with urllib.request.urlopen(req, timeout=4) as resp:
+                raw_klines = json.loads(resp.read().decode("utf-8"))
+                if isinstance(raw_klines, list) and len(raw_klines) > 10:
+                    bars = []
+                    for k in raw_klines:
+                        bars.append({
+                            "time": int(k[0]),
+                            "open": round(float(k[1]), 2),
+                            "high": round(float(k[2]), 2),
+                            "low": round(float(k[3]), 2),
+                            "close": round(float(k[4]), 2),
+                            "volume": round(float(k[5]), 2),
+                        })
+
+                    # If Atlas Funded tick is live, calibrate the latest bar's close to Atlas bid/ask
+                    if atlas_tick and len(bars) > 0:
+                        last_p = float(atlas_tick.get("bid") or atlas_tick.get("ask") or atlas_tick.get("price", bars[-1]["close"]))
+                        bars[-1]["close"] = round(last_p, 2)
+                        if last_p > bars[-1]["high"]:
+                            bars[-1]["high"] = round(last_p, 2)
+                        if last_p < bars[-1]["low"]:
+                            bars[-1]["low"] = round(last_p, 2)
+
+                    return bars
+        except Exception as e:
+            logger.debug(f"Cloud market data fetch error: {e}")
+
+        # 4. Resilient institutional fallback provider (if offline)
         now = int(time.time() * 1000)
         interval_ms = 5 * 60 * 1000
-        base_price = 2680.0
+        base_price = 2740.0
         bars = []
         for i in range(count):
             t = now - (count - i) * interval_ms
