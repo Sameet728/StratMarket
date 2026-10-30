@@ -1,6 +1,6 @@
 {
-  "apiEndpoint": "http://localhost:3000/api/internal/signals",
-  "healthEndpoint": "http://localhost:3000/api/internal/health",
+  "apiEndpoint": "https://strat-market-chi.vercel.app/api/internal/signals",
+  "healthEndpoint": "https://strat-market-chi.vercel.app/api/internal/health",
   "sharedSecret": "stratmarket-dev-vps-hmac-shared-secret-key-2026",
   "pollingIntervalMs": 15000,
   "heartbeatIntervalMs": 60000,

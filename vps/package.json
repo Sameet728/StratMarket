@@ -11,7 +11,7 @@
     "pm2:logs": "pm2 logs stratmarket-vps"
   },
   "dependencies": {
-    "@mathieuc/tradingview": "^6.2.0"
+    "@mathieuc/tradingview": "^4.1.0"
   },
   "devDependencies": {
     "tsx": "^4.7.1",

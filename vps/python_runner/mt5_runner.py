@@ -267,8 +267,10 @@ class PythonMT5Runner:
             self.is_running = False
 
 if __name__ == "__main__":
+    api_endpoint = os.environ.get("VPS_API_ENDPOINT", "https://strat-market-chi.vercel.app/api/internal/signals")
+    shared_secret = os.environ.get("VPS_SHARED_SECRET", "stratmarket-dev-vps-hmac-shared-secret-key-2026")
     runner = PythonMT5Runner(
-        api_endpoint="http://localhost:3000/api/internal/signals",
-        shared_secret="stratmarket-dev-vps-hmac-shared-secret-key-2026"
+        api_endpoint=api_endpoint,
+        shared_secret=shared_secret
     )
     runner.run_forever(interval_sec=15)
