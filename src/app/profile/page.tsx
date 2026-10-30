@@ -158,31 +158,68 @@ export default function ProfilePage() {
   // Toggle individual strategy alert
   const toggleAlert = async (strategyId: string, currentEnabled: boolean) => {
     setUpdatingAlert(strategyId);
+    const newEnabled = !currentEnabled;
+
+    // Optimistically update UI immediately for 0ms latency
+    setStrategies((prev) =>
+      prev.map((s) =>
+        s.id === strategyId || s.slug === strategyId
+          ? {
+              ...s,
+              enabled: newEnabled,
+              trialStatus: s.trialStatus === "NOT_STARTED" && newEnabled ? "ACTIVE" : s.trialStatus,
+              daysLeft: s.daysLeft === 0 && newEnabled ? 7 : s.daysLeft,
+            }
+          : s
+      )
+    );
+    setAlerts((prev) =>
+      prev.map((a) =>
+        a.strategyId === strategyId ? { ...a, enabled: newEnabled } : a
+      )
+    );
+
     try {
       const res = await fetch("/api/me/alerts", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           strategyId,
-          enabled: !currentEnabled,
+          enabled: newEnabled,
           alertTypes: ["ENTRY", "EXIT", "STOP_LOSS", "TAKE_PROFIT"],
-          destinationEmail: signalEmail,
+          destinationEmail: signalEmail || user?.email,
         }),
       });
-      if (res.ok) {
-        setAlerts((prev) =>
-          prev.map((a) =>
-            a.strategyId === strategyId ? { ...a, enabled: !currentEnabled } : a
-          )
-        );
+
+      if (!res.ok) {
+        // Revert on error
         setStrategies((prev) =>
           prev.map((s) =>
-            s.id === strategyId || s.slug === strategyId ? { ...s, enabled: !currentEnabled } : s
+            s.id === strategyId || s.slug === strategyId ? { ...s, enabled: currentEnabled } : s
           )
         );
+        setAlerts((prev) =>
+          prev.map((a) =>
+            a.strategyId === strategyId ? { ...a, enabled: currentEnabled } : a
+          )
+        );
+      } else {
+        // Silently sync latest trial records in background
+        fetch("/api/me/entitlements")
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.success && data.trials) setTrials(data.trials);
+          })
+          .catch(() => {});
       }
     } catch (err) {
       console.error("Failed to toggle alert:", err);
+      // Revert on exception
+      setStrategies((prev) =>
+        prev.map((s) =>
+          s.id === strategyId || s.slug === strategyId ? { ...s, enabled: currentEnabled } : s
+        )
+      );
     } finally {
       setUpdatingAlert(null);
     }
@@ -758,19 +795,20 @@ export default function ProfilePage() {
                                 disabled={updatingAlert === s.id}
                                 onClick={() => toggleAlert(s.id, s.enabled)}
                                 style={{
-                                  padding: "7px 16px",
+                                  padding: "7px 18px",
                                   borderRadius: 20,
                                   fontSize: 12,
                                   fontWeight: 700,
-                                  cursor: "pointer",
-                                  border: s.enabled ? "1px solid rgba(16,185,129,0.5)" : "1px solid var(--line)",
-                                  background: s.enabled ? "rgba(16,185,129,0.2)" : "transparent",
-                                  color: s.enabled ? "#10b981" : "var(--mut)",
-                                  transition: "all 0.2s",
+                                  cursor: updatingAlert === s.id ? "wait" : "pointer",
+                                  border: s.enabled ? "1px solid #10b981" : "1px solid rgba(255,255,255,0.18)",
+                                  background: s.enabled ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.04)",
+                                  color: s.enabled ? "#10b981" : "var(--tx)",
+                                  boxShadow: s.enabled ? "0 0 12px rgba(16,185,129,0.25)" : "none",
+                                  transition: "all 0.15s ease",
                                 }}
                               >
                                 {updatingAlert === s.id
-                                  ? "Updating..."
+                                  ? (s.enabled ? "● Saving..." : "○ Saving...")
                                   : s.enabled
                                   ? "● Alerts Active"
                                   : "○ Turn ON"}

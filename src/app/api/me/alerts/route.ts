@@ -7,8 +7,8 @@ import { z } from "zod";
 const AlertUpdateSchema = z.object({
   strategyId: z.string(),
   enabled: z.boolean(),
-  alertTypes: z.array(z.string()).default(["ENTRY", "EXIT"]),
-  destinationEmail: z.string().email().optional(),
+  alertTypes: z.array(z.string()).optional().default(["ENTRY", "EXIT", "STOP_LOSS", "TAKE_PROFIT"]),
+  destinationEmail: z.string().optional().nullable(),
 });
 
 export async function GET() {
@@ -149,7 +149,12 @@ export async function PUT(request: NextRequest) {
       } catch (_) {}
     }
 
-    const updated = await db.setAlertPreference(user.id, strategyId, enabled, alertTypes, destinationEmail);
+    const cleanEmail =
+      destinationEmail && destinationEmail.includes("@")
+        ? destinationEmail.trim()
+        : user.email;
+
+    const updated = await db.setAlertPreference(user.id, strategyId, enabled, alertTypes, cleanEmail);
 
     return NextResponse.json({
       success: true,

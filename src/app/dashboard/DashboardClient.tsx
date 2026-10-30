@@ -173,6 +173,23 @@ export function DashboardClient() {
     setUpdatingStrategy(strategy.id);
     const newEnabled = !strategy.enabled;
 
+    // Optimistically update UI immediately
+    setStrategies((prev) =>
+      prev.map((s) => {
+        if (s.id === strategy.id) {
+          const trialStatus = s.trialStatus === "NOT_STARTED" && newEnabled ? "ACTIVE" : s.trialStatus;
+          return {
+            ...s,
+            enabled: newEnabled,
+            trialStatus,
+            hasAccess: true,
+            daysLeft: s.daysLeft === 0 && newEnabled ? 7 : s.daysLeft,
+          };
+        }
+        return s;
+      })
+    );
+
     try {
       const res = await fetch("/api/me/alerts", {
         method: "PUT",
@@ -181,30 +198,21 @@ export function DashboardClient() {
           strategyId: strategy.id,
           enabled: newEnabled,
           alertTypes: ["ENTRY", "EXIT", "STOP_LOSS", "TAKE_PROFIT"],
-          destinationEmail,
+          destinationEmail: destinationEmail || user?.email,
         }),
       });
 
-      const data = await res.json();
-      if (res.ok && data.success) {
+      if (!res.ok) {
+        // Revert on failure
         setStrategies((prev) =>
-          prev.map((s) => {
-            if (s.id === strategy.id) {
-              const trialStatus = s.trialStatus === "NOT_STARTED" && newEnabled ? "ACTIVE" : s.trialStatus;
-              return {
-                ...s,
-                enabled: newEnabled,
-                trialStatus,
-                hasAccess: true,
-                daysLeft: s.daysLeft === 0 && newEnabled ? 7 : s.daysLeft,
-              };
-            }
-            return s;
-          })
+          prev.map((s) => (s.id === strategy.id ? { ...s, enabled: strategy.enabled } : s))
         );
       }
     } catch (err) {
       console.error("Toggle alert error:", err);
+      setStrategies((prev) =>
+        prev.map((s) => (s.id === strategy.id ? { ...s, enabled: strategy.enabled } : s))
+      );
     } finally {
       setUpdatingStrategy(null);
     }
@@ -964,7 +972,7 @@ function StrategyDashboardCard({
                 <span>{strategy.enabled ? "🔔" : "🔕"}</span>
                 <span>
                   {updating
-                    ? "Updating..."
+                    ? (strategy.enabled ? "Saving Active..." : "Saving...")
                     : strategy.enabled
                     ? "Email Alerts Active"
                     : "Turn Alerts ON"}
