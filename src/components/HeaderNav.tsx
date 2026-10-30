@@ -63,7 +63,7 @@ export function HeaderNav() {
 
       <span className="chip0">
         <i />
-        Simulated markets · demo
+        Live Quant Signals · Active
       </span>
 
       <div className="r">
@@ -73,6 +73,9 @@ export function HeaderNav() {
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <Link href="/dashboard" className="pill g sm">
                   Dashboard
+                </Link>
+                <Link href="/profile" className="pill g sm">
+                  Profile
                 </Link>
                 {user.role === "ADMIN" && (
                   <Link href="/admin" className="pill g sm" style={{ borderColor: "var(--gold)" }}>

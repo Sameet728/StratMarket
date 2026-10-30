@@ -3,14 +3,29 @@
 import Link from "next/link";
 import { StrategyChartContract } from "@/lib/strategy-execution";
 
+interface StoredSignal {
+  id: string;
+  strategyId: string;
+  instrument: string;
+  timeframe: string;
+  signalType: "ENTRY" | "EXIT" | "STOP_LOSS" | "TAKE_PROFIT";
+  direction: "LONG" | "SHORT";
+  timestamp: string | Date;
+  entryPrice?: number;
+  stopLoss?: number;
+  targetPrice?: number;
+  status: string;
+}
+
 interface Props {
   contract: StrategyChartContract | null;
   onClose: () => void;
   isOpen: boolean;
   candleCount: number;
+  storedSignals?: StoredSignal[];
 }
 
-export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount }: Props) {
+export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, storedSignals = [] }: Props) {
   if (!isOpen || !contract) return null;
 
   const isPine = contract.implementationType === "PINE_SCRIPT";
@@ -204,6 +219,92 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount }: 
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Live VPS Signal Feed */}
+        <div className="panel-section">
+          <div className="section-title">
+            Live VPS Signals
+            <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 600, background: "rgba(16,185,129,0.15)", color: "#10b981", padding: "2px 6px", borderRadius: 10, border: "1px solid rgba(16,185,129,0.2)" }}>
+              {storedSignals.length > 0 ? `${storedSignals.length} signals` : "LIVE"}
+            </span>
+          </div>
+          {storedSignals.length > 0 ? (
+            <div style={{ display: "grid", gap: 6 }}>
+              {storedSignals.slice(0, 8).map((sig) => {
+                const isEntry = sig.signalType === "ENTRY";
+                const isTP = sig.signalType === "TAKE_PROFIT";
+                const isSL = sig.signalType === "STOP_LOSS";
+                const isLong = sig.direction === "LONG";
+
+                const color = isTP ? "#10b981" : isSL ? "#ef4444" : isLong ? "#10b981" : "#ef4444";
+                const bg = isTP
+                  ? "rgba(16,185,129,0.07)"
+                  : isSL
+                  ? "rgba(239,68,68,0.07)"
+                  : "rgba(255,255,255,0.03)";
+                const icon = isTP ? "🏆" : isSL ? "❌" : isLong ? "▲" : "▼";
+                const label = isTP
+                  ? "TP HIT"
+                  : isSL
+                  ? "SL HIT"
+                  : `${sig.signalType} ${sig.direction}`;
+
+                const ts = new Date(sig.timestamp);
+                const timeStr = ts.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+                const dateStr = ts.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+
+                return (
+                  <div
+                    key={sig.id}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "8px 10px",
+                      borderRadius: 8,
+                      background: bg,
+                      border: `1px solid ${color}30`,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 14 }}>{icon}</span>
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color, letterSpacing: "0.04em" }}>{label}</div>
+                        {sig.entryPrice && (
+                          <div style={{ fontSize: 10, color: "#a1a1aa", fontFamily: "'JetBrains Mono', monospace", marginTop: 1 }}>
+                            @ ${sig.entryPrice.toFixed(2)}
+                            {sig.stopLoss && ` · SL $${sig.stopLoss.toFixed(2)}`}
+                            {sig.targetPrice && ` · TP $${sig.targetPrice.toFixed(2)}`}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 10, color: "#71717a", textAlign: "right", flexShrink: 0 }}>
+                      <div>{timeStr}</div>
+                      <div>{dateStr}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div
+              style={{
+                padding: "12px",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid #1f1f23",
+                fontSize: 11.5,
+                color: "#71717a",
+                lineHeight: 1.5,
+              }}
+            >
+              <span style={{ color: "#10b981" }}>●</span> VPS engine monitoring live markets 24/7.
+              <br />
+              Signals appear here in real-time when conditions are met.
+            </div>
+          )}
         </div>
 
         {/* Actions */}

@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
         stopLoss: parsed.data.stopLoss,
         targetPrice: parsed.data.targetPrice,
         sourceEventId: parsed.data.sourceEventId,
+        extraRecipients: result.subscriberEmails,
       }).catch((err) => {
         console.error("[Signal Email Dispatch Failed]:", err);
       });

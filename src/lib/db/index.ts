@@ -682,7 +682,7 @@ export const db = {
     stopLoss?: number;
     targetPrice?: number;
     signalProvenance?: string;
-  }): Promise<{ signal: SignalRecord; notifiedUsersCount: number }> {
+  }): Promise<{ signal: SignalRecord; notifiedUsersCount: number; subscriberEmails: string[] }> {
     const mdb = await getMongoDb();
 
     // 1. Idempotency Check
@@ -731,6 +731,7 @@ export const db = {
 
     // 4. Find entitled users with active alert preference
     let notifiedUsersCount = 0;
+    const subscriberEmails: string[] = [];
     const now = new Date();
 
     for (const alert of globalStore.alerts.values()) {
@@ -738,6 +739,9 @@ export const db = {
         // Check if user has active entitlement
         const access = await this.checkUserStrategyAccess(alert.userId, strategy.id);
         if (access.hasAccess) {
+          if (alert.verifiedDestination && !subscriberEmails.includes(alert.verifiedDestination)) {
+            subscriberEmails.push(alert.verifiedDestination);
+          }
           const delivery: EmailDeliveryRecord = {
             id: "del_" + Math.random().toString(36).substring(2, 11),
             signalId: newSignal.id,
@@ -765,7 +769,7 @@ export const db = {
       }),
     });
 
-    return { signal: newSignal, notifiedUsersCount };
+    return { signal: newSignal, notifiedUsersCount, subscriberEmails };
   },
 
   // EMAIL ALERTS PREFERENCES
@@ -783,7 +787,8 @@ export const db = {
     userId: string,
     strategyId: string,
     enabled: boolean,
-    alertTypes: string[]
+    alertTypes: string[],
+    destinationEmail?: string
   ): Promise<AlertPreferenceRecord> {
     const user = await this.getUserById(userId);
     if (!user) throw new Error("USER_NOT_FOUND");
@@ -791,19 +796,42 @@ export const db = {
     const key = `${userId}:${strategyId}`;
     const existing = globalStore.alerts.get(key);
 
+    const targetEmail = destinationEmail?.trim() || existing?.verifiedDestination || user.email;
+
     const record: AlertPreferenceRecord = {
       id: existing?.id || "alt_" + Math.random().toString(36).substring(2, 11),
       userId,
       strategyId,
       enabled,
       alertTypes,
-      verifiedDestination: user.email,
+      verifiedDestination: targetEmail,
       createdAt: existing?.createdAt || new Date(),
       updatedAt: new Date(),
     };
 
     globalStore.alerts.set(key, record);
     return { ...record };
+  },
+
+  async updateAllUserAlertDestinations(userId: string, destinationEmail: string): Promise<number> {
+    const user = await this.getUserById(userId);
+    if (!user) throw new Error("USER_NOT_FOUND");
+
+    const cleanEmail = destinationEmail.trim();
+    let updatedCount = 0;
+
+    for (const [key, alert] of globalStore.alerts.entries()) {
+      if (alert.userId === userId) {
+        globalStore.alerts.set(key, {
+          ...alert,
+          verifiedDestination: cleanEmail,
+          updatedAt: new Date(),
+        });
+        updatedCount++;
+      }
+    }
+
+    return updatedCount;
   },
 
   async getUserDeliveries(userId: string): Promise<EmailDeliveryRecord[]> {

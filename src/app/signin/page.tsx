@@ -59,8 +59,8 @@ export default function SignInPage() {
 
       setGlobalOk(
         isRegister
-          ? "Account registered successfully! Redirecting to dashboard..."
-          : "Signed in successfully! Redirecting..."
+          ? "Account registered! Redirecting to your dashboard..."
+          : "Signed in! Redirecting..."
       );
 
       setTimeout(() => {
@@ -77,31 +77,44 @@ export default function SignInPage() {
     }
   };
 
-  const fillQuickDemo = (demoRole: "CUSTOMER" | "ADMIN") => {
-    setIsRegister(false);
-    if (demoRole === "ADMIN") {
-      setEmail("admin@elvariscapital.in");
-      setPassword("Elvaris2026!");
-    } else {
-      setEmail("trader@elvariscapital.in");
-      setPassword("Elvaris2026!");
-    }
-    setE1("");
-    setE2("");
-    setGlobalError("");
-  };
-
   return (
     <div className="page" id="p-signin">
       <section className="b">
-        <div className="wrap" style={{ textAlign: "center" }}>
-          <h2 style={{ fontSize: "44px" }}>
-            {isRegister ? "Create an account" : "Sign in"}
+        <div className="wrap" style={{ textAlign: "center", maxWidth: 480, margin: "0 auto" }}>
+          {/* Logo mark */}
+          <div style={{ marginBottom: 24, marginTop: 40 }}>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 700,
+                fontSize: 20,
+                letterSpacing: "-0.04em",
+                color: "var(--tx)",
+              }}
+            >
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 6,
+                  background: "linear-gradient(135deg, #fff 0%, #999 100%)",
+                  display: "inline-block",
+                }}
+              />
+              Elvaris Capital
+            </span>
+          </div>
+
+          <h2 style={{ fontSize: 38, marginBottom: 8 }}>
+            {isRegister ? "Create account" : "Welcome back"}
           </h2>
-          <p className="lede" style={{ margin: "12px auto 28px" }}>
+          <p className="lede" style={{ margin: "0 auto 28px", fontSize: 15, color: "var(--mut)", maxWidth: 360 }}>
             {isRegister
-              ? "Register to start 7-day strategy trials and configure email signal alerts."
-              : "Sign in with your verified credentials or select a pre-configured demo account below."}
+              ? "Register for a free 7-day trial on any strategy."
+              : "Sign in to access your live strategy signals and dashboard."}
           </p>
 
           <form className="form" onSubmit={handleSubmit} noValidate style={{ textAlign: "left" }}>
@@ -123,7 +136,7 @@ export default function SignInPage() {
               <input
                 id="em"
                 type="email"
-                placeholder="name@elvariscapital.in"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
@@ -148,18 +161,18 @@ export default function SignInPage() {
               </span>
             </label>
 
-            {globalError && <div className="err">{globalError}</div>}
-            {globalOk && <div className="ok">{globalOk}</div>}
+            {globalError && <div className="err" style={{ padding: "10px 12px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>{globalError}</div>}
+            {globalOk && <div className="ok" style={{ padding: "10px 12px", borderRadius: 8, background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}>{globalOk}</div>}
 
-            <button className="pill" type="submit" disabled={loading} style={{ width: "100%" }}>
+            <button className="pill" type="submit" disabled={loading} style={{ width: "100%", marginTop: 4 }}>
               {loading
                 ? "Processing..."
                 : isRegister
                 ? "Create Account"
-                : "Sign In"}
+                : "Sign In →"}
             </button>
 
-            <div style={{ textAlign: "center", marginTop: "12px", fontSize: "14px" }}>
+            <div style={{ textAlign: "center", marginTop: 14, fontSize: 14, color: "var(--mut)" }}>
               {isRegister ? (
                 <span>
                   Already have an account?{" "}
@@ -169,59 +182,33 @@ export default function SignInPage() {
                       setIsRegister(false);
                       setGlobalError("");
                     }}
-                    style={{ background: "none", border: "none", color: "var(--tx)", textDecoration: "underline" }}
+                    style={{ background: "none", border: "none", color: "var(--tx)", textDecoration: "underline", cursor: "pointer" }}
                   >
                     Sign in
                   </button>
                 </span>
               ) : (
                 <span>
-                  Need an account?{" "}
+                  No account?{" "}
                   <button
                     type="button"
                     onClick={() => {
                       setIsRegister(true);
                       setGlobalError("");
                     }}
-                    style={{ background: "none", border: "none", color: "var(--tx)", textDecoration: "underline" }}
+                    style={{ background: "none", border: "none", color: "var(--tx)", textDecoration: "underline", cursor: "pointer" }}
                   >
-                    Create account
+                    Create one free
                   </button>
                 </span>
               )}
             </div>
-
-            {/* Quick Demo Credentials */}
-            <div
-              style={{
-                marginTop: "20px",
-                padding: "16px",
-                border: "1px dashed var(--line)",
-                borderRadius: "12px",
-                background: "var(--bg2)",
-              }}
-            >
-              <span className="note" style={{ display: "block", marginBottom: "8px" }}>
-                Pre-seeded evaluation accounts:
-              </span>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                <button
-                  type="button"
-                  className="chip"
-                  onClick={() => fillQuickDemo("CUSTOMER")}
-                >
-                  Trader Demo
-                </button>
-                <button
-                  type="button"
-                  className="chip"
-                  onClick={() => fillQuickDemo("ADMIN")}
-                >
-                  Admin Demo
-                </button>
-              </div>
-            </div>
           </form>
+
+          <div style={{ marginTop: 32, paddingTop: 20, borderTop: "1px solid var(--line)", fontSize: 12, color: "var(--mut)" }}>
+            By signing in you agree to Elvaris Capital{" "}
+            <Link href="/how" style={{ color: "var(--mut)", textDecoration: "underline" }}>Terms of Service</Link>.
+          </div>
         </div>
       </section>
     </div>

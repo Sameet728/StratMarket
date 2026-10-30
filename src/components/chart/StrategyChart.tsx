@@ -6,6 +6,20 @@ import { StrategyStatusPanel } from "./StrategyStatusPanel";
 import { StrategyChartContract } from "@/lib/strategy-execution";
 import { MarketCandle } from "@/lib/market-data";
 
+interface StoredSignal {
+  id: string;
+  strategyId: string;
+  instrument: string;
+  timeframe: string;
+  signalType: "ENTRY" | "EXIT" | "STOP_LOSS" | "TAKE_PROFIT";
+  direction: "LONG" | "SHORT";
+  timestamp: string | Date;
+  entryPrice?: number;
+  stopLoss?: number;
+  targetPrice?: number;
+  status: string;
+}
+
 interface Props {
   strategyId: string;
 }
@@ -17,6 +31,7 @@ export function StrategyChart({ strategyId }: Props) {
 
   const [contract, setContract] = useState<StrategyChartContract | null>(null);
   const [candles, setCandles] = useState<MarketCandle[]>([]);
+  const [storedSignals, setStoredSignals] = useState<StoredSignal[]>([]);
   const [timeframe, setTimeframe] = useState<string>("15");
   const [status, setStatus] = useState<"LIVE" | "HISTORICAL" | "CONNECTING" | "ERROR">("CONNECTING");
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +65,7 @@ export function StrategyChart({ strategyId }: Props) {
 
         setContract(data.contract);
         setCandles(data.candles || []);
+        setStoredSignals(data.storedSignals || []);
         setStatus("LIVE");
 
         // Clean up prior instance if switching timeframe/strategy
@@ -212,6 +228,26 @@ export function StrategyChart({ strategyId }: Props) {
                 },
               });
               lockDrawing(d6);
+
+              // 7. Dedicated Trade Exit Outcome Pin - Shows TP HIT / SL HIT with exact price & outcome
+              const isWin = tb.isWin ?? (tb.profitUsd > 0);
+              const cleanBadge = (tb.exitBadge || "").replace(/\n/g, " ");
+              const exitText = cleanBadge || (isWin ? `🏆 TP HIT +$${rewardAmount}` : `❌ SL HIT -$${riskAmount}`);
+              const exitColor = isWin ? "#34d399" : "#f87171";
+
+              const d7 = ws.chart.drawings.add("text", {
+                anchors: [
+                  { time: tb.exitTime, price: tb.exitPrice },
+                ],
+                text: {
+                  value: `${exitText} @ $${tb.exitPrice.toFixed(2)}`,
+                  color: exitColor,
+                  size: "small",
+                  hAlign: "left",
+                  vAlign: "center",
+                },
+              });
+              lockDrawing(d7);
             } catch (drawingErr) {
               console.warn("[StrategyChart] Error plotting trade setup:", drawingErr);
             }
@@ -305,6 +341,7 @@ export function StrategyChart({ strategyId }: Props) {
           onClose={() => setPanelOpen(false)}
           isOpen={panelOpen}
           candleCount={candles.length}
+          storedSignals={storedSignals}
         />
       </div>
     </div>
