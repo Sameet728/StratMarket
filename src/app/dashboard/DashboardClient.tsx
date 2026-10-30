@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -25,12 +25,25 @@ interface TrialItem {
   isExpired: boolean;
 }
 
-interface AlertPref {
+interface StrategyAlertItem {
   id: string;
-  strategyId: string;
+  slug: string;
+  name: string;
+  type: "PINE_SCRIPT" | "PYTHON";
+  instrument: string;
+  timeframe: string;
+  winRate: number;
+  profitFactor: number;
+  netReturn: number;
+  maxDrawdown: number;
   enabled: boolean;
-  alertTypes: string[];
-  verifiedDestination?: string;
+  hasAccess: boolean;
+  hasPaid: boolean;
+  trialStatus: "ACTIVE" | "EXPIRED" | "NOT_STARTED";
+  daysLeft: number;
+  expiryTime?: string;
+  chartUrl: string;
+  reportUrl: string;
 }
 
 interface DeliveryItem {
@@ -49,10 +62,14 @@ interface ConnectionItem {
   isLive: boolean;
 }
 
-function useCountdown(expiryTime: string) {
+function useCountdown(expiryTime?: string) {
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
+    if (!expiryTime) {
+      setTimeLeft("");
+      return;
+    }
     const tick = () => {
       const diff = new Date(expiryTime).getTime() - Date.now();
       if (diff <= 0) {
@@ -77,240 +94,33 @@ function useCountdown(expiryTime: string) {
   return timeLeft;
 }
 
-function TrialCard({ trial, onBuy }: { trial: TrialItem; onBuy: () => void }) {
-  const countdown = useCountdown(trial.expiryTime);
-  const msLeft = new Date(trial.expiryTime).getTime() - Date.now();
-  const hoursLeft = msLeft / 3600000;
-  const isUrgent = hoursLeft < 48 && !trial.isExpired;
-  const isWarning = hoursLeft < 96 && hoursLeft >= 48 && !trial.isExpired;
-
-  return (
-    <div
-      style={{
-        border: `1px solid ${isUrgent ? "rgba(239,68,68,0.4)" : isWarning ? "rgba(251,191,36,0.3)" : "var(--line)"}`,
-        borderRadius: 12,
-        padding: 16,
-        background: isUrgent
-          ? "rgba(239,68,68,0.04)"
-          : isWarning
-          ? "rgba(251,191,36,0.03)"
-          : "var(--bg)",
-        transition: "border-color 0.3s",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 15 }}>{trial.strategyName}</div>
-          <div className="note" style={{ marginTop: 3, fontSize: 12 }}>
-            {trial.strategyId} · {trial.instrument} · {trial.timeframe} · {trial.category}
-          </div>
-        </div>
-        <div style={{ textAlign: "right", flexShrink: 0 }}>
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              fontFamily: "'JetBrains Mono', monospace",
-              color: isUrgent ? "#ef4444" : isWarning ? "#fbbf24" : "#10b981",
-            }}
-          >
-            {countdown}
-          </div>
-          <div style={{ fontSize: 10, color: "var(--mut)", marginTop: 2 }}>remaining</div>
-        </div>
-      </div>
-
-      <div style={{ fontSize: 11, color: "var(--mut)", marginTop: 8 }}>
-        Expires {new Date(trial.expiryTime).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} at{" "}
-        {new Date(trial.expiryTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-      </div>
-
-      {isUrgent && (
-        <div
-          style={{
-            marginTop: 12,
-            padding: "10px 12px",
-            borderRadius: 8,
-            background: "rgba(239,68,68,0.08)",
-            border: "1px solid rgba(239,68,68,0.2)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          <span style={{ fontSize: 12, color: "#f87171" }}>⚠️ Trial ending soon — upgrade to keep access</span>
-          <button
-            onClick={onBuy}
-            style={{
-              padding: "5px 12px",
-              borderRadius: 6,
-              border: "1px solid rgba(239,68,68,0.4)",
-              background: "rgba(239,68,68,0.15)",
-              color: "#f87171",
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            View Plans →
-          </button>
-        </div>
-      )}
-
-      {isWarning && (
-        <div
-          style={{
-            marginTop: 12,
-            padding: "8px 12px",
-            borderRadius: 8,
-            background: "rgba(251,191,36,0.06)",
-            border: "1px solid rgba(251,191,36,0.2)",
-            fontSize: 12,
-            color: "#fbbf24",
-          }}
-        >
-          ⏳ Less than 4 days left — consider subscribing to continue receiving signals.
-        </div>
-      )}
-
-      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-        <Link
-          href={`/chart/${trial.strategyId.toLowerCase()}`}
-          className="pill g sm"
-          style={{ fontSize: 12, padding: "5px 12px" }}
-        >
-          Open Chart →
-        </Link>
-        <Link
-          href={`/strategies/${trial.strategyId.toLowerCase()}`}
-          style={{
-            padding: "5px 12px",
-            borderRadius: 6,
-            border: "1px solid var(--line)",
-            fontSize: 12,
-            color: "var(--mut)",
-            display: "inline-flex",
-            alignItems: "center",
-          }}
-        >
-          Performance Report
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function SignalEmailForm({ user }: { user: UserProfile }) {
-  const [signalEmail, setSignalEmail] = useState(user.email);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSave = async () => {
-    if (!/^\S+@\S+\.\S+$/.test(signalEmail)) {
-      setError("Enter a valid email address.");
-      return;
-    }
-    setSaving(true);
-    setError("");
-    setSaved(false);
-    try {
-      // Store preference via alerts endpoint
-      const res = await fetch("/api/me/alerts", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          strategyId: "ALL",
-          enabled: true,
-          alertTypes: ["ENTRY", "EXIT", "STOP_LOSS", "TAKE_PROFIT"],
-          verifiedDestination: signalEmail,
-        }),
-      });
-      if (res.ok) {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
-      } else {
-        setError("Failed to save. Please try again.");
-      }
-    } catch {
-      setError("Network error.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div
-      style={{
-        marginTop: 16,
-        padding: "14px 16px",
-        borderRadius: 10,
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid var(--line)",
-      }}
-    >
-      <div style={{ fontSize: 12, color: "var(--mut)", marginBottom: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-        Signal Delivery Email
-      </div>
-      <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
-        <input
-          type="email"
-          value={signalEmail}
-          onChange={(e) => {
-            setSignalEmail(e.target.value);
-            setSaved(false);
-            setError("");
-          }}
-          placeholder="your@email.com"
-          style={{
-            flex: 1,
-            background: "var(--bg)",
-            border: "1px solid var(--line)",
-            borderRadius: 8,
-            padding: "8px 12px",
-            color: "var(--tx)",
-            fontSize: 14,
-            outline: "none",
-          }}
-        />
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 8,
-            border: "1px solid rgba(255,255,255,0.15)",
-            background: saved ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.06)",
-            color: saved ? "#10b981" : "var(--tx)",
-            fontWeight: 600,
-            fontSize: 13,
-            cursor: "pointer",
-            flexShrink: 0,
-            transition: "all 0.2s",
-          }}
-        >
-          {saving ? "Saving..." : saved ? "✓ Saved" : "Save"}
-        </button>
-      </div>
-      {error && <div style={{ fontSize: 12, color: "#ef4444", marginTop: 6 }}>{error}</div>}
-      <div style={{ fontSize: 11, color: "var(--mut)", marginTop: 6 }}>
-        Live trade signals (Entry, TP hit, SL hit) will be sent to this address from <code style={{ fontSize: 11 }}>signals@elvariscapital.in</code>
-      </div>
-    </div>
-  );
-}
-
 export function DashboardClient() {
+  const router = useRouter();
+
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [strategies, setStrategies] = useState<StrategyAlertItem[]>([]);
   const [trials, setTrials] = useState<TrialItem[]>([]);
-  const [alerts, setAlerts] = useState<AlertPref[]>([]);
   const [deliveries, setDeliveries] = useState<DeliveryItem[]>([]);
   const [connections, setConnections] = useState<ConnectionItem[]>([]);
+  const [destinationEmail, setDestinationEmail] = useState("");
   const [loading, setLoading] = useState(true);
-  const [updatingAlert, setUpdatingAlert] = useState<string | null>(null);
-  const router = useRouter();
+
+  // Filter state
+  const [activeTab, setActiveTab] = useState<"ALL" | "PINE" | "PYTHON" | "ACTIVE">("ALL");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Email update state
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
+  const [savingEmail, setSavingEmail] = useState(false);
+  const [emailMessage, setEmailMessage] = useState<{ text: string; ok: boolean } | null>(null);
+
+  // Test email state
+  const [sendingTest, setSendingTest] = useState(false);
+  const [testResult, setTestResult] = useState<{ text: string; ok: boolean } | null>(null);
+
+  // Alert toggle state
+  const [updatingStrategy, setUpdatingStrategy] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -322,22 +132,26 @@ export function DashboardClient() {
           return;
         }
         setUser(authData.user);
+        setEmailInput(authData.user.email);
 
-        const [entRes, alertRes, connRes] = await Promise.all([
-          fetch("/api/me/entitlements"),
+        const [alertsRes, entRes, connRes] = await Promise.all([
           fetch("/api/me/alerts"),
+          fetch("/api/me/entitlements"),
           fetch("/api/me/connections"),
         ]);
+
+        const alertsData = await alertsRes.json();
+        if (alertsData.success) {
+          setStrategies(alertsData.strategies || []);
+          setDeliveries(alertsData.deliveries || []);
+          const dest = alertsData.destinationEmail || authData.user.email;
+          setDestinationEmail(dest);
+          setEmailInput(dest);
+        }
 
         const entData = await entRes.json();
         if (entData.success) {
           setTrials(entData.trials || []);
-        }
-
-        const alertData = await alertRes.json();
-        if (alertData.success) {
-          setAlerts(alertData.preferences || []);
-          setDeliveries(alertData.deliveries || []);
         }
 
         const connData = await connRes.json();
@@ -354,28 +168,101 @@ export function DashboardClient() {
     loadData();
   }, [router]);
 
-  const toggleAlert = async (strategyId: string, currentEnabled: boolean) => {
-    setUpdatingAlert(strategyId);
+  // Toggle individual strategy alert
+  const toggleAlert = async (strategy: StrategyAlertItem) => {
+    setUpdatingStrategy(strategy.id);
+    const newEnabled = !strategy.enabled;
+
     try {
       const res = await fetch("/api/me/alerts", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          strategyId,
-          enabled: !currentEnabled,
+          strategyId: strategy.id,
+          enabled: newEnabled,
           alertTypes: ["ENTRY", "EXIT", "STOP_LOSS", "TAKE_PROFIT"],
+          destinationEmail,
         }),
       });
+
       const data = await res.json();
-      if (data.success) {
-        setAlerts((prev) =>
-          prev.map((a) => (a.strategyId === strategyId ? { ...a, enabled: !currentEnabled } : a))
+      if (res.ok && data.success) {
+        setStrategies((prev) =>
+          prev.map((s) => {
+            if (s.id === strategy.id) {
+              const trialStatus = s.trialStatus === "NOT_STARTED" && newEnabled ? "ACTIVE" : s.trialStatus;
+              return {
+                ...s,
+                enabled: newEnabled,
+                trialStatus,
+                hasAccess: true,
+                daysLeft: s.daysLeft === 0 && newEnabled ? 7 : s.daysLeft,
+              };
+            }
+            return s;
+          })
         );
       }
     } catch (err) {
-      console.error(err);
+      console.error("Toggle alert error:", err);
     } finally {
-      setUpdatingAlert(null);
+      setUpdatingStrategy(null);
+    }
+  };
+
+  // Save new destination email
+  const handleSaveEmail = async () => {
+    if (!/^\S+@\S+\.\S+$/.test(emailInput)) {
+      setEmailMessage({ text: "Please enter a valid email address.", ok: false });
+      return;
+    }
+    setSavingEmail(true);
+    setEmailMessage(null);
+    try {
+      const res = await fetch("/api/me/alerts", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "UPDATE_EMAIL", email: emailInput.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setDestinationEmail(emailInput.trim());
+        setEditingEmail(false);
+        setEmailMessage({ text: "Notification email updated across all strategies!", ok: true });
+        setTimeout(() => setEmailMessage(null), 4000);
+      } else {
+        setEmailMessage({ text: data.error || "Failed to update email.", ok: false });
+      }
+    } catch {
+      setEmailMessage({ text: "Network error saving email.", ok: false });
+    } finally {
+      setSavingEmail(false);
+    }
+  };
+
+  // Send sample test signal to destination email
+  const handleSendTestSignal = async () => {
+    setSendingTest(true);
+    setTestResult(null);
+    try {
+      const res = await fetch("/api/me/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: destinationEmail || user?.email }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTestResult({
+          text: `Sample signal sent to ${destinationEmail || user?.email}! Check your inbox.`,
+          ok: true,
+        });
+      } else {
+        setTestResult({ text: data.error || "Failed to dispatch test signal.", ok: false });
+      }
+    } catch {
+      setTestResult({ text: "Network error sending test signal.", ok: false });
+    } finally {
+      setSendingTest(false);
     }
   };
 
@@ -402,38 +289,56 @@ export function DashboardClient() {
     }
   };
 
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/signin");
-  };
-
   if (loading) {
     return (
       <div className="wrap" style={{ padding: "120px 24px", textAlign: "center" }}>
-        <div style={{ display: "inline-block", width: 32, height: 32, border: "2px solid var(--line)", borderTopColor: "var(--tx)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-        <p className="note" style={{ marginTop: 16 }}>Loading your trading dashboard...</p>
+        <div
+          style={{
+            display: "inline-block",
+            width: 36,
+            height: 36,
+            border: "2px solid var(--line)",
+            borderTopColor: "#10b981",
+            borderRadius: "50%",
+            animation: "spin 0.8s linear infinite",
+          }}
+        />
+        <p className="note" style={{ marginTop: 16 }}>Loading your StratMarket institutional trading hub...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
-  const activeTrials = trials.filter((t) => !t.isExpired && t.status === "ACTIVE");
-  const expiredTrials = trials.filter((t) => t.isExpired || t.status === "EXPIRED");
+  // Filter strategies
+  const filteredStrategies = strategies.filter((s) => {
+    const matchesTab =
+      activeTab === "ALL" ||
+      (activeTab === "PINE" && s.type === "PINE_SCRIPT") ||
+      (activeTab === "PYTHON" && s.type === "PYTHON") ||
+      (activeTab === "ACTIVE" && s.enabled);
 
-  // Check for urgently expiring trials (< 48 hours)
-  const urgentTrials = activeTrials.filter((t) => {
-    const msLeft = new Date(t.expiryTime).getTime() - Date.now();
-    return msLeft < 48 * 3600 * 1000;
+    const matchesSearch =
+      !searchTerm.trim() ||
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.instrument.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesTab && matchesSearch;
   });
 
+  const activeAlertsCount = strategies.filter((s) => s.enabled).length;
+  const pineCount = strategies.filter((s) => s.type === "PINE_SCRIPT").length;
+  const pythonCount = strategies.filter((s) => s.type === "PYTHON").length;
+  const activeTrialsCount = strategies.filter((s) => s.trialStatus === "ACTIVE").length;
+
   return (
-    <div className="wrap" style={{ padding: "100px 24px 80px" }}>
-      {/* User Header */}
+    <div className="wrap" style={{ padding: "90px 24px 80px", maxWidth: 1280, margin: "0 auto" }}>
+      {/* 1. Header Bar */}
       <div
         style={{
           borderBottom: "1px solid var(--line)",
           paddingBottom: 24,
-          marginBottom: 32,
+          marginBottom: 28,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-end",
@@ -442,322 +347,691 @@ export function DashboardClient() {
         }}
       >
         <div>
-          <span className="badge py">Trader Account</span>
-          <h1 style={{ fontSize: 34, marginTop: 8 }}>
-            Welcome back, {user?.name?.split(" ")[0]}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "3px 10px",
+                borderRadius: 20,
+                fontSize: 12,
+                fontWeight: 700,
+                background: "rgba(16,185,129,0.12)",
+                border: "1px solid rgba(16,185,129,0.3)",
+                color: "#10b981",
+              }}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: "#10b981",
+                  boxShadow: "0 0 8px #10b981",
+                }}
+              />
+              Live Quant Signals Active · VPS Connected
+            </span>
+          </div>
+
+          <h1 style={{ fontSize: 32, margin: "10px 0 0", fontWeight: 800 }}>
+            Trading Dashboard
           </h1>
           <p className="note" style={{ fontSize: 13, marginTop: 4 }}>
-            {user?.email} · Role: {user?.role}
+            Logged in as <b>{user?.name}</b> ({user?.email}) ·{" "}
+            <span style={{ color: "#38bdf8" }}>Institutional Execution Feed</span>
           </p>
         </div>
+
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <Link href="/profile" className="pill g sm" style={{ fontSize: 13 }}>
-            ⚙️ Profile & Signal Email
+            ⚙️ Profile &amp; Settings
           </Link>
-          <Link href="/market" className="pill sm">
-            + Explore Strategies
+          <Link href="/market" className="pill sm" style={{ fontSize: 13 }}>
+            Explore All Strategies →
           </Link>
+        </div>
+      </div>
+
+      {/* 2. Master Stats Cards */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: 14,
+          marginBottom: 28,
+        }}
+      >
+        <div
+          style={{
+            padding: "16px 20px",
+            borderRadius: 12,
+            border: "1px solid var(--line)",
+            background: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#10b981", fontFamily: "'JetBrains Mono', monospace" }}>
+            {activeTrialsCount}
+          </div>
+          <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>Active 7-Day Trials</div>
+        </div>
+
+        <div
+          style={{
+            padding: "16px 20px",
+            borderRadius: 12,
+            border: "1px solid var(--line)",
+            background: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#38bdf8", fontFamily: "'JetBrains Mono', monospace" }}>
+            {activeAlertsCount} / {strategies.length}
+          </div>
+          <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>Signal Alerts Enabled</div>
+        </div>
+
+        <div
+          style={{
+            padding: "16px 20px",
+            borderRadius: 12,
+            border: "1px solid var(--line)",
+            background: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#fbbf24", fontFamily: "'JetBrains Mono', monospace" }}>
+            {deliveries.length}
+          </div>
+          <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>Signals Delivered</div>
+        </div>
+
+        <div
+          style={{
+            padding: "16px 20px",
+            borderRadius: 12,
+            border: "1px solid var(--line)",
+            background: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#a78bfa", fontFamily: "'JetBrains Mono', monospace" }}>
+            {connections.length}
+          </div>
+          <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>Active Broker Relays</div>
+        </div>
+      </div>
+
+      {/* 3. Master Signal Notification Destination Banner */}
+      <div
+        className="card"
+        style={{
+          padding: "20px 24px",
+          marginBottom: 32,
+          borderRadius: 14,
+          border: "1px solid rgba(56, 189, 248, 0.25)",
+          background: "linear-gradient(135deg, rgba(14, 165, 233, 0.05) 0%, rgba(15, 23, 42, 0.4) 100%)",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 16 }}>📬</span>
+              <strong style={{ fontSize: 15, color: "#f8fafc" }}>Signal Notification Delivery Inbox</strong>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: "2px 8px",
+                  borderRadius: 6,
+                  background: "rgba(16,185,129,0.15)",
+                  color: "#10b981",
+                  border: "1px solid rgba(16,185,129,0.3)",
+                }}
+              >
+                Resend Verified Domain: elvariscapital.in
+              </span>
+            </div>
+            <p className="note" style={{ margin: "4px 0 0", fontSize: 13 }}>
+              Live Entry, Stop Loss, and Take Profit signals from MT5 VPS and Pine Script engines dispatch straight to this inbox.
+            </p>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              onClick={handleSendTestSignal}
+              disabled={sendingTest}
+              className="pill g sm"
+              style={{ fontSize: 12, fontWeight: 600 }}
+            >
+              {sendingTest ? "Sending..." : "✉️ Send Test Signal"}
+            </button>
+            <button
+              onClick={() => setEditingEmail(!editingEmail)}
+              className="pill sm"
+              style={{ fontSize: 12, fontWeight: 600 }}
+            >
+              {editingEmail ? "Cancel" : "Change Inbox"}
+            </button>
+          </div>
+        </div>
+
+        {/* Current Destination Display or Input */}
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          {editingEmail ? (
+            <div style={{ display: "flex", gap: 10, maxWidth: 500 }}>
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="trader@yourdomain.com"
+                style={{
+                  flex: 1,
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  border: "1px solid var(--line)",
+                  background: "var(--bg)",
+                  color: "var(--tx)",
+                  fontSize: 13,
+                  outline: "none",
+                }}
+              />
+              <button
+                onClick={handleSaveEmail}
+                disabled={savingEmail}
+                className="pill sm"
+                style={{ fontSize: 12, padding: "0 18px" }}
+              >
+                {savingEmail ? "Saving..." : "Save"}
+              </button>
+            </div>
+          ) : (
+            <div style={{ fontSize: 13, color: "var(--mut)", display: "flex", alignItems: "center", gap: 8 }}>
+              <span>Signals delivering to:</span>
+              <code style={{ fontSize: 13, color: "#38bdf8", fontWeight: 700 }}>
+                {destinationEmail || user?.email}
+              </code>
+            </div>
+          )}
+
+          {emailMessage && (
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 12,
+                color: emailMessage.ok ? "#10b981" : "#ef4444",
+              }}
+            >
+              {emailMessage.ok ? "✓ " : "✕ "}
+              {emailMessage.text}
+            </div>
+          )}
+
+          {testResult && (
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 12,
+                color: testResult.ok ? "#10b981" : "#ef4444",
+              }}
+            >
+              {testResult.ok ? "✓ " : "✕ "}
+              {testResult.text}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 4. Strategy Alert Controls Section */}
+      <div style={{ marginBottom: 20 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 16,
+            marginBottom: 16,
+          }}
+        >
+          <div>
+            <h2 style={{ fontSize: 22, margin: 0, fontWeight: 800 }}>
+              Live Strategy Signals &amp; Alert Feeds
+            </h2>
+            <p className="note" style={{ margin: "4px 0 0", fontSize: 13 }}>
+              Toggle real-time email trade alerts and open live candlestick charts for both Pine Script and Python strategies.
+            </p>
+          </div>
+
+          {/* Search Input */}
+          <div style={{ minWidth: 240 }}>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Filter by strategy or symbol (e.g. XAUUSD)..."
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid var(--line)",
+                background: "var(--bg)",
+                color: "var(--tx)",
+                fontSize: 13,
+                outline: "none",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Filter Tabs */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", borderBottom: "1px solid var(--line)", paddingBottom: 12 }}>
           <button
-            onClick={handleLogout}
+            onClick={() => setActiveTab("ALL")}
+            className={`pill ${activeTab === "ALL" ? "" : "g"} sm`}
+            style={{ fontSize: 12 }}
+          >
+            All Strategies ({strategies.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("PINE")}
+            className={`pill ${activeTab === "PINE" ? "" : "g"} sm`}
             style={{
-              padding: "7px 16px",
-              borderRadius: 8,
-              border: "1px solid var(--line)",
-              background: "none",
-              color: "var(--mut)",
-              fontSize: 13,
-              cursor: "pointer",
+              fontSize: 12,
+              background: activeTab === "PINE" ? "rgba(16,185,129,0.2)" : undefined,
+              borderColor: activeTab === "PINE" ? "#10b981" : undefined,
+              color: activeTab === "PINE" ? "#4ade80" : undefined,
             }}
           >
-            Sign Out
+            🌲 Pine Script Strategies ({pineCount})
+          </button>
+          <button
+            onClick={() => setActiveTab("PYTHON")}
+            className={`pill ${activeTab === "PYTHON" ? "" : "g"} sm`}
+            style={{
+              fontSize: 12,
+              background: activeTab === "PYTHON" ? "rgba(234,179,8,0.2)" : undefined,
+              borderColor: activeTab === "PYTHON" ? "#eab308" : undefined,
+              color: activeTab === "PYTHON" ? "#fde047" : undefined,
+            }}
+          >
+            🐍 Python MT5 Ensembles ({pythonCount})
+          </button>
+          <button
+            onClick={() => setActiveTab("ACTIVE")}
+            className={`pill ${activeTab === "ACTIVE" ? "" : "g"} sm`}
+            style={{
+              fontSize: 12,
+              color: activeAlertsCount > 0 ? "#38bdf8" : undefined,
+            }}
+          >
+            🔔 Active Alerts ({activeAlertsCount})
           </button>
         </div>
       </div>
 
-      {/* Urgent Expiry Banner */}
-      {urgentTrials.length > 0 && (
-        <div
-          style={{
-            marginBottom: 24,
-            padding: "14px 20px",
-            borderRadius: 12,
-            background: "rgba(239,68,68,0.07)",
-            border: "1px solid rgba(239,68,68,0.25)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <div>
-            <div style={{ fontWeight: 700, color: "#f87171", fontSize: 14 }}>
-              ⚠️ {urgentTrials.length === 1 ? "1 trial" : `${urgentTrials.length} trials`} expiring in less than 48 hours
-            </div>
-            <div style={{ fontSize: 13, color: "var(--mut)", marginTop: 3 }}>
-              {urgentTrials.map(t => t.strategyName).join(", ")} — upgrade now to avoid losing signal access
-            </div>
-          </div>
-          <Link
-            href="/pricing"
-            style={{
-              padding: "8px 18px",
-              borderRadius: 8,
-              background: "#ef4444",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: 13,
-              display: "inline-block",
-              flexShrink: 0,
-            }}
-          >
-            View Subscription Plans →
-          </Link>
-        </div>
-      )}
-
-      {/* Stats Bar */}
+      {/* 5. Strategy Cards Grid */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-          gap: 12,
-          marginBottom: 28,
+          gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))",
+          gap: 18,
+          marginBottom: 40,
         }}
       >
-        {[
-          { label: "Active Trials", value: activeTrials.length, color: "#10b981" },
-          { label: "Signal Alerts", value: alerts.filter(a => a.enabled).length, color: "#38bdf8" },
-          { label: "Signals Delivered", value: deliveries.length, color: "#fbbf24" },
-          { label: "Connections", value: connections.length, color: "#a78bfa" },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            style={{
-              padding: "14px 16px",
-              borderRadius: 10,
-              border: "1px solid var(--line)",
-              background: "var(--bg2)",
-            }}
-          >
-            <div style={{ fontSize: 24, fontWeight: 800, color: stat.color, fontFamily: "'JetBrains Mono', monospace" }}>
-              {stat.value}
-            </div>
-            <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>{stat.label}</div>
-          </div>
+        {filteredStrategies.map((strategy) => (
+          <StrategyDashboardCard
+            key={strategy.id}
+            strategy={strategy}
+            updating={updatingStrategy === strategy.id}
+            onToggleAlert={() => toggleAlert(strategy)}
+          />
         ))}
       </div>
 
-      {/* Main Dashboard Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
-
-        {/* Active Trials Panel */}
-        <div className="card" style={{ padding: 24 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-            <h3 style={{ fontSize: 17 }}>Active 7-Day Trials</h3>
-            <span style={{ fontSize: 12, color: "var(--mut)" }}>{activeTrials.length} active</span>
+      {/* 6. Trading Connections & Execution Gate */}
+      <div
+        className="card"
+        style={{
+          padding: 24,
+          borderRadius: 14,
+          border: "1px solid var(--line)",
+          background: "rgba(255,255,255,0.02)",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+          <div>
+            <h3 style={{ fontSize: 17, margin: 0, fontWeight: 700 }}>Trading Connections &amp; Execution Relays</h3>
+            <p className="note" style={{ margin: "4px 0 0", fontSize: 13 }}>
+              Connect low-latency MetaTrader 5 execution accounts or deploy a zero-risk Virtual Paper Simulator.
+            </p>
           </div>
-          <p className="note" style={{ fontSize: 13, marginBottom: 16 }}>
-            Live countdown timers showing exact time remaining.
-          </p>
-
-          {activeTrials.length > 0 ? (
-            <div style={{ display: "grid", gap: 12 }}>
-              {activeTrials.map((t) => (
-                <TrialCard
-                  key={t.id}
-                  trial={t}
-                  onBuy={() => router.push("/pricing")}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="empty" style={{ margin: "16px 0" }}>
-              No active trials. Browse the marketplace to activate a free 7-day trial on any strategy.
-              <div style={{ marginTop: 12 }}>
-                <Link href="/market" className="pill g sm">
-                  Browse Strategies →
-                </Link>
-              </div>
-            </div>
-          )}
+          <button
+            onClick={connectSimulator}
+            className="pill g sm"
+            style={{ fontSize: 12, fontWeight: 600 }}
+          >
+            + Connect Paper Simulator
+          </button>
         </div>
 
-        {/* Email Signal Preferences Panel */}
-        <div className="card" style={{ padding: 24 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-            <h3 style={{ fontSize: 17 }}>Email Signal Alerts</h3>
-            <span style={{ fontSize: 12, background: "rgba(16,185,129,0.1)", color: "#10b981", padding: "2px 8px", borderRadius: 20, border: "1px solid rgba(16,185,129,0.2)" }}>
-              VPS Live
-            </span>
-          </div>
-          <p className="note" style={{ fontSize: 13, marginBottom: 0 }}>
-            Real-time signals generated by the Elvaris quant VPS — Entry, TP hit, SL hit.
-          </p>
-
-          {user && <SignalEmailForm user={user} />}
-
-          <div style={{ marginTop: 16 }}>
-            {alerts.length > 0 ? (
-              <div style={{ display: "grid", gap: 8 }}>
-                {alerts.map((a) => (
-                  <div
-                    key={a.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      border: "1px solid var(--line)",
-                      borderRadius: 10,
-                      padding: "10px 14px",
-                      background: "var(--bg)",
-                    }}
-                  >
-                    <div>
-                      <b style={{ fontSize: 14 }}>{a.strategyId}</b>
-                      <div className="note" style={{ fontSize: 12 }}>Entry · Exit · SL · TP</div>
-                    </div>
-                    <button
-                      className={`chip ${a.enabled ? "on" : ""}`}
-                      disabled={updatingAlert === a.strategyId}
-                      onClick={() => toggleAlert(a.strategyId, a.enabled)}
-                      style={{ fontSize: 12 }}
-                    >
-                      {a.enabled ? "● Active" : "○ Off"}
-                    </button>
+        {connections.length > 0 ? (
+          <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
+            {connections.map((c) => (
+              <div
+                key={c.id}
+                style={{
+                  border: "1px solid var(--line)",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  background: "var(--bg)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <b style={{ fontSize: 14 }}>{c.brokerIdentifier}</b>
+                  <div className="note" style={{ fontSize: 12, marginTop: 2 }}>
+                    Status: {c.connectionStatus} · Scopes: {c.grantedScopes.join(", ")}
                   </div>
-                ))}
+                </div>
+                <span className="badge py" style={{ fontSize: 11 }}>Active Relay</span>
               </div>
-            ) : (
-              <div className="empty" style={{ margin: "12px 0", fontSize: 13 }}>
-                No strategy alerts configured. Starting a trial auto-enables email alerts.
-              </div>
-            )}
+            ))}
           </div>
+        ) : (
+          <div className="empty" style={{ margin: "16px 0", fontSize: 13 }}>
+            No broker connections active. Connect your MT5 or Paper Simulator to route signals automatically.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
-          {deliveries.length > 0 && (
-            <div
+function StrategyDashboardCard({
+  strategy,
+  updating,
+  onToggleAlert,
+}: {
+  strategy: StrategyAlertItem;
+  updating: boolean;
+  onToggleAlert: () => void;
+}) {
+  const isPine = strategy.type === "PINE_SCRIPT";
+  const countdown = useCountdown(strategy.expiryTime);
+
+  return (
+    <div
+      style={{
+        border: strategy.enabled
+          ? "1px solid rgba(16, 185, 129, 0.4)"
+          : "1px solid var(--line)",
+        borderRadius: 14,
+        padding: "20px",
+        background: strategy.enabled
+          ? "linear-gradient(145deg, rgba(16, 185, 129, 0.04) 0%, rgba(15, 23, 42, 0.3) 100%)"
+          : "rgba(255,255,255,0.015)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        transition: "all 0.25s ease",
+        boxShadow: strategy.enabled ? "0 4px 20px rgba(16, 185, 129, 0.08)" : "none",
+      }}
+    >
+      <div>
+        {/* Top Badges Row */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <span
               style={{
-                marginTop: 14,
-                padding: "10px 14px",
-                borderRadius: 8,
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid var(--line)",
-                fontSize: 12,
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "2px 8px",
+                borderRadius: 6,
+                background: isPine ? "rgba(76, 199, 154, 0.15)" : "rgba(234, 179, 8, 0.15)",
+                color: isPine ? "#4ade80" : "#fde047",
+                border: isPine ? "1px solid rgba(76, 199, 154, 0.3)" : "1px solid rgba(234, 179, 8, 0.3)",
+              }}
+            >
+              {isPine ? "🌲 PINE SCRIPT v5" : "🐍 PYTHON MT5"}
+            </span>
+
+            <span
+              style={{
+                fontSize: 11,
+                padding: "2px 8px",
+                borderRadius: 6,
+                background: "rgba(255,255,255,0.05)",
                 color: "var(--mut)",
               }}
             >
-              📧 {deliveries.length} signal{deliveries.length !== 1 ? "s" : ""} delivered so far
-              {deliveries.filter(d => d.deliveryStatus === "SENT").length > 0 && (
-                <span style={{ color: "#10b981", marginLeft: 8 }}>
-                  · {deliveries.filter(d => d.deliveryStatus === "SENT").length} sent
-                </span>
-              )}
+              {strategy.instrument} · {strategy.timeframe}
+            </span>
+          </div>
+
+          {/* Access / Trial Badge */}
+          <div>
+            {strategy.hasPaid ? (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "2px 8px",
+                  borderRadius: 6,
+                  background: "rgba(168, 85, 247, 0.15)",
+                  color: "#c084fc",
+                  border: "1px solid rgba(168, 85, 247, 0.3)",
+                }}
+              >
+                💎 Pro Active
+              </span>
+            ) : strategy.trialStatus === "ACTIVE" ? (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "2px 8px",
+                  borderRadius: 6,
+                  background: "rgba(16, 185, 129, 0.15)",
+                  color: "#34d399",
+                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                }}
+              >
+                ⏱️ Trial: {countdown || `${strategy.daysLeft}d left`}
+              </span>
+            ) : strategy.trialStatus === "EXPIRED" ? (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "2px 8px",
+                  borderRadius: 6,
+                  background: "rgba(239, 68, 68, 0.15)",
+                  color: "#f87171",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                }}
+              >
+                🔒 Trial Expired
+              </span>
+            ) : (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: "2px 8px",
+                  borderRadius: 6,
+                  background: "rgba(56, 189, 248, 0.1)",
+                  color: "#38bdf8",
+                  border: "1px solid rgba(56, 189, 248, 0.2)",
+                }}
+              >
+                ⚡ 7-Day Trial Available
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Strategy Title */}
+        <h3 style={{ fontSize: 18, margin: "0 0 6px", fontWeight: 800, color: "#fff" }}>
+          {strategy.name}{" "}
+          <span style={{ fontSize: 13, color: "var(--mut)", fontWeight: 400 }}>({strategy.id})</span>
+        </h3>
+
+        {/* Core Institutional Metrics */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: 8,
+            padding: "10px 12px",
+            background: "rgba(0,0,0,0.25)",
+            borderRadius: 8,
+            border: "1px solid var(--line)",
+            margin: "12px 0 16px",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 11, color: "var(--mut)" }}>Win Rate</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", fontFamily: "'JetBrains Mono', monospace" }}>
+              {strategy.winRate}%
             </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--mut)" }}>Profit Factor</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#f8fafc", fontFamily: "'JetBrains Mono', monospace" }}>
+              {strategy.profitFactor}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--mut)" }}>Max DD</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#f87171", fontFamily: "'JetBrains Mono', monospace" }}>
+              {strategy.maxDrawdown}%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Controls */}
+      <div>
+        {/* Email Alerts Toggle Switch */}
+        <div style={{ marginBottom: 12 }}>
+          {strategy.trialStatus === "EXPIRED" && !strategy.hasPaid ? (
+            <Link
+              href="/pricing"
+              style={{
+                width: "100%",
+                padding: "9px 12px",
+                borderRadius: 8,
+                background: "rgba(239, 68, 68, 0.12)",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+                color: "#f87171",
+                fontSize: 12,
+                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                textDecoration: "none",
+              }}
+            >
+              🔒 7-Day Trial Ended · Upgrade to Re-enable Alerts →
+            </Link>
+          ) : (
+            <button
+              onClick={onToggleAlert}
+              disabled={updating}
+              style={{
+                width: "100%",
+                padding: "9px 14px",
+                borderRadius: 8,
+                border: strategy.enabled
+                  ? "1px solid rgba(16, 185, 129, 0.5)"
+                  : "1px solid var(--line)",
+                background: strategy.enabled
+                  ? "linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.25) 100%)"
+                  : "rgba(255,255,255,0.03)",
+                color: strategy.enabled ? "#10b981" : "var(--mut)",
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                transition: "all 0.2s",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span>{strategy.enabled ? "🔔" : "🔕"}</span>
+                <span>
+                  {updating
+                    ? "Updating..."
+                    : strategy.enabled
+                    ? "Email Alerts Active"
+                    : "Turn Alerts ON"}
+                </span>
+              </span>
+
+              <span
+                style={{
+                  fontSize: 11,
+                  padding: "2px 8px",
+                  borderRadius: 12,
+                  background: strategy.enabled ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.06)",
+                  color: strategy.enabled ? "#fff" : "var(--mut)",
+                }}
+              >
+                {strategy.enabled ? "● ON" : "○ OFF"}
+              </span>
+            </button>
           )}
         </div>
 
-        {/* Trading Connections Panel */}
-        <div className="card" style={{ padding: 24 }}>
-          <h3 style={{ fontSize: 17, marginBottom: 6 }}>Trading Connections</h3>
-          <p className="note" style={{ fontSize: 13, marginBottom: 16 }}>
-            Automated trade routing — zero API secret exposure.
-          </p>
+        {/* Action Buttons: Live Chart & Performance Report */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <Link
+            href={strategy.chartUrl}
+            style={{
+              padding: "8px 10px",
+              borderRadius: 8,
+              border: "1px solid rgba(56, 189, 248, 0.3)",
+              background: "rgba(56, 189, 248, 0.08)",
+              color: "#38bdf8",
+              fontSize: 12,
+              fontWeight: 600,
+              textAlign: "center",
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+            }}
+          >
+            <span>📈</span>
+            <span>Open Chart</span>
+          </Link>
 
-          <div style={{ display: "grid", gap: 10 }}>
-            {connections.length > 0 ? (
-              connections.map((c) => (
-                <div
-                  key={c.id}
-                  style={{
-                    border: "1px solid var(--line)",
-                    borderRadius: 10,
-                    padding: "12px 14px",
-                    background: "var(--bg)",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <div>
-                    <b style={{ fontSize: 14 }}>{c.brokerIdentifier}</b>
-                    <div className="note" style={{ fontSize: 12 }}>
-                      Status: {c.connectionStatus} · Scopes: {c.grantedScopes.join(", ")}
-                    </div>
-                  </div>
-                  <span className="badge py" style={{ fontSize: 11 }}>Connected</span>
-                </div>
-              ))
-            ) : (
-              <div className="empty" style={{ fontSize: 13 }}>No active broker connections.</div>
-            )}
-
-            <button
-              className="pill g sm"
-              onClick={connectSimulator}
-              style={{ marginTop: 6, fontSize: 13 }}
-            >
-              + Connect Paper Simulator
-            </button>
-            <span className="note" style={{ fontSize: 12 }}>
-              Live broker integrations (Alpaca, IBKR) require KYC verification.
-            </span>
-          </div>
+          <Link
+            href={strategy.reportUrl}
+            style={{
+              padding: "8px 10px",
+              borderRadius: 8,
+              border: "1px solid var(--line)",
+              background: "rgba(255,255,255,0.03)",
+              color: "var(--tx)",
+              fontSize: 12,
+              fontWeight: 600,
+              textAlign: "center",
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+            }}
+          >
+            <span>📊</span>
+            <span>Tear Sheet</span>
+          </Link>
         </div>
-
-        {/* Expired Trials & Upgrade */}
-        {expiredTrials.length > 0 && (
-          <div className="card" style={{ padding: 24, gridColumn: "1 / -1" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <h3 style={{ fontSize: 17 }}>Expired Trials</h3>
-              <Link href="/pricing" className="pill sm" style={{ fontSize: 12 }}>
-                View Subscription Plans →
-              </Link>
-            </div>
-            <p className="note" style={{ fontSize: 13, marginBottom: 16 }}>
-              These 7-day trials have ended. Subscribe to regain full signal access.
-            </p>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-                gap: 12,
-              }}
-            >
-              {expiredTrials.map((t) => (
-                <div
-                  key={t.id}
-                  style={{
-                    border: "1px dashed var(--line)",
-                    borderRadius: 10,
-                    padding: 16,
-                    background: "var(--bg)",
-                    opacity: 0.75,
-                  }}
-                >
-                  <div style={{ fontWeight: 700, fontSize: 14 }}>{t.strategyName}</div>
-                  <div className="note" style={{ margin: "4px 0", fontSize: 12 }}>
-                    Expired {new Date(t.expiryTime).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-                  </div>
-                  <div style={{ marginTop: 10 }}>
-                    <Link
-                      href="/pricing"
-                      style={{
-                        fontSize: 12,
-                        padding: "5px 12px",
-                        borderRadius: 6,
-                        border: "1px solid var(--line)",
-                        display: "inline-block",
-                      }}
-                    >
-                      Subscribe →
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

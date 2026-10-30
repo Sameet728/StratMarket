@@ -15,6 +15,10 @@ interface Props {
   panelOpen: boolean;
   showBoxes: boolean;
   onToggleBoxes: () => void;
+  alertEnabled?: boolean;
+  onToggleAlert?: () => void;
+  trialStatus?: string;
+  daysLeft?: number;
 }
 
 const TIMEFRAMES = [
@@ -45,6 +49,10 @@ export function ChartToolbar({
   panelOpen,
   showBoxes,
   onToggleBoxes,
+  alertEnabled = false,
+  onToggleAlert,
+  trialStatus,
+  daysLeft,
 }: Props) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -97,6 +105,22 @@ export function ChartToolbar({
           <span className="chart-tf-tag">{timeframe}</span>
         </div>
 
+        {trialStatus === "ACTIVE" && (
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              padding: "3px 8px",
+              borderRadius: 6,
+              background: "rgba(16,185,129,0.15)",
+              color: "#34d399",
+              border: "1px solid rgba(16,185,129,0.3)",
+            }}
+          >
+            ⏱️ 7-Day Trial Active ({daysLeft}d left)
+          </span>
+        )}
+
         <div className="chart-bars-badge" title="Maximum historical dataset loaded">
           <span>{candleCount.toLocaleString()} Bars (Max)</span>
         </div>
@@ -117,6 +141,22 @@ export function ChartToolbar({
       </div>
 
       <div className="chart-toolbar-right">
+        {/* Email Alerts Quick Toggle */}
+        {onToggleAlert && (
+          <button
+            className={`chart-toggle-pill ${alertEnabled ? "active" : ""}`}
+            onClick={onToggleAlert}
+            title={alertEnabled ? "Email alerts active - click to mute" : "Click to enable real-time email trade alerts"}
+            style={{
+              background: alertEnabled ? "rgba(16,185,129,0.2)" : undefined,
+              borderColor: alertEnabled ? "#10b981" : undefined,
+              color: alertEnabled ? "#4ade80" : undefined,
+            }}
+          >
+            <span>{alertEnabled ? "🔔 Alerts ON" : "🔕 Alerts OFF"}</span>
+          </button>
+        )}
+
         {/* Toggle On-Chart Position Tool Boxes */}
         <button
           className={`chart-toggle-pill ${showBoxes ? "active" : ""}`}

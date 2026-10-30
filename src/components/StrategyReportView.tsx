@@ -57,29 +57,36 @@ export function StrategyReportView({ strategy }: Props) {
     setEmailSuccess(null);
 
     try {
-      const res = await fetch("/api/alerts", {
+      // 1. Activate 7-day trial if not started
+      await fetch(`/api/strategies/${strategy.slug}/trial`, {
         method: "POST",
+      }).catch(() => {});
+
+      // 2. Persist alert preference for this strategy
+      const res = await fetch("/api/me/alerts", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           strategyId: strategy.id,
           enabled: true,
-          alertTypes: ["ENTRY", "EXIT", "STOP_LOSS"],
-          destination: email.trim(),
+          alertTypes: ["ENTRY", "EXIT", "STOP_LOSS", "TAKE_PROFIT"],
+          destinationEmail: email.trim(),
         }),
       });
 
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         setEmailSuccess(
-          `✓ Email Trades active! Real-time signals for ${strategy.id} (${strategy.name}) are routed to ${email.trim()}.`
+          `✓ Signal Alerts Activated! Real-time signals (Entry, TP, SL) for ${strategy.id} (${strategy.name}) are routed to ${email.trim()}.`
         );
       } else {
         setEmailSuccess(
-          `✓ Email Trades active! Real-time signals for ${strategy.id} are routed to ${email.trim()}.`
+          `✓ Signal Alerts active! Real-time signals for ${strategy.id} are routed to ${email.trim()}.`
         );
       }
     } catch {
       setEmailSuccess(
-        `✓ Email Trades active! Real-time signals for ${strategy.id} are routed to ${email.trim()}.`
+        `✓ Signal Alerts active! Real-time signals for ${strategy.id} are routed to ${email.trim()}.`
       );
     } finally {
       setEmailLoading(false);
@@ -92,13 +99,13 @@ export function StrategyReportView({ strategy }: Props) {
     setAutomationSuccess(null);
 
     try {
-      const res = await fetch("/api/connections", {
+      const res = await fetch("/api/me/connections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brokerIdentifier: isPaperSimulator ? "Paper Trading Sandbox" : brokerPlatform,
+          brokerIdentifier: isPaperSimulator ? "PAPER_SIMULATOR" : brokerPlatform,
           isLive: !isPaperSimulator,
-          accountRef: accountNumber.trim() || "DEMO-ACCT-88921",
+          grantedScopes: ["READ_ONLY", "TRADE_EXECUTION"],
         }),
       });
 
@@ -701,11 +708,21 @@ if (ta.crossover(close, upper) and shortFilter)
           <div className="action-zone-buttons" style={{ display: "flex", flexWrap: "wrap", gap: "16px", justifyContent: "center" }}>
             {isPython ? (
               <>
+                <Link
+                  href={`/chart/${strategy.slug}`}
+                  className="pill g action-btn"
+                  style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px", textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                  </svg>
+                  Open Live Chart
+                </Link>
                 <button
                   id="btn-email-trades"
                   className="pill action-btn"
                   onClick={() => setEmailModalOpen(true)}
-                  style={{ minWidth: "220px", padding: "15px 34px", fontSize: "16px" }}
+                  style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px" }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
@@ -717,7 +734,7 @@ if (ta.crossover(close, upper) and shortFilter)
                   id="btn-full-automation"
                   className="pill action-btn action-btn-accent"
                   onClick={() => setAutomationModalOpen(true)}
-                  style={{ minWidth: "220px", padding: "15px 34px", fontSize: "16px" }}
+                  style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px" }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
@@ -727,17 +744,16 @@ if (ta.crossover(close, upper) and shortFilter)
               </>
             ) : (
               <>
-                <button
-                  id="btn-tradingview"
+                <Link
+                  href={`/chart/${strategy.slug}`}
                   className="pill g action-btn"
-                  onClick={() => setChartModalOpen(true)}
-                  style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px" }}
+                  style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px", textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                   </svg>
-                  View on TradingView
-                </button>
+                  Open Live Chart
+                </Link>
                 <button
                   id="btn-email-trades"
                   className="pill action-btn"
@@ -751,16 +767,19 @@ if (ta.crossover(close, upper) and shortFilter)
                   Email Trades
                 </button>
                 <button
+                  id="btn-tradingview"
+                  className="pill action-btn"
+                  onClick={() => setChartModalOpen(true)}
+                  style={{ minWidth: "180px", padding: "15px 24px", fontSize: "15px" }}
+                >
+                  TradingView Code
+                </button>
+                <button
                   id="btn-connect-account"
                   className="pill action-btn action-btn-accent"
                   onClick={() => setAutomationModalOpen(true)}
-                  style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px" }}
+                  style={{ minWidth: "180px", padding: "15px 24px", fontSize: "15px" }}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                  </svg>
                   Connect Account
                 </button>
               </>

@@ -18,13 +18,78 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const preferences = await db.getUserAlertPreferences(user.id);
-    const deliveries = await db.getUserDeliveries(user.id);
-    const currentDestination = preferences[0]?.verifiedDestination || user.email;
+    const [preferences, deliveries, trials, entitlements, strategies] = await Promise.all([
+      db.getUserAlertPreferences(user.id),
+      db.getUserDeliveries(user.id),
+      db.getUserTrials(user.id),
+      db.getUserEntitlements(user.id),
+      db.getStrategies({ includeDrafts: false }),
+    ]);
+
+    const currentDestination =
+      preferences.find((p) => p.verifiedDestination)?.verifiedDestination || user.email;
+
+    const now = new Date();
+
+    const strategyAlerts = strategies.map((s) => {
+      const userPref = preferences.find(
+        (p) =>
+          p.strategyId.toUpperCase() === s.id.toUpperCase() ||
+          p.strategyId.toLowerCase() === s.slug.toLowerCase()
+      );
+      const allPref = preferences.find((p) => p.strategyId === "ALL");
+      const enabled = userPref ? userPref.enabled : (allPref ? allPref.enabled : false);
+
+      const userTrial = trials.find(
+        (t) =>
+          t.strategyId.toUpperCase() === s.id.toUpperCase() ||
+          t.strategyId.toLowerCase() === s.slug.toLowerCase()
+      );
+      const isTrialActive =
+        Boolean(userTrial && userTrial.status === "ACTIVE" && new Date(userTrial.expiryTime) > now);
+      const isTrialExpired =
+        Boolean(userTrial && (userTrial.status === "EXPIRED" || new Date(userTrial.expiryTime) <= now));
+      const daysLeft =
+        userTrial && isTrialActive
+          ? Math.max(0, Math.ceil((new Date(userTrial.expiryTime).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+          : 0;
+
+      const hasPaid = entitlements.some(
+        (e) =>
+          e.status === "ACTIVE" &&
+          new Date(e.expiryTime) > now &&
+          e.entitlementType === "PAID" &&
+          (e.strategyId === s.id || e.strategyId === null)
+      );
+
+      const hasAccess = hasPaid || isTrialActive;
+
+      return {
+        id: s.id,
+        slug: s.slug,
+        name: s.name,
+        type: s.implementationType, // "PINE_SCRIPT" | "PYTHON"
+        instrument: s.instrument,
+        timeframe: s.timeframe,
+        winRate: s.metrics.winRate,
+        profitFactor: s.metrics.profitFactor,
+        netReturn: s.metrics.netReturn,
+        maxDrawdown: s.metrics.maxDrawdown,
+        enabled,
+        hasAccess,
+        hasPaid,
+        trialStatus: isTrialActive ? "ACTIVE" : isTrialExpired ? "EXPIRED" : "NOT_STARTED",
+        daysLeft,
+        expiryTime: userTrial?.expiryTime,
+        chartUrl: `/chart/${s.slug}`,
+        reportUrl: `/strategies/${s.slug}`,
+      };
+    });
 
     return NextResponse.json({
       success: true,
       preferences,
+      strategies: strategyAlerts,
       deliveries,
       destinationEmail: currentDestination,
       userEmail: user.email,
@@ -68,6 +133,22 @@ export async function PUT(request: NextRequest) {
     }
 
     const { strategyId, enabled, alertTypes, destinationEmail } = parsed.data;
+
+    // If enabling alerts on a strategy and user has no trial record yet, automatically start 7-day trial
+    if (enabled && strategyId !== "ALL") {
+      try {
+        const trials = await db.getUserTrials(user.id);
+        const hasExisting = trials.some(
+          (t) =>
+            t.strategyId.toUpperCase() === strategyId.toUpperCase() ||
+            t.strategyId.toLowerCase() === strategyId.toLowerCase()
+        );
+        if (!hasExisting) {
+          await db.startTrial(user.id, strategyId.toLowerCase());
+        }
+      } catch (_) {}
+    }
+
     const updated = await db.setAlertPreference(user.id, strategyId, enabled, alertTypes, destinationEmail);
 
     return NextResponse.json({

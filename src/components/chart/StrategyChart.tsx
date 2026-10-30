@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { ChartToolbar } from "./ChartToolbar";
 import { StrategyStatusPanel } from "./StrategyStatusPanel";
 import { StrategyChartContract } from "@/lib/strategy-execution";
@@ -38,6 +39,58 @@ export function StrategyChart({ strategyId }: Props) {
   const [panelOpen, setPanelOpen] = useState(true);
   const [showBoxes, setShowBoxes] = useState(true);
   const [loading, setLoading] = useState(true);
+
+  // Alert and Trial states
+  const [alertEnabled, setAlertEnabled] = useState(false);
+  const [trialStatus, setTrialStatus] = useState<string>("NOT_STARTED");
+  const [daysLeft, setDaysLeft] = useState<number>(0);
+  const [hasPaid, setHasPaid] = useState<boolean>(false);
+
+  // Load alert and trial status
+  useEffect(() => {
+    fetch("/api/me/alerts")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.strategies) {
+          const current = data.strategies.find(
+            (s: any) =>
+              s.id.toUpperCase() === strategyId.toUpperCase() ||
+              s.slug.toLowerCase() === strategyId.toLowerCase()
+          );
+          if (current) {
+            setAlertEnabled(Boolean(current.enabled));
+            setTrialStatus(current.trialStatus || "NOT_STARTED");
+            setDaysLeft(current.daysLeft || 0);
+            setHasPaid(Boolean(current.hasPaid));
+          }
+        }
+      })
+      .catch(() => {});
+  }, [strategyId]);
+
+  const handleToggleAlert = async () => {
+    const newEnabled = !alertEnabled;
+    try {
+      const res = await fetch("/api/me/alerts", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          strategyId,
+          enabled: newEnabled,
+          alertTypes: ["ENTRY", "EXIT", "STOP_LOSS", "TAKE_PROFIT"],
+        }),
+      });
+      if (res.ok) {
+        setAlertEnabled(newEnabled);
+        if (trialStatus === "NOT_STARTED") {
+          setTrialStatus("ACTIVE");
+          setDaysLeft(7);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to toggle alert in chart:", err);
+    }
+  };
 
   // Mount Vela workspace ONCE per strategy/timeframe — eliminates resetting every 5-10 sec
   useEffect(() => {
@@ -305,11 +358,49 @@ export function StrategyChart({ strategyId }: Props) {
         panelOpen={panelOpen}
         showBoxes={showBoxes}
         onToggleBoxes={() => setShowBoxes((prev) => !prev)}
+        alertEnabled={alertEnabled}
+        onToggleAlert={handleToggleAlert}
+        trialStatus={trialStatus}
+        daysLeft={daysLeft}
       />
 
       <div className="chart-main-body">
         {/* Main Chart Stage */}
-        <div className="chart-canvas-wrapper">
+        <div className="chart-canvas-wrapper" style={{ position: "relative" }}>
+
+          {trialStatus === "EXPIRED" && !hasPaid && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 100,
+                background: "rgba(5, 8, 17, 0.88)",
+                backdropFilter: "blur(10px)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 24,
+                textAlign: "center",
+              }}
+            >
+              <div style={{ fontSize: 44, marginBottom: 12 }}>🔒</div>
+              <h2 style={{ fontSize: 24, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>
+                7-Day Free Trial Concluded
+              </h2>
+              <p style={{ maxWidth: 480, color: "#94a3b8", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
+                Your 7-day evaluation period for <b>{contract?.name || strategyId}</b> has ended. Upgrade to StratMarket Pro to unlock continuous 24/7 autonomous VPS signals, candlestick streaming, and execution overlays.
+              </p>
+              <div style={{ display: "flex", gap: 12 }}>
+                <Link href="/pricing" className="pill action-btn" style={{ fontSize: 14, padding: "12px 28px", textDecoration: "none" }}>
+                  Upgrade to StratMarket Pro →
+                </Link>
+                <Link href="/dashboard" className="pill g sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none" }}>
+                  Back to Dashboard
+                </Link>
+              </div>
+            </div>
+          )}
 
           {loading && (
             <div className="chart-loading-overlay">

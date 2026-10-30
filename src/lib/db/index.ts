@@ -499,6 +499,14 @@ export const db = {
       throw new Error("TRIAL_ALREADY_USED");
     }
 
+    const mdb = await getMongoDb();
+    if (mdb) {
+      const existingTrial = await mdb.collection("trials").findOne({ userId, strategyId: strategy.id });
+      if (existingTrial) {
+        throw new Error("TRIAL_ALREADY_USED");
+      }
+    }
+
     // Server-enforced exact 7 days duration (7 * 24 * 60 * 60 * 1000 ms)
     const startTime = new Date();
     const expiryTime = new Date(startTime.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -530,23 +538,51 @@ export const db = {
       associatedEntitlementId: entitlementId,
     };
 
-    // Atomic storage
+    // Atomic storage in globalStore and MongoDB Atlas
     globalStore.entitlements.set(entitlementId, entitlement);
     globalStore.trials.set(trialKey, trial);
 
+    if (mdb) {
+      try {
+        await mdb.collection("entitlements").updateOne(
+          { id: entitlementId },
+          { $set: entitlement },
+          { upsert: true }
+        );
+        await mdb.collection("trials").updateOne(
+          { id: trialId },
+          { $set: trial },
+          { upsert: true }
+        );
+      } catch (e) {
+        console.warn("[MongoDB] Entitlement/trial persistence note:", e);
+      }
+    }
+
     // Default email alert preference enabled upon trial start
     const alertKey = `${userId}:${strategy.id}`;
+    const defaultAlert: AlertPreferenceRecord = {
+      id: "alt_" + Math.random().toString(36).substring(2, 11),
+      userId,
+      strategyId: strategy.id,
+      enabled: true,
+      alertTypes: ["ENTRY", "EXIT", "STOP_LOSS", "TAKE_PROFIT"],
+      verifiedDestination: user.email,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
     if (!globalStore.alerts.has(alertKey)) {
-      globalStore.alerts.set(alertKey, {
-        id: "alt_" + Math.random().toString(36).substring(2, 11),
-        userId,
-        strategyId: strategy.id,
-        enabled: true,
-        alertTypes: ["ENTRY", "EXIT"],
-        verifiedDestination: user.email,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      globalStore.alerts.set(alertKey, defaultAlert);
+      if (mdb) {
+        try {
+          await mdb.collection("alert_preferences").updateOne(
+            { userId, strategyId: strategy.id },
+            { $setOnInsert: defaultAlert },
+            { upsert: true }
+          );
+        } catch (_) {}
+      }
     }
 
     await this.createAuditEvent({
@@ -566,10 +602,32 @@ export const db = {
 
   async getUserTrials(userId: string): Promise<TrialRecord[]> {
     const now = new Date();
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        const docs = await mdb.collection("trials").find({ userId }).toArray();
+        if (docs.length > 0) {
+          const list: TrialRecord[] = docs.map((d: any) => ({
+            id: d.id || d._id?.toString(),
+            userId: d.userId,
+            strategyId: d.strategyId,
+            startTime: new Date(d.startTime),
+            expiryTime: new Date(d.expiryTime),
+            status: now > new Date(d.expiryTime) ? "EXPIRED" : (d.status || "ACTIVE"),
+            eligibilityResult: d.eligibilityResult,
+            associatedEntitlementId: d.associatedEntitlementId,
+          }));
+          list.forEach((t) => globalStore.trials.set(`${userId}:${t.strategyId}`, t));
+          return list;
+        }
+      } catch (e) {
+        console.warn("[MongoDB] getUserTrials fallback to memory:", e);
+      }
+    }
+
     const userTrials: TrialRecord[] = [];
     for (const t of globalStore.trials.values()) {
       if (t.userId === userId) {
-        // Enforce expiry state
         if (t.status === "ACTIVE" && now > t.expiryTime) {
           t.status = "EXPIRED";
         }
@@ -581,6 +639,31 @@ export const db = {
 
   async getUserEntitlements(userId: string): Promise<EntitlementRecord[]> {
     const now = new Date();
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        const docs = await mdb.collection("entitlements").find({ userId }).toArray();
+        if (docs.length > 0) {
+          const list: EntitlementRecord[] = docs.map((d: any) => ({
+            id: d.id || d._id?.toString(),
+            userId: d.userId,
+            strategyId: d.strategyId,
+            planId: d.planId || null,
+            entitlementSource: d.entitlementSource || "TRIAL",
+            startTime: new Date(d.startTime),
+            expiryTime: new Date(d.expiryTime),
+            status: now > new Date(d.expiryTime) ? "EXPIRED" : (d.status || "ACTIVE"),
+            entitlementType: d.entitlementType || "TRIAL",
+            createdAt: d.createdAt ? new Date(d.createdAt) : new Date(),
+          }));
+          list.forEach((e) => globalStore.entitlements.set(e.id, e));
+          return list;
+        }
+      } catch (e) {
+        console.warn("[MongoDB] getUserEntitlements fallback to memory:", e);
+      }
+    }
+
     const results: EntitlementRecord[] = [];
     for (const e of globalStore.entitlements.values()) {
       if (e.userId === userId) {
@@ -774,6 +857,29 @@ export const db = {
 
   // EMAIL ALERTS PREFERENCES
   async getUserAlertPreferences(userId: string): Promise<AlertPreferenceRecord[]> {
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        const docs = await mdb.collection("alert_preferences").find({ userId }).toArray();
+        if (docs.length > 0) {
+          const list: AlertPreferenceRecord[] = docs.map((d: any) => ({
+            id: d.id || d._id?.toString(),
+            userId: d.userId,
+            strategyId: d.strategyId,
+            enabled: Boolean(d.enabled),
+            alertTypes: d.alertTypes || ["ENTRY", "EXIT", "STOP_LOSS", "TAKE_PROFIT"],
+            verifiedDestination: d.verifiedDestination,
+            createdAt: d.createdAt ? new Date(d.createdAt) : new Date(),
+            updatedAt: d.updatedAt ? new Date(d.updatedAt) : new Date(),
+          }));
+          list.forEach((a) => globalStore.alerts.set(`${userId}:${a.strategyId}`, a));
+          return list;
+        }
+      } catch (e) {
+        console.warn("[MongoDB] getUserAlertPreferences fallback to memory:", e);
+      }
+    }
+
     const list: AlertPreferenceRecord[] = [];
     for (const a of globalStore.alerts.values()) {
       if (a.userId === userId) {
@@ -810,6 +916,20 @@ export const db = {
     };
 
     globalStore.alerts.set(key, record);
+
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        await mdb.collection("alert_preferences").updateOne(
+          { userId, strategyId },
+          { $set: record },
+          { upsert: true }
+        );
+      } catch (e) {
+        console.warn("[MongoDB] setAlertPreference persistence note:", e);
+      }
+    }
+
     return { ...record };
   },
 
@@ -828,6 +948,19 @@ export const db = {
           updatedAt: new Date(),
         });
         updatedCount++;
+      }
+    }
+
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        const res = await mdb.collection("alert_preferences").updateMany(
+          { userId },
+          { $set: { verifiedDestination: cleanEmail, updatedAt: new Date() } }
+        );
+        updatedCount = Math.max(updatedCount, res.modifiedCount);
+      } catch (e) {
+        console.warn("[MongoDB] updateAllUserAlertDestinations note:", e);
       }
     }
 

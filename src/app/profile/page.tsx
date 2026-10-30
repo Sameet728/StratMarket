@@ -46,9 +46,11 @@ interface UserProfile {
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [strategies, setStrategies] = useState<any[]>([]);
   const [trials, setTrials] = useState<Trial[]>([]);
   const [alerts, setAlerts] = useState<AlertPref[]>([]);
   const [deliveries, setDeliveries] = useState<EmailDelivery[]>([]);
+  const [profileTab, setProfileTab] = useState<"ALL" | "PINE" | "PYTHON">("ALL");
   const [signalEmail, setSignalEmail] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
   const [emailStatusMsg, setEmailStatusMsg] = useState<{ text: string; ok: boolean } | null>(null);
@@ -79,6 +81,7 @@ export default function ProfilePage() {
         const alertRes = await fetch("/api/me/alerts");
         const alertData = await alertRes.json();
         if (alertData.success) {
+          setStrategies(alertData.strategies || []);
           setAlerts(alertData.preferences || []);
           setDeliveries(alertData.deliveries || []);
           setSignalEmail(alertData.destinationEmail || meData.user.email);
@@ -170,6 +173,11 @@ export default function ProfilePage() {
         setAlerts((prev) =>
           prev.map((a) =>
             a.strategyId === strategyId ? { ...a, enabled: !currentEnabled } : a
+          )
+        );
+        setStrategies((prev) =>
+          prev.map((s) =>
+            s.id === strategyId || s.slug === strategyId ? { ...s, enabled: !currentEnabled } : s
           )
         );
       }
@@ -620,74 +628,161 @@ export default function ProfilePage() {
               </form>
 
               {/* Per-Strategy Alert Subscriptions */}
-              <div style={{ marginTop: 20 }}>
-                <h3 style={{ fontSize: 15, marginBottom: 10, fontWeight: 700 }}>
-                  Strategy Alert Preferences
-                </h3>
-                <p className="note" style={{ fontSize: 13, marginBottom: 14 }}>
-                  Toggle notifications for specific algorithmic strategies. Each alert includes Entry price, Stop Loss, and Take Profit targets.
-                </p>
+              <div style={{ marginTop: 24 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+                  <div>
+                    <h3 style={{ fontSize: 16, margin: 0, fontWeight: 700 }}>
+                      Strategy Alert Feeds &amp; Live Controls
+                    </h3>
+                    <p className="note" style={{ fontSize: 13, margin: "2px 0 0" }}>
+                      Toggle real-time notifications (Entry, TP, SL) and jump directly into live candlestick charts.
+                    </p>
+                  </div>
 
-                {alerts.length > 0 ? (
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button
+                      type="button"
+                      onClick={() => setProfileTab("ALL")}
+                      className={`pill ${profileTab === "ALL" ? "" : "g"} sm`}
+                      style={{ fontSize: 12 }}
+                    >
+                      All ({strategies.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProfileTab("PINE")}
+                      className={`pill ${profileTab === "PINE" ? "" : "g"} sm`}
+                      style={{
+                        fontSize: 12,
+                        color: profileTab === "PINE" ? "#4ade80" : undefined,
+                      }}
+                    >
+                      🌲 Pine ({strategies.filter((s) => s.type === "PINE_SCRIPT").length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProfileTab("PYTHON")}
+                      className={`pill ${profileTab === "PYTHON" ? "" : "g"} sm`}
+                      style={{
+                        fontSize: 12,
+                        color: profileTab === "PYTHON" ? "#fde047" : undefined,
+                      }}
+                    >
+                      🐍 Python ({strategies.filter((s) => s.type === "PYTHON").length})
+                    </button>
+                  </div>
+                </div>
+
+                {strategies.length > 0 ? (
                   <div style={{ display: "grid", gap: 10 }}>
-                    {alerts.map((a) => (
-                      <div
-                        key={a.id}
-                        style={{
-                          border: "1px solid var(--line)",
-                          borderRadius: 10,
-                          padding: "12px 16px",
-                          background: "rgba(255,255,255,0.015)",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          flexWrap: "wrap",
-                          gap: 10,
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: 14 }}>{a.strategyId}</div>
-                          <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>
-                            Delivering to: <code style={{ color: "#38bdf8" }}>{a.verifiedDestination || signalEmail}</code>
-                          </div>
-                        </div>
+                    {strategies
+                      .filter((s) =>
+                        profileTab === "ALL"
+                          ? true
+                          : profileTab === "PINE"
+                          ? s.type === "PINE_SCRIPT"
+                          : s.type === "PYTHON"
+                      )
+                      .map((s) => {
+                        const isPine = s.type === "PINE_SCRIPT";
+                        return (
+                          <div
+                            key={s.id}
+                            style={{
+                              border: s.enabled
+                                ? "1px solid rgba(16,185,129,0.35)"
+                                : "1px solid var(--line)",
+                              borderRadius: 10,
+                              padding: "14px 18px",
+                              background: s.enabled
+                                ? "linear-gradient(135deg, rgba(16,185,129,0.03) 0%, rgba(15,23,42,0.2) 100%)"
+                                : "rgba(255,255,255,0.015)",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              flexWrap: "wrap",
+                              gap: 12,
+                            }}
+                          >
+                            <div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    padding: "2px 7px",
+                                    borderRadius: 4,
+                                    background: isPine ? "rgba(76,199,154,0.15)" : "rgba(234,179,8,0.15)",
+                                    color: isPine ? "#4ade80" : "#fde047",
+                                  }}
+                                >
+                                  {isPine ? "🌲 PINE" : "🐍 PYTHON"}
+                                </span>
+                                <strong style={{ fontSize: 15 }}>{s.name}</strong>
+                                <span style={{ fontSize: 12, color: "var(--mut)" }}>
+                                  ({s.id} · {s.instrument} {s.timeframe})
+                                </span>
+                              </div>
+                              <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 4 }}>
+                                Delivering to: <code style={{ color: "#38bdf8" }}>{signalEmail}</code>
+                                {s.trialStatus === "ACTIVE" && (
+                                  <span style={{ color: "#10b981", marginLeft: 10 }}>
+                                    ● 7-Day Trial Active ({s.daysLeft}d left)
+                                  </span>
+                                )}
+                              </div>
+                            </div>
 
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <span
-                            style={{
-                              fontSize: 11,
-                              color: "var(--mut)",
-                              background: "rgba(255,255,255,0.04)",
-                              padding: "3px 8px",
-                              borderRadius: 6,
-                            }}
-                          >
-                            ENTRY · TP · SL
-                          </span>
-                          <button
-                            type="button"
-                            disabled={updatingAlert === a.strategyId}
-                            onClick={() => toggleAlert(a.strategyId, a.enabled)}
-                            style={{
-                              padding: "6px 14px",
-                              borderRadius: 20,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              border: a.enabled ? "1px solid rgba(16,185,129,0.4)" : "1px solid var(--line)",
-                              background: a.enabled ? "rgba(16,185,129,0.15)" : "transparent",
-                              color: a.enabled ? "#10b981" : "var(--mut)",
-                            }}
-                          >
-                            {a.enabled ? "● Alerts ON" : "○ Alerts Muted"}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <Link
+                                href={s.chartUrl}
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  padding: "6px 12px",
+                                  borderRadius: 8,
+                                  border: "1px solid rgba(56,189,248,0.3)",
+                                  background: "rgba(56,189,248,0.08)",
+                                  color: "#38bdf8",
+                                  textDecoration: "none",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                }}
+                              >
+                                <span>📈</span> Chart
+                              </Link>
+
+                              <button
+                                type="button"
+                                disabled={updatingAlert === s.id}
+                                onClick={() => toggleAlert(s.id, s.enabled)}
+                                style={{
+                                  padding: "7px 16px",
+                                  borderRadius: 20,
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                  border: s.enabled ? "1px solid rgba(16,185,129,0.5)" : "1px solid var(--line)",
+                                  background: s.enabled ? "rgba(16,185,129,0.2)" : "transparent",
+                                  color: s.enabled ? "#10b981" : "var(--mut)",
+                                  transition: "all 0.2s",
+                                }}
+                              >
+                                {updatingAlert === s.id
+                                  ? "Updating..."
+                                  : s.enabled
+                                  ? "● Alerts Active"
+                                  : "○ Turn ON"}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
                 ) : (
-                  <div style={{ fontSize: 13, color: "var(--mut)", padding: 12, border: "1px dashed var(--line)", borderRadius: 8 }}>
-                    Alert preferences auto-generate when you start a strategy trial or subscription.
+                  <div style={{ fontSize: 13, color: "var(--mut)", padding: 16, border: "1px dashed var(--line)", borderRadius: 8 }}>
+                    Loading strategy alert feeds...
                   </div>
                 )}
               </div>
