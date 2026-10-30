@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { hashPassword, signToken } from "@/lib/auth/session";
+import { sendWelcomeEmail } from "@/lib/email/resend";
 import { z } from "zod";
 
 const RegisterSchema = z.object({
@@ -40,6 +41,14 @@ export async function POST(request: NextRequest) {
       email,
       passwordHash,
       role: "CUSTOMER",
+    });
+
+    // Send Welcome Email asynchronously via Resend (elvariscapital.in)
+    sendWelcomeEmail({
+      to: user.email,
+      name: user.name,
+    }).catch((err) => {
+      console.error("[Email] Failed to send welcome email:", err);
     });
 
     const token = signToken({

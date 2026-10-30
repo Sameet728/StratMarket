@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyVpsSignature } from "@/lib/vps/security";
 import { db } from "@/lib/db";
+import { dispatchSignalAlertEmails } from "@/lib/email/resend";
 import { z } from "zod";
 
 const SignalPayloadSchema = z.object({
@@ -52,6 +53,25 @@ export async function POST(request: NextRequest) {
     // 3. Ingest signal with idempotency & notify entitled users
     try {
       const result = await db.ingestVpsSignal(parsed.data);
+
+      // 4. Trigger Resend Email Alerts to subscribers & operators asynchronously
+      const strategy = await db.getStrategyBySlug(parsed.data.strategyId);
+      const strategyName = strategy ? strategy.name : parsed.data.strategyId;
+
+      dispatchSignalAlertEmails({
+        strategyName,
+        strategyId: parsed.data.strategyId,
+        instrument: parsed.data.instrument,
+        timeframe: parsed.data.timeframe,
+        signalType: parsed.data.signalType,
+        direction: parsed.data.direction,
+        entryPrice: parsed.data.entryPrice,
+        stopLoss: parsed.data.stopLoss,
+        targetPrice: parsed.data.targetPrice,
+        sourceEventId: parsed.data.sourceEventId,
+      }).catch((err) => {
+        console.error("[Signal Email Dispatch Failed]:", err);
+      });
 
       return NextResponse.json({
         success: true,

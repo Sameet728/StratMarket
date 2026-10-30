@@ -35,10 +35,14 @@ export async function GET(request: NextRequest, { params }: Props) {
     // Execute strategy in private server environment
     const contract = strategyExecutionRunner.execute(strategy, candles);
 
+    // Fetch live signals stored in the database (ingested from 24x7 VPS runner)
+    const storedSignals = await db.getSignals(strategy.id, 50);
+
     return NextResponse.json({
       success: true,
       contract,
       candles,
+      storedSignals,
     });
   } catch (error: any) {
     if (error?.digest === "NEXT_PRERENDER_INTERRUPTED") {

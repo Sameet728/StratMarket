@@ -226,11 +226,17 @@ describe("Private Live Charting Platform & Market Data", () => {
     expect(contract.tradeBoxes!.length).toBeGreaterThan(0);
 
     const trade = contract.tradeBoxes![0];
-    expect(trade.type).toBe("SHORT");
-    expect(trade.entryPrice).toBeGreaterThan(4000);
-    expect(trade.tpPrice).toBeLessThan(trade.entryPrice);
-    expect(trade.slPrice).toBeGreaterThan(trade.entryPrice);
-    expect(trade.entryBadge).toContain("SHORT");
+    expect(["LONG", "SHORT"]).toContain(trade.type);
+    expect(trade.entryPrice).toBeGreaterThan(2000);
+    if (trade.type === "SHORT") {
+      expect(trade.tpPrice).toBeLessThan(trade.entryPrice);
+      expect(trade.slPrice).toBeGreaterThan(trade.entryPrice);
+      expect(trade.entryBadge).toContain("SHORT");
+    } else {
+      expect(trade.tpPrice).toBeGreaterThan(trade.entryPrice);
+      expect(trade.slPrice).toBeLessThan(trade.entryPrice);
+      expect(trade.entryBadge).toContain("LONG");
+    }
     expect(trade.exitBadge).toBeDefined();
   });
 

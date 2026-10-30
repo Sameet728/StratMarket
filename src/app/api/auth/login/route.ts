@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyPassword, signToken } from "@/lib/auth/session";
+import { sendLoginSecurityEmail } from "@/lib/email/resend";
 import { z } from "zod";
 
 const LoginSchema = z.object({
@@ -63,6 +64,19 @@ export async function POST(request: NextRequest) {
       entityType: "USER",
       entityId: user.id,
       details: JSON.stringify({ email: user.email, role: user.role }),
+    });
+
+    // Send Security Notification Email asynchronously via Resend (elvariscapital.in)
+    const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "Unknown IP";
+    const userAgent = request.headers.get("user-agent") || "Web Browser";
+    sendLoginSecurityEmail({
+      to: user.email,
+      name: user.name,
+      ip: clientIp.split(",")[0].trim(),
+      userAgent,
+      time: new Date().toUTCString(),
+    }).catch((err) => {
+      console.error("[Email] Failed to send login security email:", err);
     });
 
     const response = NextResponse.json({

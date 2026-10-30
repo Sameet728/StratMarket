@@ -1,122 +1,163 @@
-# StratMarket — Deployment, Setup & Architecture Guide
+# StratMarket — Deployment, Setup & Production Readiness Guide
 **Operated by:** Elvaris Capital ([https://elvariscapital.in](https://elvariscapital.in))  
-**Product Positioning:** The Marketplace for AI-Researched Trading Strategies  
+**Product Positioning:** The Quantitative Marketplace for Institutional Trading Strategies  
 
 ---
 
-## 1. System Architecture
+## 1. Production Architecture Overview
 
-StratMarket is architected into three distinct execution tiers:
+The system is decoupled into two independent production tiers:
 
 ```
-┌────────────────────────────────┐       ┌───────────────────────────────┐
-│     Next.js Web Marketplace    │       │     Elvaris Python VPS        │
-│   (App Router, Server Actions) │       │   (Linux execution runner)    │
-│  - Public Catalogue            │◄──────┼─── Authenticated HMAC Webhook │
-│  - Research Reports            │       │   - Ingests Live Signals      │
-│  - 7-Day Trial System          │       │   - Health / Heartbeats       │
-│  - User & Admin Dashboards     │       └───────────────────────────────┘
-└───────────────┬────────────────┘
-                │
-                ▼
-┌────────────────────────────────┐       ┌───────────────────────────────┐
-│     PostgreSQL Database        │       │  External Provider Adapters   │
-│  - Prisma ORM & Migrations     │       │  - Transactional Email        │
-│  - Immutable Strategy Versions │       │  - Payment Gateway (Stripe/RZ)│
-│  - Server-Enforced Trials      │       │  - Broker Vault (Encrypted)   │
-│  - Security Audit Trail        │       └───────────────────────────────┘
-└────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                        VERCEL (Next.js Application)                    │
+│                                                                        │
+│  - Public Marketplace & Strategy Catalogue (/market, /strategies/[id]) │
+│  - Interactive Live TradingView Charts (/chart/[id])                   │
+│  - Authentication (Signup, Login, Sessions, Secure HTTP-only cookies)  │
+│  - 7-Day Server-Enforced Trial Engine                                  │
+│  - Signal Ingest Webhook (POST /api/internal/signals with HMAC)        │
+│  - Transactional Resend Emails (Domain: elvariscapital.in)             │
+│  - Standalone VPS Monitor Dashboard (/vps-dashboard.html)              │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    │ HTTPS Webhook (POST /api/internal/signals)
+                                    │ HMAC SHA-256 Signature Verified
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                        CLOUD VPS (vps/ Folder)                         │
+│                                                                        │
+│  - Runs 24x7 autonomously on Linux (Ubuntu/Debian) or Windows VPS     │
+│  - Pine Script Engine (@mathieuc/tradingview live candle evaluator)    │
+│  - Python MT5 Engine (MetaTrader 5 live ticks & terminal automation)   │
+│  - Automated HMAC SHA-256 Signer & HTTP Dispatcher                     │
+│  - Managed via PM2 (ecosystem.config.js), Systemd, or Docker           │
+└────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                       MONGODB ATLAS CLUSTER                            │
+│                                                                        │
+│  - 3-Node Replica Set: ac-ozckia6-shard-00-00.syikpx1.mongodb.net      │
+│  - Collections: users, strategies, trials, signals, auditEvents        │
+│  - Unique Idempotency Indexes on sourceEventId and email               │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Environment Variables Configuration
+## 2. Part 1: Vercel Deployment (Next.js Marketplace)
 
-Copy `.env.example` to `.env.local` for local execution:
-```bash
-cp .env.example .env.local
-```
+Deploying the root Next.js repository to **Vercel**:
 
-### Critical Variables:
-| Variable | Description | Default / Example |
+### Step 1: Connect Repository to Vercel
+1. Log into your [Vercel Dashboard](https://vercel.com).
+2. Click **Add New** -> **Project** and select your `StratMarket` repository.
+3. Framework Preset: **Next.js** (automatically detected).
+4. Root Directory: `./` (leave default).
+
+### Step 2: Configure Environment Variables in Vercel
+Under the **Environment Variables** tab, add the following variables:
+
+| Variable | Recommended Production Value | Description |
 | :--- | :--- | :--- |
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/stratmarket?schema=public` |
-| `JWT_SECRET` | 32+ character HMAC key for session tokens | Random base64 string |
-| `VPS_SHARED_SECRET` | Secret key shared with Elvaris Python VPS | Random hex string |
-| `VPS_API_ENDPOINT` | URL of VPS execution engine | `https://vps.elvariscapital.in/api/v1` |
-| `EMAIL_PROVIDER` | Transactional email provider | `console` (dev) or `resend` (prod) |
-| `PAYMENT_PROVIDER` | Payment gateway | `stripe` or `razorpay` |
-| `CREDENTIAL_VAULT_KEY` | AES-256-GCM key for broker credential storage | 32-byte secret |
+| `MONGODB_URI` | `mongodb://sameetpisal_db_user:0op4uoeZpcVTooaP@ac-ozckia6-shard-00-00.syikpx1.mongodb.net:27017,ac-ozckia6-shard-00-01.syikpx1.mongodb.net:27017,ac-ozckia6-shard-00-02.syikpx1.mongodb.net:27017/stratmarket?ssl=true&replicaSet=atlas-11286g-shard-0&authSource=admin` | Live MongoDB Atlas connection string |
+| `MONGODB_DB_NAME` | `stratmarket` | Database name |
+| `JWT_SECRET` | `stratmarket-dev-jwt-super-secret-key-2026-secure` | 32+ character HMAC secret for user sessions |
+| `VPS_SHARED_SECRET` | `stratmarket-dev-vps-hmac-shared-secret-key-2026` | 32+ character secret shared with VPS dispatcher |
+| `EMAIL_PROVIDER` | `resend` | Enables Resend email dispatch |
+| `RESEND_API_KEY` | `re_... (Configured from Resend Dashboard)` | Resend API key |
+| `EMAIL_FROM` | `StratMarket Alerts <alerts@elvariscapital.in>` | Verified domain sender |
+| `SIGNAL_ALERT_RECIPIENT` | `sameetpisal@gmail.com` | Operator/Admin email for real-time signal alerts |
+| `SESSION_COOKIE_NAME` | `stratmarket_session` | Session cookie identifier |
+| `SESSION_MAX_AGE_SECONDS` | `604800` | Session lifetime (7 days) |
+
+### Step 3: Deploy
+- Click **Deploy**.
+- Next.js will build with zero errors (`npm run build` generates 72 optimized static/dynamic routes).
 
 ---
 
-## 3. Local Development Setup
+## 3. Part 2: VPS Deployment (`vps/` Folder)
 
-### Step 1: Install Dependencies
+The `vps/` folder is designed to run 24x7 on any cloud VPS (Ubuntu 22.04 / 24.04 LTS or Windows Server).
+
+### Prerequisites on VPS:
 ```bash
-npm install
+# Ubuntu / Debian:
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs python3 python3-pip
+sudo npm install -g pm2 tsx
 ```
 
-### Step 2: Database Setup & Prisma Client Generation
-```bash
-npx prisma generate
-```
-*Note: If PostgreSQL is running locally, apply migrations with `npx prisma migrate dev`.*
+### Setup Steps on VPS:
+1. Copy the `vps/` directory to `/opt/stratmarket-vps/` on your VPS.
+2. Install dependencies:
+   ```bash
+   cd /opt/stratmarket-vps
+   npm install
+   pip3 install -r requirements.txt
+   ```
+3. Edit `vps/config.json` with your production Vercel URL:
+   ```json
+   {
+     "apiEndpoint": "https://your-vercel-domain.vercel.app/api/internal/signals",
+     "healthEndpoint": "https://your-vercel-domain.vercel.app/api/internal/health",
+     "sharedSecret": "stratmarket-dev-vps-hmac-shared-secret-key-2026",
+     "pollingIntervalMs": 15000
+   }
+   ```
+4. Start 24x7 service using PM2:
+   ```bash
+   pm2 start ecosystem.config.js
+   pm2 save
+   pm2 startup
+   ```
+5. Monitor live VPS logs:
+   ```bash
+   pm2 logs stratmarket-vps
+   ```
 
-### Step 3: Run the Test Suite
+### Alternatively with Docker:
 ```bash
-npm run test
+cd vps
+docker compose up -d --build
 ```
-Runs 20 unit and integration tests covering authentication, 7-day trials, marketplace filtering, VPS HMAC verification, and user isolation.
-
-### Step 4: Run the Development Server
-```bash
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## 4. Pre-configured Evaluation Accounts
+## 4. Part 3: Transactional Resend Email Integration
 
-StratMarket includes pre-seeded evaluation accounts for seamless local evaluation:
+Emails are sent exclusively from the verified domain: **`elvariscapital.in`**.
 
-- **Customer / Trader Account:**
-  - **Email:** `trader@elvariscapital.in`
-  - **Password:** `Elvaris2026!`
-  - **Access:** Browse strategies, start 7-day trials, view countdown, configure alert preferences, connect paper simulator.
+### Verified Endpoints & Events:
+1. **User Signup / Registration:**
+   - Triggered at: `POST /api/auth/register`
+   - Sender: `StratMarket <alerts@elvariscapital.in>`
+   - Template: Responsive dark-mode HTML welcome letter, features summary, and link to strategy catalog.
 
-- **Administrator Account:**
-  - **Email:** `admin@elvariscapital.in`
-  - **Password:** `Elvaris2026!`
-  - **Access:** Dedicated `/admin` console, toggle strategy publication status, view VPS runtime health, inspect incoming signal logs, audit trails.
+2. **User Login / Security Notification:**
+   - Triggered at: `POST /api/auth/login`
+   - Sender: `StratMarket <alerts@elvariscapital.in>`
+   - Template: Security alert containing exact timestamp (UTC), client IP address, and browser User-Agent.
+
+3. **Real-Time Trade Signal Generated:**
+   - Triggered at: `POST /api/internal/signals` (dispatched by 24x7 VPS)
+   - Sender: `StratMarket Alerts <alerts@elvariscapital.in>`
+   - Template: Real-time trade badge (BUY/LONG or SELL/SHORT), pair name (e.g. XAUUSD), timeframe, Entry Price, Take Profit (TP), Stop Loss (SL), and strategy performance link.
 
 ---
 
-## 5. Deployment Options
+## 5. Single-Page VPS Control Center
 
-### Vercel / Cloudflare Pages / AWS Amplify
-1. Connect GitHub repository.
-2. Configure environment variables matching `.env.example`.
-3. Build command: `npm run build`.
-4. Output directory: default (`.next`).
+A unified standalone HTML dashboard is accessible at:
+- **Local:** [http://localhost:3000/vps-dashboard.html](http://localhost:3000/vps-dashboard.html)
+- **Production:** `https://your-domain.vercel.app/vps-dashboard.html`
+- **File location:** `vps/dashboard.html` and `public/vps-dashboard.html`
 
-### Docker Deployment
-A standard multi-stage `Dockerfile`:
-```dockerfile
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-EXPOSE 3000
-CMD ["node", "server.js"]
-```
+Features:
+- Live CPU & RAM gauges
+- Pine Script 4-Engine cluster status
+- Python MT5 2-Engine cluster status
+- One-click Test Signal Dispatcher with HMAC SHA-256 calculation
+- Filterable live telemetry terminal logs

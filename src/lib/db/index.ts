@@ -1,7 +1,8 @@
 // StratMarket Unified Database & Repository Service
-// Supports PostgreSQL via Prisma with self-contained fallback repository for seamless development and testing.
+// Supports MongoDB (via native driver/Prisma) with self-contained fallback repository for seamless development and testing.
 
 import { INITIAL_STRATEGIES, INITIAL_PLANS, StrategySeedItem, getStrategySortOrder } from "./seed-data";
+import { getMongoDb, isMongoActive } from "./mongodb";
 import bcrypt from "bcryptjs";
 
 export interface UserRecord {
@@ -246,6 +247,23 @@ export const db = {
   // USER OPERATIONS
   async getUserByEmail(email: string): Promise<UserRecord | null> {
     const normalized = email.toLowerCase().trim();
+    const mdb = await getMongoDb();
+    if (mdb) {
+      const doc = await mdb.collection("users").findOne({ email: normalized });
+      if (doc) {
+        return {
+          id: doc.id || doc._id?.toString(),
+          name: doc.name,
+          email: doc.email,
+          passwordHash: doc.passwordHash,
+          role: doc.role,
+          accountStatus: doc.accountStatus,
+          emailVerified: doc.emailVerified,
+          createdAt: new Date(doc.createdAt),
+          updatedAt: new Date(doc.updatedAt),
+        };
+      }
+    }
     for (const u of globalStore.users.values()) {
       if (u.email.toLowerCase() === normalized) return { ...u };
     }
@@ -253,6 +271,23 @@ export const db = {
   },
 
   async getUserById(id: string): Promise<UserRecord | null> {
+    const mdb = await getMongoDb();
+    if (mdb) {
+      const doc = await mdb.collection("users").findOne({ id });
+      if (doc) {
+        return {
+          id: doc.id || doc._id?.toString(),
+          name: doc.name,
+          email: doc.email,
+          passwordHash: doc.passwordHash,
+          role: doc.role,
+          accountStatus: doc.accountStatus,
+          emailVerified: doc.emailVerified,
+          createdAt: new Date(doc.createdAt),
+          updatedAt: new Date(doc.updatedAt),
+        };
+      }
+    }
     const u = globalStore.users.get(id);
     return u ? { ...u } : null;
   },
@@ -281,6 +316,11 @@ export const db = {
       updatedAt: new Date(),
     };
 
+    const mdb = await getMongoDb();
+    if (mdb) {
+      await mdb.collection("users").insertOne({ ...newUser });
+    }
+
     globalStore.users.set(newUser.id, newUser);
     await this.createAuditEvent({
       userId: newUser.id,
@@ -294,6 +334,23 @@ export const db = {
   },
 
   async getAllUsers(): Promise<UserRecord[]> {
+    const mdb = await getMongoDb();
+    if (mdb) {
+      const docs = await mdb.collection("users").find({}).toArray();
+      if (docs.length > 0) {
+        return docs.map((doc) => ({
+          id: doc.id || doc._id?.toString(),
+          name: doc.name,
+          email: doc.email,
+          passwordHash: doc.passwordHash,
+          role: doc.role,
+          accountStatus: doc.accountStatus,
+          emailVerified: doc.emailVerified,
+          createdAt: new Date(doc.createdAt),
+          updatedAt: new Date(doc.updatedAt),
+        }));
+      }
+    }
     const list = Array.from(globalStore.users.values()) as UserRecord[];
     return list.map((u) => ({ ...u }));
   },
@@ -573,6 +630,37 @@ export const db = {
 
   // SIGNALS & PYTHON VPS INTEGRATION
   async getSignals(strategyId?: string, limit: number = 50): Promise<SignalRecord[]> {
+    const mdb = await getMongoDb();
+    if (mdb) {
+      const filter: any = {};
+      if (strategyId) filter.strategyId = strategyId;
+      const docs = await mdb
+        .collection("signals")
+        .find(filter)
+        .sort({ timestamp: -1 })
+        .limit(limit)
+        .toArray();
+
+      if (docs.length > 0) {
+        return docs.map((d) => ({
+          id: d.id || d._id?.toString(),
+          strategyId: d.strategyId,
+          strategyVersion: d.strategyVersion,
+          instrument: d.instrument,
+          timeframe: d.timeframe,
+          signalType: d.signalType,
+          direction: d.direction,
+          timestamp: new Date(d.timestamp),
+          entryPrice: d.entryPrice,
+          stopLoss: d.stopLoss,
+          targetPrice: d.targetPrice,
+          signalProvenance: d.signalProvenance,
+          sourceEventId: d.sourceEventId,
+          status: d.status,
+        })) as SignalRecord[];
+      }
+    }
+
     let list = Array.from(globalStore.signals.values()) as SignalRecord[];
     if (strategyId) {
       list = list.filter((s) => s.strategyId === strategyId);
@@ -595,7 +683,16 @@ export const db = {
     targetPrice?: number;
     signalProvenance?: string;
   }): Promise<{ signal: SignalRecord; notifiedUsersCount: number }> {
+    const mdb = await getMongoDb();
+
     // 1. Idempotency Check
+    if (mdb) {
+      const existing = await mdb.collection("signals").findOne({ sourceEventId: payload.sourceEventId });
+      if (existing) {
+        throw new Error("DUPLICATE_SOURCE_EVENT_ID");
+      }
+    }
+
     for (const existing of globalStore.signals.values()) {
       if (existing.sourceEventId === payload.sourceEventId) {
         throw new Error("DUPLICATE_SOURCE_EVENT_ID");
@@ -625,6 +722,10 @@ export const db = {
       sourceEventId: payload.sourceEventId,
       status: "PROCESSED",
     };
+
+    if (mdb) {
+      await mdb.collection("signals").insertOne({ ...newSignal });
+    }
 
     globalStore.signals.set(newSignal.id, newSignal);
 
@@ -824,6 +925,7 @@ export const db = {
     return {
       vpsEndpoint: process.env.VPS_API_ENDPOINT || "https://vps.elvariscapital.in/api/v1",
       status: "CONFIGURED_AWAITING_VPS_HEARTBEAT",
+      databaseProvider: isMongoActive() ? "MongoDB (Active)" : "MongoDB (Resilient In-Memory Fallback)",
       isMockMode: true,
       lastSignalReceived: latestSignal ? latestSignal.timestamp : null,
       lastSignalAgeMinutes: lastSignalAgeMs ? Math.round(lastSignalAgeMs / (1000 * 60)) : null,

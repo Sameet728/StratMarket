@@ -1,0 +1,17 @@
+[Unit]
+Description=StratMarket 24x7 VPS Strategy Runner Service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/stratmarket
+ExecStart=/usr/bin/npx tsx vps/runner.ts
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=VPS_API_ENDPOINT=https://stratmarket.elvariscapital.in/api/internal/signals
+Environment=VPS_SHARED_SECRET=stratmarket-dev-vps-hmac-shared-secret-key-2026
+
+[Install]
+WantedBy=multi-user.target

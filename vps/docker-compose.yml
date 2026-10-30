@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  vps-runner:
+    build:
+      context: ..
+      dockerfile: vps/Dockerfile
+    container_name: stratmarket-vps-runner
+    restart: always
+    environment:
+      - VPS_API_ENDPOINT=http://host.docker.internal:3000/api/internal/signals
+      - VPS_SHARED_SECRET=stratmarket-dev-vps-hmac-shared-secret-key-2026
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
