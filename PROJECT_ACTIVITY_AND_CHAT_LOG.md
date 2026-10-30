@@ -472,4 +472,23 @@ All 3 sample emails were successfully transmitted and delivered via Resend from 
 
 ---
 
+### Session Update (23:00 - 23:02): Vercel Deployment Architecture & Exclusion of VPS Daemon
+
+#### User Query:
+> *"can this both also run here ?"* (with Vercel Import screenshot showing `vps (Python)` and `app (Next.js)`)
+
+#### Architectural Explanation & Actions:
+1. **Why `vps` Cannot Run on Vercel:**
+   - **Vercel is Serverless:** It executes stateless functions that sleep/terminate after an HTTP request finishes (max duration: 15–60s).
+   - **VPS is a 24x7 Continuous Daemon:** It runs an infinite polling loop every 15 seconds to evaluate Pine Script and MetaTrader 5 (MT5) indicators and dispatch real-time signals. Long-running background processes and MT5 terminal IPC cannot run inside Vercel serverless containers.
+   - **Correct Placement:**
+     - **Vercel:** Runs the `app (Next.js)` web marketplace, user authentication, interactive charts, and Resend email alerts.
+     - **VPS (Cloud Linux/Windows):** Runs the `vps/` autonomous execution daemon 24 hours a day, 7 days a week.
+2. **Immediate Action on Vercel Screen:**
+   - On the Vercel import screen, click **`Import single project ->`** directly next to **`app (Next.js /)`**.
+3. **Repository Improvement:**
+   - Created and pushed **[.vercelignore](file:///c:/Users/samee/Desktop/StratMarket/StratMarket/.vercelignore)** containing `vps/`, `MT5_Single_Digit_Ensembles/`, and `scripts/` so Vercel exclusively builds the Next.js web application without multi-service confusion.
+
+---
+
 *(This document is continuously updated with all user queries, code changes, architecture details, and execution logs).*
