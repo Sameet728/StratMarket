@@ -162,7 +162,7 @@ class PythonMT5Runner:
         # 4. Resilient institutional fallback provider (if offline)
         now = int(time.time() * 1000)
         interval_ms = 5 * 60 * 1000
-        base_price = 2740.0
+        base_price = 3880.0
         bars = []
         for i in range(count):
             t = now - (count - i) * interval_ms
