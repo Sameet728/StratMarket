@@ -491,4 +491,33 @@ All 3 sample emails were successfully transmitted and delivered via Resend from 
 
 ---
 
+### Session Update (23:04 - 23:06): Vercel Build Fix (.vercelignore Leading Slash)
+
+#### Error Observed in Vercel Log:
+```text
+Error: Turbopack build failed with 1 error:
+./src/app/api/internal/signals/route.ts:2:1
+Error: Module not found: Can't resolve '@/lib/vps/security'
+```
+
+#### Cause & Root Analysis:
+- In `.vercelignore`, writing `vps/` without a leading slash matched any directory named `vps` anywhere in the project, which inadvertently stripped the Next.js API security module `src/lib/vps/security.ts`.
+
+#### Resolution:
+- Updated **[.vercelignore](file:///c:/Users/samee/Desktop/StratMarket/StratMarket/.vercelignore)** to:
+  ```gitignore
+  # Only ignore root level background directories
+  /vps/
+  /MT5_Single_Digit_Ensembles/
+  /scripts/
+
+  # Explicitly ensure all src/ files and subdirectories are never ignored
+  !src/
+  !src/**
+  ```
+- Tested local build: `npm run build` completed in 1.3s with 72 pages successfully generated.
+- Pushed fix directly to GitHub branch `main`.
+
+---
+
 *(This document is continuously updated with all user queries, code changes, architecture details, and execution logs).*

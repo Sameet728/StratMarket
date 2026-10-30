@@ -1,4 +1,8 @@
-# Ignore non-Next.js directories during Vercel deployment
-vps/
-MT5_Single_Digit_Ensembles/
-scripts/
+# Only ignore root level background directories
+/vps/
+/MT5_Single_Digit_Ensembles/
+/scripts/
+
+# Explicitly ensure all src/ files and subdirectories are never ignored
+!src/
+!src/**
