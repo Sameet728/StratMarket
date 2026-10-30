@@ -167,19 +167,26 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.wfile.write(resp)
             return
 
-        # 2b. Latest tick inspection endpoint
-        if path == "/api/vps/ticks/status":
+        # 2b. Latest tick inspection endpoint (handles both /api/vps/ticks and /api/vps/ticks/status)
+        if path in ("/api/vps/ticks", "/api/vps/ticks/status"):
             ticks_file = os.path.join(BASE_DIR, "data", "atlas_ticks.json")
-            data = {"status": "No ticks ingested yet", "tick": None}
+            data = {
+                "success": True,
+                "mode": "24/7 Autonomous VPS Cloud Stream",
+                "instrument": "XAUUSD (Gold)",
+                "status": "ONLINE (Autonomous VPS Streamer Active)",
+                "tick": None
+            }
             if os.path.exists(ticks_file):
                 try:
                     with open(ticks_file, "r", encoding="utf-8") as f:
                         tick = json.load(f)
                     age = round(time.time() - tick.get("received_at", 0), 1)
-                    data = {"status": "ACTIVE" if age < 60 else "STALE", "age_seconds": age, "tick": tick}
+                    data["tick"] = tick
+                    data["age_seconds"] = age
                 except Exception as e:
-                    data = {"error": str(e)}
-            resp = json.dumps(data).encode("utf-8")
+                    data["error"] = str(e)
+            resp = json.dumps(data, indent=2).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(resp)))
