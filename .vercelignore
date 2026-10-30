@@ -1,0 +1,4 @@
+# Ignore non-Next.js directories during Vercel deployment
+vps/
+MT5_Single_Digit_Ensembles/
+scripts/
