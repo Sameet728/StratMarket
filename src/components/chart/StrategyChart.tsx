@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { ChartToolbar } from "./ChartToolbar";
 import { StrategyStatusPanel } from "./StrategyStatusPanel";
@@ -23,9 +23,21 @@ interface StoredSignal {
 
 interface Props {
   strategyId: string;
+  initialUser?: { id: string; name: string; email: string };
+  initialHasAccess?: boolean;
+  initialTrialStatus?: string;
+  initialDaysLeft?: number;
+  initialHasPaid?: boolean;
 }
 
-export function StrategyChart({ strategyId }: Props) {
+export function StrategyChart({
+  strategyId,
+  initialUser,
+  initialHasAccess = false,
+  initialTrialStatus = "NOT_STARTED",
+  initialDaysLeft = 0,
+  initialHasPaid = false,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const workspaceRef = useRef<any>(null);
   const mountedKeyRef = useRef<string>("");
@@ -40,13 +52,21 @@ export function StrategyChart({ strategyId }: Props) {
   const [showBoxes, setShowBoxes] = useState(true);
   const [loading, setLoading] = useState(true);
 
-  // Alert and Trial states
+  // Entitlement & Trial states
+  const [trialStatus, setTrialStatus] = useState<string>(initialTrialStatus);
+  const [daysLeft, setDaysLeft] = useState<number>(initialDaysLeft);
+  const [hasPaid, setHasPaid] = useState<boolean>(initialHasPaid);
   const [alertEnabled, setAlertEnabled] = useState(false);
-  const [trialStatus, setTrialStatus] = useState<string>("NOT_STARTED");
-  const [daysLeft, setDaysLeft] = useState<number>(0);
-  const [hasPaid, setHasPaid] = useState<boolean>(false);
+  const [activatingTrial, setActivatingTrial] = useState(false);
+  const [paywallType, setPaywallType] = useState<"NONE" | "SIGNIN" | "TRIAL_REQUIRED" | "EXPIRED">(
+    initialTrialStatus === "EXPIRED" && !initialHasPaid
+      ? "EXPIRED"
+      : initialTrialStatus === "NOT_STARTED" && !initialHasPaid && !initialHasAccess
+      ? "TRIAL_REQUIRED"
+      : "NONE"
+  );
 
-  // Load alert and trial status
+  // Load alert and trial status from backend
   useEffect(() => {
     fetch("/api/me/alerts")
       .then((res) => res.json())
@@ -62,11 +82,44 @@ export function StrategyChart({ strategyId }: Props) {
             setTrialStatus(current.trialStatus || "NOT_STARTED");
             setDaysLeft(current.daysLeft || 0);
             setHasPaid(Boolean(current.hasPaid));
+            if (current.hasPaid || current.trialStatus === "ACTIVE") {
+              setPaywallType("NONE");
+            } else if (current.trialStatus === "EXPIRED") {
+              setPaywallType("EXPIRED");
+            } else if (current.trialStatus === "NOT_STARTED") {
+              setPaywallType("TRIAL_REQUIRED");
+            }
           }
         }
       })
       .catch(() => {});
   }, [strategyId]);
+
+  // Activate 7-Day Free Trial instantly from paywall
+  const handleStartTrial = async () => {
+    setActivatingTrial(true);
+    try {
+      const res = await fetch(`/api/strategies/${strategyId.toLowerCase()}/trial`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTrialStatus("ACTIVE");
+        setDaysLeft(7);
+        setPaywallType("NONE");
+        setAlertEnabled(true);
+        // Force workspace reload
+        mountedKeyRef.current = "";
+        setTimeframe((tf) => tf);
+      } else {
+        alert(data.error || "Failed to start 7-day trial.");
+      }
+    } catch {
+      alert("Network error activating 7-day trial. Please try again.");
+    } finally {
+      setActivatingTrial(false);
+    }
+  };
 
   const handleToggleAlert = async () => {
     const newEnabled = !alertEnabled;
@@ -85,6 +138,12 @@ export function StrategyChart({ strategyId }: Props) {
         if (trialStatus === "NOT_STARTED") {
           setTrialStatus("ACTIVE");
           setDaysLeft(7);
+          setPaywallType("NONE");
+        }
+      } else {
+        const data = await res.json();
+        if (data.code === "TRIAL_EXPIRED") {
+          setPaywallType("EXPIRED");
         }
       }
     } catch (err) {
@@ -92,14 +151,14 @@ export function StrategyChart({ strategyId }: Props) {
     }
   };
 
-  // Mount Vela workspace ONCE per strategy/timeframe — eliminates resetting every 5-10 sec
+  // Mount Vela workspace ONCE per strategy/timeframe
   useEffect(() => {
     let disposed = false;
 
     async function loadAndMount() {
       const key = `${strategyId}-${timeframe}`;
       if (mountedKeyRef.current === key && workspaceRef.current) {
-        return; // Already initialized for this strategy & timeframe
+        return;
       }
 
       try {
@@ -108,6 +167,28 @@ export function StrategyChart({ strategyId }: Props) {
 
         // Fetch maximum 5,000 bars and strategy execution contract
         const res = await fetch(`/api/chart/${strategyId}/series?count=5000&timeframe=${timeframe}`);
+        
+        // Handle 401 Unauthorized
+        if (res.status === 401) {
+          setPaywallType("SIGNIN");
+          setLoading(false);
+          return;
+        }
+
+        // Handle 403 Forbidden (Trial Required or Trial Expired)
+        if (res.status === 403) {
+          const errData = await res.json().catch(() => ({}));
+          if (errData.code === "TRIAL_EXPIRED" || errData.paywallType === "UPGRADE_REQUIRED") {
+            setPaywallType("EXPIRED");
+            setTrialStatus("EXPIRED");
+          } else {
+            setPaywallType("TRIAL_REQUIRED");
+            setTrialStatus("NOT_STARTED");
+          }
+          setLoading(false);
+          return;
+        }
+
         const data = await res.json();
 
         if (!data.success) {
@@ -120,6 +201,7 @@ export function StrategyChart({ strategyId }: Props) {
         setCandles(data.candles || []);
         setStoredSignals(data.storedSignals || []);
         setStatus("LIVE");
+        setPaywallType("NONE");
 
         // Clean up prior instance if switching timeframe/strategy
         if (workspaceRef.current) {
@@ -139,14 +221,14 @@ export function StrategyChart({ strategyId }: Props) {
 
         // Initialize pure candlestick chart: left charting tools enabled, indicators disabled
         const ws = new VelaWorkspace(containerRef.current, {
-          layout: false, // Clean single-chart mode
+          layout: false,
           theme: "dark",
           symbol: data.contract?.symbol || "XAUUSD",
           timeframe: timeframe,
-          live: false, // Prevents mock interval resets
-          volume: false, // Clean display without distracting volume columns
-          drawingToolbar: true, // Left charting & drawing tools enabled
-          indicatorPicker: false, // Prevents user from adding arbitrary indicators
+          live: false,
+          volume: false,
+          drawingToolbar: true,
+          indicatorPicker: false,
           cells: {
             c1: {
               symbol: data.contract?.symbol || "XAUUSD",
@@ -175,8 +257,6 @@ export function StrategyChart({ strategyId }: Props) {
         obs.observe(containerRef.current, { childList: true, subtree: true });
 
         // Plot authentic Long/Short Position Tool boxes with exact Entry, SL, and TP prices
-        // All drawings are permanently locked (locked: true) so they cannot be moved, dragged, or altered
-        // Exit callout (TP HIT / SL HIT) removed per user instruction
         if (data.contract?.tradeBoxes && ws.chart?.drawings) {
           const lockDrawing = (d: any) => {
             if (!d) return;
@@ -301,17 +381,19 @@ export function StrategyChart({ strategyId }: Props) {
                 },
               });
               lockDrawing(d7);
-            } catch (drawingErr) {
-              console.warn("[StrategyChart] Error plotting trade setup:", drawingErr);
-            }
+            } catch (_) {}
           }
         }
       } catch (err: any) {
-        console.error("[StrategyChart] Data load error:", err);
-        setError(err?.message || "Failed to load market data");
-        setStatus("ERROR");
+        console.error("Vela mount error:", err);
+        if (!disposed) {
+          setError(err.message || "Failed to load TradingView chart series");
+          setStatus("ERROR");
+        }
       } finally {
-        setLoading(false);
+        if (!disposed) {
+          setLoading(false);
+        }
       }
     }
 
@@ -319,12 +401,6 @@ export function StrategyChart({ strategyId }: Props) {
 
     return () => {
       disposed = true;
-    };
-  }, [strategyId, timeframe]);
-
-  // Teardown on unmount
-  useEffect(() => {
-    return () => {
       if (workspaceRef.current) {
         try {
           workspaceRef.current.destroy();
@@ -332,16 +408,19 @@ export function StrategyChart({ strategyId }: Props) {
         workspaceRef.current = null;
       }
     };
-  }, []);
+  }, [strategyId, timeframe]);
 
-  const handleTimeframeChange = (newTf: string) => {
-    setTimeframe(newTf);
+  const handleTimeframeChange = (tf: string) => {
+    const clean = tf.replace("M", "").toLowerCase();
+    setTimeframe(clean);
   };
 
   const handleRetry = () => {
     mountedKeyRef.current = "";
     setTimeframe((tf) => tf);
   };
+
+  const isLocked = paywallType !== "NONE";
 
   return (
     <div className="chart-layout-root">
@@ -367,15 +446,146 @@ export function StrategyChart({ strategyId }: Props) {
       <div className="chart-main-body">
         {/* Main Chart Stage */}
         <div className="chart-canvas-wrapper" style={{ position: "relative" }}>
-
-          {trialStatus === "EXPIRED" && !hasPaid && (
+          
+          {/* PAYWALL 1: Authentication Required */}
+          {paywallType === "SIGNIN" && (
             <div
               style={{
                 position: "absolute",
                 inset: 0,
                 zIndex: 100,
-                background: "rgba(5, 8, 17, 0.88)",
-                backdropFilter: "blur(10px)",
+                background: "rgba(5, 8, 17, 0.94)",
+                backdropFilter: "blur(12px)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 24,
+                textAlign: "center",
+              }}
+            >
+              <div style={{ fontSize: 44, marginBottom: 12 }}>🔒</div>
+              <div
+                style={{
+                  display: "inline-block",
+                  padding: "4px 12px",
+                  borderRadius: 20,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#d4af37",
+                  border: "1px solid rgba(212, 175, 55, 0.4)",
+                  background: "rgba(212, 175, 55, 0.1)",
+                  marginBottom: 12,
+                  fontFamily: "'SF Mono', monospace",
+                  textTransform: "uppercase",
+                }}
+              >
+                Sign In Required
+              </div>
+              <h2 style={{ fontSize: 24, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>
+                Authentication Required to Stream Live Chart
+              </h2>
+              <p style={{ maxWidth: 480, color: "#94a3b8", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
+                Live TradingView tick streaming, Long/Short execution overlays, and 24/7 VPS signals for <b>{contract?.name || strategyId}</b> are available exclusively to authenticated traders with an active 7-Day Free Trial or Pro Membership.
+              </p>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+                <Link
+                  href={`/signin?redirect=/chart/${encodeURIComponent(strategyId)}`}
+                  className="pill action-btn"
+                  style={{
+                    fontSize: 14,
+                    padding: "12px 28px",
+                    textDecoration: "none",
+                    background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
+                    color: "#000",
+                    fontWeight: 800,
+                  }}
+                >
+                  Sign In / Create Account →
+                </Link>
+                <Link href="/market" className="pill g sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none" }}>
+                  Explore Strategies
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* PAYWALL 2: 7-Day Free Trial Required (Trial not started yet) */}
+          {(paywallType === "TRIAL_REQUIRED" || (trialStatus === "NOT_STARTED" && !hasPaid)) && paywallType !== "SIGNIN" && paywallType !== "EXPIRED" && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 100,
+                background: "rgba(5, 8, 17, 0.94)",
+                backdropFilter: "blur(12px)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 24,
+                textAlign: "center",
+              }}
+            >
+              <div style={{ fontSize: 44, marginBottom: 12 }}>🛡️</div>
+              <div
+                style={{
+                  display: "inline-block",
+                  padding: "4px 12px",
+                  borderRadius: 20,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#d4af37",
+                  border: "1px solid rgba(212, 175, 55, 0.4)",
+                  background: "rgba(212, 175, 55, 0.1)",
+                  marginBottom: 12,
+                  fontFamily: "'SF Mono', monospace",
+                  textTransform: "uppercase",
+                }}
+              >
+                7-Day Risk-Free Trial
+              </div>
+              <h2 style={{ fontSize: 24, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>
+                Unlock {contract?.name || strategyId} Live Terminal
+              </h2>
+              <p style={{ maxWidth: 480, color: "#94a3b8", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
+                Access to private LuxAlgo Vela live market charting, real-time Long/Short trade execution boxes, and 24/7 VPS signal alerts is reserved for active 7-Day Trial and StratMarket Pro members.
+              </p>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+                <button
+                  onClick={handleStartTrial}
+                  disabled={activatingTrial}
+                  className="pill action-btn"
+                  style={{
+                    fontSize: 14,
+                    padding: "12px 28px",
+                    cursor: activatingTrial ? "wait" : "pointer",
+                    background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
+                    color: "#000",
+                    fontWeight: 800,
+                  }}
+                >
+                  {activatingTrial ? "Activating 7-Day Trial..." : "⚡ Start 7-Day Free Trial (Instant Access)"}
+                </button>
+                <Link href="/pricing" className="pill g sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none" }}>
+                  Upgrade to Pro
+                </Link>
+                <Link href="/dashboard" className="pill sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none" }}>
+                  Dashboard
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* PAYWALL 3: 7-Day Free Trial Concluded */}
+          {(paywallType === "EXPIRED" || (trialStatus === "EXPIRED" && !hasPaid)) && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 100,
+                background: "rgba(5, 8, 17, 0.94)",
+                backdropFilter: "blur(12px)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -391,7 +601,7 @@ export function StrategyChart({ strategyId }: Props) {
               <p style={{ maxWidth: 480, color: "#94a3b8", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
                 Your 7-day evaluation period for <b>{contract?.name || strategyId}</b> has ended. Upgrade to StratMarket Pro to unlock continuous 24/7 autonomous VPS signals, candlestick streaming, and execution overlays.
               </p>
-              <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
                 <Link href="/pricing" className="pill action-btn" style={{ fontSize: 14, padding: "12px 28px", textDecoration: "none" }}>
                   Upgrade to StratMarket Pro →
                 </Link>
@@ -402,14 +612,14 @@ export function StrategyChart({ strategyId }: Props) {
             </div>
           )}
 
-          {loading && (
+          {loading && !isLocked && (
             <div className="chart-loading-overlay">
               <div className="chart-spinner" />
               <p>Streaming authoritative TradingView market data for {strategyId}...</p>
             </div>
           )}
 
-          {error && (
+          {error && !isLocked && (
             <div className="chart-error-banner">
               <p>⚠️ {error}</p>
               <button className="chart-retry-btn" onClick={handleRetry}>

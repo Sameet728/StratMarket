@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/auth/session";
 import { StrategyChart } from "@/components/chart/StrategyChart";
 import type { Metadata } from "next";
 
@@ -10,16 +11,6 @@ interface Props {
 }
 
 export const instant = false;
-
-export async function generateStaticParams() {
-  const strategies = await db.getStrategies({ includeDrafts: true });
-  const params: { strategyId: string }[] = [];
-  strategies.forEach((s) => {
-    params.push({ strategyId: s.id });
-    params.push({ strategyId: s.slug });
-  });
-  return params;
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { strategyId } = await params;
@@ -45,9 +36,41 @@ export default async function ChartPage({ params }: Props) {
     notFound();
   }
 
+  // 1. Unauthenticated users cannot view live chart -> Redirect to Sign in
+  const user = await getSession();
+  if (!user) {
+    redirect(`/signin?redirect=/chart/${encodeURIComponent(strategy.id)}`);
+  }
+
+  // 2. Check Entitlement and 7-Day Trial status
+  const access = await db.checkUserStrategyAccess(user.id, strategy.id);
+  const userTrials = await db.getUserTrials(user.id);
+  const now = new Date();
+  const currentTrial = userTrials.find(
+    (t) =>
+      t.strategyId.toUpperCase() === strategy.id.toUpperCase() ||
+      t.strategyId.toLowerCase() === strategy.slug.toLowerCase()
+  );
+  const isTrialActive = Boolean(
+    currentTrial && currentTrial.status === "ACTIVE" && new Date(currentTrial.expiryTime) > now
+  );
+  const isExpired = Boolean(
+    currentTrial && (currentTrial.status === "EXPIRED" || new Date(currentTrial.expiryTime) <= now)
+  );
+
+  const trialStatus = isTrialActive ? "ACTIVE" : isExpired ? "EXPIRED" : "NOT_STARTED";
+  const hasAccess = access.hasAccess || isTrialActive;
+
   return (
     <main className="chart-page-fullscreen">
-      <StrategyChart strategyId={strategy.id} />
+      <StrategyChart
+        strategyId={strategy.id}
+        initialUser={{ id: user.id, name: user.name, email: user.email }}
+        initialHasAccess={hasAccess}
+        initialTrialStatus={trialStatus}
+        initialDaysLeft={access.daysRemaining || (isTrialActive ? 7 : 0)}
+        initialHasPaid={access.accessType === "PAID"}
+      />
     </main>
   );
 }

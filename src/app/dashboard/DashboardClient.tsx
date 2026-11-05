@@ -245,6 +245,10 @@ export function DashboardClient() {
       });
 
       if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        if (res.status === 403 || errData.code === "TRIAL_EXPIRED") {
+          alert(errData.error || "Your 7-day free trial has expired. Upgrade to StratMarket Pro to enable live email signals.");
+        }
         // Revert on failure
         setStrategies((prev) =>
           prev.map((s) => (s.id === strategy.id ? { ...s, enabled: strategy.enabled } : s))
@@ -344,11 +348,13 @@ export function DashboardClient() {
         }),
       });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         setConnections((prev) => {
           const filtered = prev.filter((c) => c.brokerIdentifier !== "PAPER_SIMULATOR");
           return [...filtered, data.connection];
         });
+      } else {
+        alert(data.error || "Broker routing and virtual simulation require an active 7-Day Free Trial or StratMarket Pro membership.");
       }
     } catch (err) {
       console.error(err);

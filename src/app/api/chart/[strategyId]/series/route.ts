@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/auth/session";
 import { tradingViewAdapter } from "@/lib/market-data";
 import { strategyExecutionRunner } from "@/lib/strategy-execution";
 
@@ -19,6 +20,52 @@ export async function GET(request: NextRequest, { params }: Props) {
     const strategy = await db.getStrategyBySlug(strategyId);
     if (!strategy) {
       return NextResponse.json({ success: false, error: "Strategy not found in catalogue" }, { status: 404 });
+    }
+
+    // 1. Strict Authentication Check: Must be logged in
+    const user = await getSession();
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Sign in required to stream live strategy charts and execution signals.",
+          code: "UNAUTHORIZED",
+          paywallType: "SIGNIN_REQUIRED",
+        },
+        { status: 401 }
+      );
+    }
+
+    // 2. Strict Entitlement & 7-Day Trial Check
+    const access = await db.checkUserStrategyAccess(user.id, strategy.id);
+    const userTrials = await db.getUserTrials(user.id);
+    const now = new Date();
+    const currentTrial = userTrials.find(
+      (t) =>
+        t.strategyId.toUpperCase() === strategy.id.toUpperCase() ||
+        t.strategyId.toLowerCase() === strategy.slug.toLowerCase()
+    );
+    const isTrialActive = Boolean(
+      currentTrial && currentTrial.status === "ACTIVE" && new Date(currentTrial.expiryTime) > now
+    );
+
+    if (!access.hasAccess && !isTrialActive) {
+      const isExpired = Boolean(
+        currentTrial && (currentTrial.status === "EXPIRED" || new Date(currentTrial.expiryTime) <= now)
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: isExpired
+            ? "Your 7-day free trial has expired. Upgrade to StratMarket Pro to continue."
+            : "Activate your 7-day free trial to unlock this live strategy chart.",
+          code: isExpired ? "TRIAL_EXPIRED" : "TRIAL_REQUIRED",
+          paywallType: isExpired ? "UPGRADE_REQUIRED" : "TRIAL_REQUIRED",
+          trialEligibility: Boolean(strategy.trialEligibility),
+        },
+        { status: 403 }
+      );
     }
 
     const { searchParams } = new URL(request.url);

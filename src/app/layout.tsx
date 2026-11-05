@@ -41,7 +41,9 @@ export default function RootLayout({
           <i className="a1" />
         </div>
         <TopProgressBar />
-        <HeaderNav />
+        <Suspense fallback={null}>
+          <HeaderNav />
+        </Suspense>
         <main>{children}</main>
         <Footer />
         <Suspense fallback={null}>

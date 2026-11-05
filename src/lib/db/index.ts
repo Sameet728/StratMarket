@@ -695,30 +695,60 @@ export const db = {
     expiresAt?: Date;
     daysRemaining?: number;
   }> {
+    const user = await this.getUserById(userId).catch(() => null);
+    if (user?.role === "ADMIN") {
+      return { hasAccess: true, accessType: "PAID", daysRemaining: 365 };
+    }
+
     const entitlements = await this.getUserEntitlements(userId);
     const now = new Date();
 
-    // Check for active plan-wide (All-Access) or strategy-specific entitlement
-    const active = entitlements.find(
+    const matchingEntitlements = entitlements.filter(
       (e) =>
-        e.status === "ACTIVE" &&
-        e.expiryTime > now &&
-        (e.strategyId === strategyId || e.strategyId === null)
+        e.strategyId === null ||
+        e.strategyId?.toUpperCase() === strategyId.toUpperCase() ||
+        e.strategyId?.toLowerCase() === strategyId.toLowerCase()
     );
 
-    if (!active) {
-      return { hasAccess: false, accessType: "NONE" };
+    if (matchingEntitlements.length > 0) {
+      const active = matchingEntitlements.find(
+        (e) => e.status === "ACTIVE" && new Date(e.expiryTime) > now
+      );
+      if (!active) {
+        return { hasAccess: false, accessType: "NONE" };
+      }
+      const msRemaining = new Date(active.expiryTime).getTime() - now.getTime();
+      const daysRemaining = Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
+      return {
+        hasAccess: true,
+        accessType: active.entitlementType,
+        expiresAt: new Date(active.expiryTime),
+        daysRemaining,
+      };
     }
 
-    const msRemaining = active.expiryTime.getTime() - now.getTime();
-    const daysRemaining = Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
+    // Fallback: Check active trials if no entitlement record was registered
+    const trials = await this.getUserTrials(userId);
+    const activeTrial = trials.find(
+      (t) =>
+        t.status === "ACTIVE" &&
+        new Date(t.expiryTime) > now &&
+        (t.strategyId.toUpperCase() === strategyId.toUpperCase() ||
+          t.strategyId.toLowerCase() === strategyId.toLowerCase())
+    );
 
-    return {
-      hasAccess: true,
-      accessType: active.entitlementType,
-      expiresAt: active.expiryTime,
-      daysRemaining,
-    };
+    if (activeTrial) {
+      const msRemaining = new Date(activeTrial.expiryTime).getTime() - now.getTime();
+      const daysRemaining = Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
+      return {
+        hasAccess: true,
+        accessType: "TRIAL",
+        expiresAt: new Date(activeTrial.expiryTime),
+        daysRemaining,
+      };
+    }
+
+    return { hasAccess: false, accessType: "NONE" };
   },
 
   // SIGNALS & PYTHON VPS INTEGRATION

@@ -60,79 +60,90 @@ export async function GET(request: NextRequest) {
 
     const now = new Date();
 
-    const strategyAlerts = strategies.map((s) => {
-      const userPref = preferences.find(
-        (p) =>
-          p.strategyId.toUpperCase() === s.id.toUpperCase() ||
-          p.strategyId.toLowerCase() === s.slug.toLowerCase()
-      );
-      const allPref = preferences.find((p) => p.strategyId === "ALL");
-      
-      // Determine enabled status: DB priority, with durable cookie backup
-      let enabled = false;
-      if (userPref !== undefined) {
-        enabled = Boolean(userPref.enabled);
-      } else if (allPref !== undefined) {
-        enabled = Boolean(allPref.enabled);
-      } else if (cookiePrefs && cookiePrefs.alerts) {
-        if (cookiePrefs.alerts[s.id] !== undefined) {
-          enabled = Boolean(cookiePrefs.alerts[s.id]);
-        } else if (cookiePrefs.alerts[s.slug] !== undefined) {
-          enabled = Boolean(cookiePrefs.alerts[s.slug]);
-        } else if (cookiePrefs.alerts[s.id.toUpperCase()] !== undefined) {
-          enabled = Boolean(cookiePrefs.alerts[s.id.toUpperCase()]);
-        } else if (cookiePrefs.alerts[s.slug.toLowerCase()] !== undefined) {
-          enabled = Boolean(cookiePrefs.alerts[s.slug.toLowerCase()]);
-        } else if (cookiePrefs.alerts["ALL"] !== undefined) {
-          enabled = Boolean(cookiePrefs.alerts["ALL"]);
+    const strategyAlerts = await Promise.all(
+      strategies.map(async (s) => {
+        const userPref = preferences.find(
+          (p) =>
+            p.strategyId.toUpperCase() === s.id.toUpperCase() ||
+            p.strategyId.toLowerCase() === s.slug.toLowerCase()
+        );
+        const allPref = preferences.find((p) => p.strategyId === "ALL");
+        
+        // Determine enabled status: DB priority, with durable cookie backup
+        let enabled = false;
+        if (userPref !== undefined) {
+          enabled = Boolean(userPref.enabled);
+        } else if (allPref !== undefined) {
+          enabled = Boolean(allPref.enabled);
+        } else if (cookiePrefs && cookiePrefs.alerts) {
+          if (cookiePrefs.alerts[s.id] !== undefined) {
+            enabled = Boolean(cookiePrefs.alerts[s.id]);
+          } else if (cookiePrefs.alerts[s.slug] !== undefined) {
+            enabled = Boolean(cookiePrefs.alerts[s.slug]);
+          } else if (cookiePrefs.alerts[s.id.toUpperCase()] !== undefined) {
+            enabled = Boolean(cookiePrefs.alerts[s.id.toUpperCase()]);
+          } else if (cookiePrefs.alerts[s.slug.toLowerCase()] !== undefined) {
+            enabled = Boolean(cookiePrefs.alerts[s.slug.toLowerCase()]);
+          } else if (cookiePrefs.alerts["ALL"] !== undefined) {
+            enabled = Boolean(cookiePrefs.alerts["ALL"]);
+          }
         }
-      }
 
-      const userTrial = trials.find(
-        (t) =>
-          t.strategyId.toUpperCase() === s.id.toUpperCase() ||
-          t.strategyId.toLowerCase() === s.slug.toLowerCase()
-      );
-      const isTrialActive =
-        Boolean(userTrial && userTrial.status === "ACTIVE" && new Date(userTrial.expiryTime) > now);
-      const isTrialExpired =
-        Boolean(userTrial && (userTrial.status === "EXPIRED" || new Date(userTrial.expiryTime) <= now));
-      const daysLeft =
-        userTrial && isTrialActive
-          ? Math.max(0, Math.ceil((new Date(userTrial.expiryTime).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
-          : 0;
+        let userTrial = trials.find(
+          (t) =>
+            t.strategyId.toUpperCase() === s.id.toUpperCase() ||
+            t.strategyId.toLowerCase() === s.slug.toLowerCase()
+        );
 
-      const hasPaid = entitlements.some(
-        (e) =>
-          e.status === "ACTIVE" &&
-          new Date(e.expiryTime) > now &&
-          e.entitlementType === "PAID" &&
-          (e.strategyId === s.id || e.strategyId === null)
-      );
+        const hasPaid = entitlements.some(
+          (e) =>
+            e.status === "ACTIVE" &&
+            new Date(e.expiryTime) > now &&
+            e.entitlementType === "PAID" &&
+            (e.strategyId === s.id || e.strategyId === null)
+        );
 
-      const hasAccess = hasPaid || isTrialActive;
+        // Auto-provision trial if user previously activated alerts but trial record was absent
+        if (enabled && !userTrial && !hasPaid) {
+          try {
+            const autoTrial = await db.startTrial(user.id, s.slug);
+            userTrial = autoTrial.trial;
+          } catch (_) {}
+        }
 
-      return {
-        id: s.id,
-        slug: s.slug,
-        name: s.name,
-        type: s.implementationType, // "PINE_SCRIPT" | "PYTHON"
-        instrument: s.instrument,
-        timeframe: s.timeframe,
-        winRate: s.metrics.winRate,
-        profitFactor: s.metrics.profitFactor,
-        netReturn: s.metrics.netReturn,
-        maxDrawdown: s.metrics.maxDrawdown,
-        enabled,
-        hasAccess,
-        hasPaid,
-        trialStatus: isTrialActive ? "ACTIVE" : isTrialExpired ? "EXPIRED" : "NOT_STARTED",
-        daysLeft,
-        expiryTime: userTrial?.expiryTime,
-        chartUrl: `/chart/${s.slug}`,
-        reportUrl: `/strategies/${s.slug}`,
-      };
-    });
+        const isTrialActive =
+          Boolean(userTrial && userTrial.status === "ACTIVE" && new Date(userTrial.expiryTime) > now);
+        const isTrialExpired =
+          Boolean(userTrial && (userTrial.status === "EXPIRED" || new Date(userTrial.expiryTime) <= now));
+        const daysLeft =
+          userTrial && isTrialActive
+            ? Math.max(0, Math.ceil((new Date(userTrial.expiryTime).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+            : 0;
+
+        const hasAccess = hasPaid || isTrialActive;
+
+        return {
+          id: s.id,
+          slug: s.slug,
+          name: s.name,
+          type: s.implementationType, // "PINE_SCRIPT" | "PYTHON"
+          instrument: s.instrument,
+          timeframe: s.timeframe,
+          winRate: s.metrics.winRate,
+          profitFactor: s.metrics.profitFactor,
+          netReturn: s.metrics.netReturn,
+          maxDrawdown: s.metrics.maxDrawdown,
+          enabled,
+          hasAccess,
+          hasPaid,
+          trialStatus: (isTrialActive ? "ACTIVE" : isTrialExpired ? "EXPIRED" : "NOT_STARTED") as "ACTIVE" | "EXPIRED" | "NOT_STARTED",
+          daysLeft,
+          expiryTime: userTrial?.expiryTime ? new Date(userTrial.expiryTime).toISOString() : undefined,
+          chartUrl: `/chart/${s.slug}`,
+          reportUrl: `/strategies/${s.slug}`,
+        };
+      })
+    );
 
     const response = NextResponse.json({
       success: true,
@@ -221,19 +232,54 @@ export async function PUT(request: NextRequest) {
 
     const { strategyId, enabled, alertTypes, destinationEmail } = parsed.data;
 
-    // If enabling alerts on a strategy and user has no trial record yet, automatically start 7-day trial
-    if (enabled && strategyId !== "ALL") {
+    // If enabling alerts on a strategy: enforce active trial or Pro membership
+    if (enabled && strategyId !== "ALL" && user.role !== "ADMIN") {
       try {
-        const trials = await db.getUserTrials(user.id);
-        const hasExisting = trials.some(
+        const [trials, entitlements] = await Promise.all([
+          db.getUserTrials(user.id),
+          db.getUserEntitlements(user.id),
+        ]);
+        const now = new Date();
+        const hasPaid = entitlements.some(
+          (e) =>
+            e.status === "ACTIVE" &&
+            new Date(e.expiryTime) > now &&
+            e.entitlementType === "PAID" &&
+            (e.strategyId === strategyId || e.strategyId === null)
+        );
+        const strategyTrial = trials.find(
           (t) =>
             t.strategyId.toUpperCase() === strategyId.toUpperCase() ||
             t.strategyId.toLowerCase() === strategyId.toLowerCase()
         );
-        if (!hasExisting) {
+        const isTrialExpired = Boolean(
+          strategyTrial && (strategyTrial.status === "EXPIRED" || new Date(strategyTrial.expiryTime) <= now)
+        );
+
+        if (isTrialExpired && !hasPaid) {
+          return NextResponse.json(
+            {
+              error: "Your 7-day free trial for this strategy has ended. Upgrade to StratMarket Pro to enable real-time email alerts.",
+              code: "TRIAL_EXPIRED",
+            },
+            { status: 403 }
+          );
+        }
+
+        if (!strategyTrial) {
           await db.startTrial(user.id, strategyId.toLowerCase());
         }
-      } catch (_) {}
+      } catch (err: any) {
+        if (err?.message === "TRIAL_ALREADY_USED") {
+          return NextResponse.json(
+            {
+              error: "Your 7-day trial for this strategy has already been used. Upgrade to StratMarket Pro to continue.",
+              code: "TRIAL_EXPIRED",
+            },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     const cleanEmail =
