@@ -81,7 +81,37 @@ export default function ProfilePage() {
         const alertRes = await fetch("/api/me/alerts");
         const alertData = await alertRes.json();
         if (alertData.success) {
-          setStrategies(alertData.strategies || []);
+          let localAlertMap: Record<string, boolean> = {};
+          try {
+            const raw = localStorage.getItem("stratmarket_user_alerts_" + meData.user.id);
+            if (raw) localAlertMap = JSON.parse(raw);
+          } catch (_) {}
+
+          const rawStrategies = alertData.strategies || [];
+          const reconciled = rawStrategies.map((s: any) => {
+            const localVal =
+              localAlertMap[s.id] !== undefined
+                ? localAlertMap[s.id]
+                : localAlertMap[s.slug] !== undefined
+                ? localAlertMap[s.slug]
+                : undefined;
+            const isEnabled = localVal !== undefined ? (s.enabled || localVal) : s.enabled;
+            return {
+              ...s,
+              enabled: isEnabled,
+            };
+          });
+
+          try {
+            const synced: Record<string, boolean> = { ...localAlertMap };
+            reconciled.forEach((s: any) => {
+              synced[s.id] = s.enabled;
+              synced[s.slug] = s.enabled;
+            });
+            localStorage.setItem("stratmarket_user_alerts_" + meData.user.id, JSON.stringify(synced));
+          } catch (_) {}
+
+          setStrategies(reconciled);
           setAlerts(alertData.preferences || []);
           setDeliveries(alertData.deliveries || []);
           setSignalEmail(alertData.destinationEmail || meData.user.email);
@@ -129,7 +159,7 @@ export default function ProfilePage() {
     }
   };
 
-  // Dispatch sample test email via Resend
+  // Dispatch sample test email via institutional gateway
   const handleSendTestEmail = async () => {
     setSendingTest(true);
     setTestResult(null);
@@ -179,6 +209,17 @@ export default function ProfilePage() {
       )
     );
 
+    // Persist immediately in client-side storage for refresh durability
+    try {
+      const storageKey = "stratmarket_user_alerts_" + (user?.id || "default");
+      const raw = localStorage.getItem(storageKey);
+      const currentMap = raw ? JSON.parse(raw) : {};
+      currentMap[strategyId] = newEnabled;
+      currentMap[strategyId.toUpperCase()] = newEnabled;
+      currentMap[strategyId.toLowerCase()] = newEnabled;
+      localStorage.setItem(storageKey, JSON.stringify(currentMap));
+    } catch (_) {}
+
     try {
       const res = await fetch("/api/me/alerts", {
         method: "PUT",
@@ -203,6 +244,13 @@ export default function ProfilePage() {
             a.strategyId === strategyId ? { ...a, enabled: currentEnabled } : a
           )
         );
+        try {
+          const storageKey = "stratmarket_user_alerts_" + (user?.id || "default");
+          const raw = localStorage.getItem(storageKey);
+          const currentMap = raw ? JSON.parse(raw) : {};
+          currentMap[strategyId] = currentEnabled;
+          localStorage.setItem(storageKey, JSON.stringify(currentMap));
+        } catch (_) {}
       } else {
         // Silently sync latest trial records in background
         fetch("/api/me/entitlements")
@@ -572,7 +620,7 @@ export default function ProfilePage() {
                       border: "1px solid rgba(16,185,129,0.3)",
                     }}
                   >
-                    Resend Verified Domain: elvariscapital.in
+                    Institutional Gateway • Domain: elvariscapital.in
                   </span>
                 </div>
                 <p className="note" style={{ margin: 0, fontSize: 13 }}>

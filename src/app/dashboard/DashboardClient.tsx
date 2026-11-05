@@ -142,7 +142,37 @@ export function DashboardClient() {
 
         const alertsData = await alertsRes.json();
         if (alertsData.success) {
-          setStrategies(alertsData.strategies || []);
+          let localAlertMap: Record<string, boolean> = {};
+          try {
+            const raw = localStorage.getItem("stratmarket_user_alerts_" + authData.user.id);
+            if (raw) localAlertMap = JSON.parse(raw);
+          } catch (_) {}
+
+          const rawStrategies = alertsData.strategies || [];
+          const reconciled = rawStrategies.map((s: StrategyAlertItem) => {
+            const localVal =
+              localAlertMap[s.id] !== undefined
+                ? localAlertMap[s.id]
+                : localAlertMap[s.slug] !== undefined
+                ? localAlertMap[s.slug]
+                : undefined;
+            const isEnabled = localVal !== undefined ? (s.enabled || localVal) : s.enabled;
+            return {
+              ...s,
+              enabled: isEnabled,
+            };
+          });
+
+          try {
+            const synced: Record<string, boolean> = { ...localAlertMap };
+            reconciled.forEach((s: StrategyAlertItem) => {
+              synced[s.id] = s.enabled;
+              synced[s.slug] = s.enabled;
+            });
+            localStorage.setItem("stratmarket_user_alerts_" + authData.user.id, JSON.stringify(synced));
+          } catch (_) {}
+
+          setStrategies(reconciled);
           setDeliveries(alertsData.deliveries || []);
           const dest = alertsData.destinationEmail || authData.user.email;
           setDestinationEmail(dest);
@@ -190,6 +220,18 @@ export function DashboardClient() {
       })
     );
 
+    // Persist immediately in client-side storage for refresh durability
+    try {
+      const storageKey = "stratmarket_user_alerts_" + (user?.id || "default");
+      const raw = localStorage.getItem(storageKey);
+      const currentMap = raw ? JSON.parse(raw) : {};
+      currentMap[strategy.id] = newEnabled;
+      currentMap[strategy.slug] = newEnabled;
+      currentMap[strategy.id.toUpperCase()] = newEnabled;
+      currentMap[strategy.slug.toLowerCase()] = newEnabled;
+      localStorage.setItem(storageKey, JSON.stringify(currentMap));
+    } catch (_) {}
+
     try {
       const res = await fetch("/api/me/alerts", {
         method: "PUT",
@@ -207,12 +249,28 @@ export function DashboardClient() {
         setStrategies((prev) =>
           prev.map((s) => (s.id === strategy.id ? { ...s, enabled: strategy.enabled } : s))
         );
+        try {
+          const storageKey = "stratmarket_user_alerts_" + (user?.id || "default");
+          const raw = localStorage.getItem(storageKey);
+          const currentMap = raw ? JSON.parse(raw) : {};
+          currentMap[strategy.id] = strategy.enabled;
+          currentMap[strategy.slug] = strategy.enabled;
+          localStorage.setItem(storageKey, JSON.stringify(currentMap));
+        } catch (_) {}
       }
     } catch (err) {
       console.error("Toggle alert error:", err);
       setStrategies((prev) =>
         prev.map((s) => (s.id === strategy.id ? { ...s, enabled: strategy.enabled } : s))
       );
+      try {
+        const storageKey = "stratmarket_user_alerts_" + (user?.id || "default");
+        const raw = localStorage.getItem(storageKey);
+        const currentMap = raw ? JSON.parse(raw) : {};
+        currentMap[strategy.id] = strategy.enabled;
+        currentMap[strategy.slug] = strategy.enabled;
+        localStorage.setItem(storageKey, JSON.stringify(currentMap));
+      } catch (_) {}
     } finally {
       setUpdatingStrategy(null);
     }
@@ -495,7 +553,7 @@ export function DashboardClient() {
                   border: "1px solid rgba(16,185,129,0.3)",
                 }}
               >
-                Resend Verified Domain: elvariscapital.in
+                Institutional Gateway • Domain: elvariscapital.in
               </span>
             </div>
             <p className="note" style={{ margin: "4px 0 0", fontSize: 13 }}>

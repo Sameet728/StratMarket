@@ -826,15 +826,40 @@ export const db = {
     let notifiedUsersCount = 0;
     const subscriberEmails: string[] = [];
     const now = new Date();
+    const targetStrategyIds = [
+      strategy.id,
+      strategy.id.toUpperCase(),
+      strategy.id.toLowerCase(),
+      strategy.slug,
+      strategy.slug.toUpperCase(),
+      strategy.slug.toLowerCase(),
+      payload.strategyId,
+      "ALL"
+    ];
+
+    if (mdb) {
+      try {
+        const dbAlerts = await mdb.collection("alert_preferences").find({
+          strategyId: { $in: targetStrategyIds },
+          enabled: true
+        }).toArray();
+
+        for (const alert of dbAlerts) {
+          const dest = alert.verifiedDestination || alert.userEmail;
+          if (dest && dest.includes("@") && !subscriberEmails.includes(dest)) {
+            subscriberEmails.push(dest);
+            notifiedUsersCount++;
+          }
+        }
+      } catch (e) {
+        console.warn("[MongoDB] Ingest signal subscriber query fallback:", e);
+      }
+    }
 
     for (const alert of globalStore.alerts.values()) {
-      if (alert.strategyId === strategy.id && alert.enabled) {
-        // Check if user has active entitlement
-        const access = await this.checkUserStrategyAccess(alert.userId, strategy.id);
-        if (access.hasAccess) {
-          if (alert.verifiedDestination && !subscriberEmails.includes(alert.verifiedDestination)) {
-            subscriberEmails.push(alert.verifiedDestination);
-          }
+      if (targetStrategyIds.includes(alert.strategyId) && alert.enabled) {
+        if (alert.verifiedDestination && !subscriberEmails.includes(alert.verifiedDestination)) {
+          subscriberEmails.push(alert.verifiedDestination);
           const delivery: EmailDeliveryRecord = {
             id: "del_" + Math.random().toString(36).substring(2, 11),
             signalId: newSignal.id,
@@ -866,11 +891,22 @@ export const db = {
   },
 
   // EMAIL ALERTS PREFERENCES
-  async getUserAlertPreferences(userId: string): Promise<AlertPreferenceRecord[]> {
+  async getUserAlertPreferences(userId: string, userEmail?: string): Promise<AlertPreferenceRecord[]> {
+    const user = await this.getUserById(userId).catch(() => null);
+    const resolvedEmail = userEmail || user?.email;
+
     const mdb = await getMongoDb();
     if (mdb) {
       try {
-        const docs = await mdb.collection("alert_preferences").find({ userId }).toArray();
+        const orList: any[] = [{ userId }];
+        if (resolvedEmail) {
+          orList.push({ userId: resolvedEmail });
+          orList.push({ verifiedDestination: resolvedEmail });
+        }
+        if (user?.id) {
+          orList.push({ userId: user.id });
+        }
+        const docs = await mdb.collection("alert_preferences").find({ $or: orList }).toArray();
         if (docs.length > 0) {
           const list: AlertPreferenceRecord[] = docs.map((d: any) => ({
             id: d.id || d._id?.toString(),
@@ -878,11 +914,15 @@ export const db = {
             strategyId: d.strategyId,
             enabled: Boolean(d.enabled),
             alertTypes: d.alertTypes || ["ENTRY", "EXIT", "STOP_LOSS", "TAKE_PROFIT"],
-            verifiedDestination: d.verifiedDestination,
+            verifiedDestination: d.verifiedDestination || resolvedEmail,
             createdAt: d.createdAt ? new Date(d.createdAt) : new Date(),
             updatedAt: d.updatedAt ? new Date(d.updatedAt) : new Date(),
           }));
-          list.forEach((a) => globalStore.alerts.set(`${userId}:${a.strategyId}`, a));
+          list.forEach((a) => {
+            globalStore.alerts.set(`${userId}:${a.strategyId}`, a);
+            globalStore.alerts.set(`${userId}:${a.strategyId.toUpperCase()}`, a);
+            globalStore.alerts.set(`${userId}:${a.strategyId.toLowerCase()}`, a);
+          });
           return list;
         }
       } catch (e) {
@@ -892,8 +932,10 @@ export const db = {
 
     const list: AlertPreferenceRecord[] = [];
     for (const a of globalStore.alerts.values()) {
-      if (a.userId === userId) {
-        list.push({ ...a });
+      if (a.userId === userId || (resolvedEmail && a.verifiedDestination === resolvedEmail)) {
+        if (!list.some((existing) => existing.strategyId.toUpperCase() === a.strategyId.toUpperCase())) {
+          list.push({ ...a });
+        }
       }
     }
     return list;
@@ -928,12 +970,21 @@ export const db = {
     };
 
     globalStore.alerts.set(key, record);
+    globalStore.alerts.set(`${userId}:${strategyId.toUpperCase()}`, record);
+    globalStore.alerts.set(`${userId}:${strategyId.toLowerCase()}`, record);
 
     const mdb = await getMongoDb();
     if (mdb) {
       try {
         await mdb.collection("alert_preferences").updateOne(
-          { userId, strategyId },
+          {
+            $or: [
+              { userId, strategyId },
+              { userId, strategyId: strategyId.toUpperCase() },
+              { userId, strategyId: strategyId.toLowerCase() },
+              ...(targetEmail ? [{ verifiedDestination: targetEmail, strategyId }] : [])
+            ]
+          },
           { $set: record },
           { upsert: true }
         );

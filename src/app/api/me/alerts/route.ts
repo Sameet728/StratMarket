@@ -11,15 +11,42 @@ const AlertUpdateSchema = z.object({
   destinationEmail: z.string().optional().nullable(),
 });
 
-export async function GET() {
+interface CookieAlertPayload {
+  userId: string;
+  destinationEmail?: string;
+  alerts: Record<string, boolean>;
+  updatedAt?: number;
+}
+
+function parseAlertPrefsCookie(raw?: string): CookieAlertPayload | null {
+  if (!raw) return null;
+  try {
+    const jsonStr = Buffer.from(raw, "base64").toString("utf-8");
+    return JSON.parse(jsonStr);
+  } catch {
+    try {
+      return JSON.parse(decodeURIComponent(raw));
+    } catch {
+      return null;
+    }
+  }
+}
+
+function serializeAlertPrefsCookie(data: CookieAlertPayload): string {
+  return Buffer.from(JSON.stringify(data), "utf-8").toString("base64");
+}
+
+export async function GET(request: NextRequest) {
   try {
     const user = await getSession();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const cookiePrefs = parseAlertPrefsCookie(request.cookies.get("stratmarket_alert_prefs")?.value);
+
     const [preferences, deliveries, trials, entitlements, strategies] = await Promise.all([
-      db.getUserAlertPreferences(user.id),
+      db.getUserAlertPreferences(user.id, user.email),
       db.getUserDeliveries(user.id),
       db.getUserTrials(user.id),
       db.getUserEntitlements(user.id),
@@ -27,7 +54,9 @@ export async function GET() {
     ]);
 
     const currentDestination =
-      preferences.find((p) => p.verifiedDestination)?.verifiedDestination || user.email;
+      preferences.find((p) => p.verifiedDestination)?.verifiedDestination ||
+      (cookiePrefs?.destinationEmail && cookiePrefs.destinationEmail.includes("@") ? cookiePrefs.destinationEmail : null) ||
+      user.email;
 
     const now = new Date();
 
@@ -38,7 +67,26 @@ export async function GET() {
           p.strategyId.toLowerCase() === s.slug.toLowerCase()
       );
       const allPref = preferences.find((p) => p.strategyId === "ALL");
-      const enabled = userPref ? userPref.enabled : (allPref ? allPref.enabled : false);
+      
+      // Determine enabled status: DB priority, with durable cookie backup
+      let enabled = false;
+      if (userPref !== undefined) {
+        enabled = Boolean(userPref.enabled);
+      } else if (allPref !== undefined) {
+        enabled = Boolean(allPref.enabled);
+      } else if (cookiePrefs && cookiePrefs.alerts) {
+        if (cookiePrefs.alerts[s.id] !== undefined) {
+          enabled = Boolean(cookiePrefs.alerts[s.id]);
+        } else if (cookiePrefs.alerts[s.slug] !== undefined) {
+          enabled = Boolean(cookiePrefs.alerts[s.slug]);
+        } else if (cookiePrefs.alerts[s.id.toUpperCase()] !== undefined) {
+          enabled = Boolean(cookiePrefs.alerts[s.id.toUpperCase()]);
+        } else if (cookiePrefs.alerts[s.slug.toLowerCase()] !== undefined) {
+          enabled = Boolean(cookiePrefs.alerts[s.slug.toLowerCase()]);
+        } else if (cookiePrefs.alerts["ALL"] !== undefined) {
+          enabled = Boolean(cookiePrefs.alerts["ALL"]);
+        }
+      }
 
       const userTrial = trials.find(
         (t) =>
@@ -86,7 +134,7 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       preferences,
       strategies: strategyAlerts,
@@ -94,6 +142,27 @@ export async function GET() {
       destinationEmail: currentDestination,
       userEmail: user.email,
     });
+
+    // Refresh and sync the alert prefs cookie so it is always warm
+    const activeMap: Record<string, boolean> = { ...(cookiePrefs?.alerts || {}) };
+    strategyAlerts.forEach((sa) => {
+      activeMap[sa.id] = sa.enabled;
+      activeMap[sa.slug] = sa.enabled;
+    });
+
+    response.cookies.set("stratmarket_alert_prefs", serializeAlertPrefsCookie({
+      userId: user.id,
+      destinationEmail: currentDestination,
+      alerts: activeMap,
+      updatedAt: Date.now(),
+    }), {
+      path: "/",
+      maxAge: 31536000,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    return response;
   } catch (error: any) {
     console.error("GET /api/me/alerts error:", error);
     return NextResponse.json({ error: "Failed to fetch alerts" }, { status: 500 });
@@ -108,6 +177,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
+    const existingCookie = parseAlertPrefsCookie(request.cookies.get("stratmarket_alert_prefs")?.value);
 
     // Batch update destination email across all preferences
     if (body.action === "UPDATE_EMAIL" && body.email) {
@@ -117,11 +187,28 @@ export async function PUT(request: NextRequest) {
       }
 
       await db.updateAllUserAlertDestinations(user.id, body.email);
-      return NextResponse.json({
+
+      const cookiePayload: CookieAlertPayload = {
+        userId: user.id,
+        destinationEmail: body.email.trim(),
+        alerts: existingCookie?.alerts || {},
+        updatedAt: Date.now(),
+      };
+
+      const response = NextResponse.json({
         success: true,
         message: "Signal notification email updated successfully.",
         destinationEmail: body.email,
       });
+
+      response.cookies.set("stratmarket_alert_prefs", serializeAlertPrefsCookie(cookiePayload), {
+        path: "/",
+        maxAge: 31536000,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      return response;
     }
 
     const parsed = AlertUpdateSchema.safeParse(body);
@@ -156,11 +243,35 @@ export async function PUT(request: NextRequest) {
 
     const updated = await db.setAlertPreference(user.id, strategyId, enabled, alertTypes, cleanEmail);
 
-    return NextResponse.json({
+    // Update cookie state with both strategyId and slug variations
+    const updatedAlerts: Record<string, boolean> = {
+      ...(existingCookie?.alerts || {}),
+      [strategyId]: enabled,
+      [strategyId.toUpperCase()]: enabled,
+      [strategyId.toLowerCase()]: enabled,
+    };
+
+    const cookiePayload: CookieAlertPayload = {
+      userId: user.id,
+      destinationEmail: cleanEmail,
+      alerts: updatedAlerts,
+      updatedAt: Date.now(),
+    };
+
+    const response = NextResponse.json({
       success: true,
       message: "Alert preference updated.",
       preference: updated,
     });
+
+    response.cookies.set("stratmarket_alert_prefs", serializeAlertPrefsCookie(cookiePayload), {
+      path: "/",
+      maxAge: 31536000,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    return response;
   } catch (error: any) {
     console.error("PUT /api/me/alerts error:", error);
     return NextResponse.json({ error: "Failed to update alert" }, { status: 500 });
@@ -181,7 +292,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid recipient email address" }, { status: 400 });
     }
 
-    // Send sample signal email via Resend verified domain
+    // Send sample signal email via verified institutional gateway
     const emailRes = await sendSignalAlertEmail({
       to: targetEmail,
       strategyName: "Ensemble 01: 6-Engine Peak Champion",
