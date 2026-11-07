@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
   onToggleAlert?: () => void;
   trialStatus?: string;
   daysLeft?: number;
+  trialExpiry?: string | null;
 }
 
 const PINE_STRATEGIES = [
@@ -26,6 +28,21 @@ const PINE_STRATEGIES = [
   { id: "PS-03", name: "Strict 1:2 R:R", badge: "74.1% WR" },
   { id: "PS-04", name: "Elite", badge: "80.7% WR" },
 ];
+
+function formatCountdown(targetMs: number): string {
+  const diff = targetMs - Date.now();
+  if (diff <= 0) return "Trial Expired";
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / 1000 / 60) % 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  if (days > 0) {
+    return `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+  }
+  return `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+}
 
 export function ChartToolbar({
   strategyId,
@@ -40,8 +57,43 @@ export function ChartToolbar({
   onToggleAlert,
   trialStatus,
   daysLeft,
+  trialExpiry,
 }: Props) {
   const isLive = status === "LIVE";
+
+  // Calculate live countdown for active trial
+  const [timerText, setTimerText] = useState<string>(() => {
+    if (trialExpiry) {
+      return formatCountdown(new Date(trialExpiry).getTime());
+    }
+    if (trialStatus === "ACTIVE" && daysLeft) {
+      return `${daysLeft}d left`;
+    }
+    return "";
+  });
+
+  useEffect(() => {
+    if (trialStatus !== "ACTIVE") return;
+
+    let targetMs: number | null = null;
+    if (trialExpiry) {
+      targetMs = new Date(trialExpiry).getTime();
+    } else if (daysLeft) {
+      // Fallback target based on days remaining
+      targetMs = Date.now() + daysLeft * 24 * 60 * 60 * 1000;
+    }
+
+    if (!targetMs) return;
+
+    // Immediate calculation
+    setTimerText(formatCountdown(targetMs));
+
+    const interval = setInterval(() => {
+      setTimerText(formatCountdown(targetMs!));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [trialStatus, trialExpiry, daysLeft]);
 
   return (
     <header className="chart-toolbar">
@@ -81,8 +133,11 @@ export function ChartToolbar({
         </div>
 
         {trialStatus === "ACTIVE" && (
-          <span className="chart-trial-pill">
-            Trial Active ({daysLeft}d left)
+          <span className="chart-trial-pill" title="7-Day Risk-Free Trial Countdown">
+            <span className="chart-trial-clock">⏱️</span>
+            <span className="chart-trial-countdown">
+              {timerText || `${daysLeft || 7}d left`}
+            </span>
           </span>
         )}
       </div>

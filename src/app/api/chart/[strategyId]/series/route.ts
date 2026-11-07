@@ -40,11 +40,34 @@ export async function GET(request: NextRequest, { params }: Props) {
     const access = await db.checkUserStrategyAccess(user.id, strategy.id);
     const userTrials = await db.getUserTrials(user.id);
     const now = new Date();
-    const currentTrial = userTrials.find(
+    let currentTrial = userTrials.find(
       (t) =>
         t.strategyId.toUpperCase() === strategy.id.toUpperCase() ||
         t.strategyId.toLowerCase() === strategy.slug.toLowerCase()
     );
+
+    // Check resilient cookie for serverless environments
+    if (!currentTrial) {
+      const trialCookie = request.cookies.get(`stratmarket_trial_${strategy.slug}`)?.value;
+      if (trialCookie) {
+        try {
+          const parsed = JSON.parse(trialCookie);
+          if (parsed.expiryTime && new Date(parsed.expiryTime) > now) {
+            currentTrial = {
+              id: `trl_cookie_${strategy.id}`,
+              userId: user.id,
+              strategyId: strategy.id,
+              startTime: new Date(),
+              expiryTime: new Date(parsed.expiryTime),
+              status: "ACTIVE",
+              eligibilityResult: "APPROVED",
+              associatedEntitlementId: `ent_cookie_${strategy.id}`,
+            };
+          }
+        } catch (_) {}
+      }
+    }
+
     const isTrialActive = Boolean(
       currentTrial && currentTrial.status === "ACTIVE" && new Date(currentTrial.expiryTime) > now
     );

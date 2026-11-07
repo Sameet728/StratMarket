@@ -32,8 +32,11 @@ export async function POST(
     // Attempt atomic trial creation with duplicate prevention
     try {
       const result = await db.startTrial(user.id, strategy.slug, user);
+      const now = new Date();
+      const msLeft = new Date(result.trial.expiryTime).getTime() - now.getTime();
+      const daysRemaining = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
 
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         message: `7-day trial activated for ${strategy.name}.`,
         trial: {
@@ -42,7 +45,7 @@ export async function POST(
           startTime: result.trial.startTime,
           expiryTime: result.trial.expiryTime,
           status: result.trial.status,
-          daysRemaining: 7,
+          daysRemaining,
         },
         entitlement: {
           id: result.entitlement.id,
@@ -50,8 +53,70 @@ export async function POST(
           expiryTime: result.entitlement.expiryTime,
         },
       });
+
+      // Set durable signed trial cookie for serverless lambda synchronization
+      response.cookies.set(`stratmarket_trial_${strategy.slug}`, JSON.stringify({
+        userId: user.id,
+        strategyId: strategy.id,
+        expiryTime: result.trial.expiryTime,
+      }), {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60,
+        path: "/",
+      });
+
+      return response;
     } catch (err: any) {
       if (err.message === "TRIAL_ALREADY_USED") {
+        // If the trial was already started, check if it is STILL ACTIVE
+        const trials = await db.getUserTrials(user.id);
+        const now = new Date();
+        const existingTrial = trials.find(
+          (t) =>
+            t.strategyId.toUpperCase() === strategy.id.toUpperCase() ||
+            t.strategyId.toLowerCase() === strategy.slug.toLowerCase()
+        );
+
+        if (existingTrial && existingTrial.status === "ACTIVE" && new Date(existingTrial.expiryTime) > now) {
+          const msLeft = new Date(existingTrial.expiryTime).getTime() - now.getTime();
+          const daysRemaining = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+
+          const response = NextResponse.json({
+            success: true,
+            alreadyActive: true,
+            message: `Your 7-day trial for ${strategy.name} is currently active.`,
+            trial: {
+              id: existingTrial.id,
+              strategyId: existingTrial.strategyId,
+              startTime: existingTrial.startTime,
+              expiryTime: existingTrial.expiryTime,
+              status: existingTrial.status,
+              daysRemaining,
+            },
+            entitlement: {
+              id: existingTrial.associatedEntitlementId,
+              status: "ACTIVE",
+              expiryTime: existingTrial.expiryTime,
+            },
+          });
+
+          response.cookies.set(`stratmarket_trial_${strategy.slug}`, JSON.stringify({
+            userId: user.id,
+            strategyId: strategy.id,
+            expiryTime: existingTrial.expiryTime,
+          }), {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60,
+            path: "/",
+          });
+
+          return response;
+        }
+
         return NextResponse.json(
           {
             error: "You have already used your 7-day trial for this strategy.",

@@ -904,6 +904,44 @@ Error: Module not found: Can't resolve '@/lib/vps/security'
 
 ---
 
+### Session Update (19:10 - 19:25): Seamless 7-Day Active Trial Unlocking & Real-Time Countdown Timer
+
+#### User Instructions (Uploaded Screenshot):
+- *"if i aldready staerd the 7 days trial for this staergy it should open the chart directly and a timer should start of the trial"*
+- (Screenshot showing browser alert: `strat-market-chi.vercel.app says: You have already used your 7-day trial for this strategy.` blocking the chart).
+
+#### Problem Analysis:
+1. When a user who had previously started a 7-day trial clicked the trial activation button or reloaded the chart page, `POST /api/strategies/[slug]/trial` returned HTTP 409 (`TRIAL_ALREADY_USED`), prompting an alert error in the browser and leaving the paywall modal locking the chart.
+2. In serverless deployment environments (e.g., Vercel Lambdas), in-memory trial stores can vary across lambda instances unless synchronized via signed cookies.
+3. The toolbar displayed a static text badge (`Trial Active (7d left)`) instead of a live ticking countdown timer showing exact days, hours, minutes, and seconds remaining.
+
+#### Solutions & Code Changes:
+1. **Server-Side Active Trial Recognition (`src/app/api/strategies/[slug]/trial/route.ts`):**
+   - When `db.startTrial` raises `TRIAL_ALREADY_USED`, the endpoint inspects `db.getUserTrials(user.id)`.
+   - If the trial is within its 7-day active window (`new Date(existingTrial.expiryTime) > now`), it returns HTTP 200 with `{ success: true, alreadyActive: true, trial: ..., daysRemaining }` instead of an error.
+   - Sets a durable signed cookie (`stratmarket_trial_${strategy.slug}`) with 7 days maxAge so all serverless lambdas can instantly verify the active trial.
+
+2. **Serverless Cookie Fallbacks (`page.tsx`, `series/route.ts`, `me/alerts/route.ts`):**
+   - Added durable cookie verification in `src/app/chart/[strategyId]/page.tsx` and `src/app/api/chart/[strategyId]/series/route.ts`. If the user has an active trial cookie, the server passes `initialHasAccess={true}` and `initialTrialExpiry` directly to the client, preventing the paywall modal from ever mounting.
+   - Synchronized `GET /api/me/alerts` to recognize the active trial cookie and return both `strategies` and `alerts` arrays.
+
+3. **Client-Side Direct Chart Unlocking (`StrategyChart.tsx`):**
+   - Added `initialTrialExpiry` prop and `trialExpiry` state.
+   - If the API returns `success: true`, `alreadyActive: true`, `TRIAL_ALREADY_USED`, or if `data.error` mentions "already used": immediately unlocks the chart (`setPaywallType("NONE")`), activates alerts, updates trial state, and re-renders the candles. No error alert is ever shown.
+
+4. **Live Real-Time Countdown Timer in Header (`ChartToolbar.tsx` & `globals.css`):**
+   - Added `trialExpiry?: string | null` to `ChartToolbar`.
+   - Built a 1-second interval timer hook (`formatCountdown`) calculating remaining days, hours, minutes, and seconds: `⏱️ 6d 23h 54m 12s`.
+   - Rendered with monospace tabular numerals (`JetBrains Mono`, `tabular-nums`) to ensure smooth ticking without text jitter.
+
+#### Verification:
+- **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
+- **Vitest Suite:** `npm test` -> **34/34 tests passed cleanly**.
+- **End-to-End Simulation:** Tested trader login, trial route (returned HTTP 200 `alreadyActive: true`), and series endpoint (returned 200 OK with all 1,500 candles and 32 markers).
+
+
+---
+
 ### Session Update (18:58 - 19:02): Restoring Drawing Toolbar & Streamlining Top Header
 
 #### User Instructions (Uploaded Screenshot):
@@ -924,6 +962,44 @@ Error: Module not found: Can't resolve '@/lib/vps/security'
 #### Verification & Quality Checks:
 - **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
 - **Vitest Suite:** `npm test` -> **34/34 tests passed cleanly**.
+
+---
+
+### Session Update (19:10 - 19:25): Seamless 7-Day Active Trial Unlocking & Real-Time Countdown Timer
+
+#### User Instructions (Uploaded Screenshot):
+- *"if i aldready staerd the 7 days trial for this staergy it should open the chart directly and a timer should start of the trial"*
+- (Screenshot showing browser alert: `strat-market-chi.vercel.app says: You have already used your 7-day trial for this strategy.` blocking the chart).
+
+#### Problem Analysis:
+1. When a user who had previously started a 7-day trial clicked the trial activation button or reloaded the chart page, `POST /api/strategies/[slug]/trial` returned HTTP 409 (`TRIAL_ALREADY_USED`), prompting an alert error in the browser and leaving the paywall modal locking the chart.
+2. In serverless deployment environments (e.g., Vercel Lambdas), in-memory trial stores can vary across lambda instances unless synchronized via signed cookies.
+3. The toolbar displayed a static text badge (`Trial Active (7d left)`) instead of a live ticking countdown timer showing exact days, hours, minutes, and seconds remaining.
+
+#### Solutions & Code Changes:
+1. **Server-Side Active Trial Recognition (`src/app/api/strategies/[slug]/trial/route.ts`):**
+   - When `db.startTrial` raises `TRIAL_ALREADY_USED`, the endpoint inspects `db.getUserTrials(user.id)`.
+   - If the trial is within its 7-day active window (`new Date(existingTrial.expiryTime) > now`), it returns HTTP 200 with `{ success: true, alreadyActive: true, trial: ..., daysRemaining }` instead of an error.
+   - Sets a durable signed cookie (`stratmarket_trial_${strategy.slug}`) with 7 days maxAge so all serverless lambdas can instantly verify the active trial.
+
+2. **Serverless Cookie Fallbacks (`page.tsx`, `series/route.ts`, `me/alerts/route.ts`):**
+   - Added durable cookie verification in `src/app/chart/[strategyId]/page.tsx` and `src/app/api/chart/[strategyId]/series/route.ts`. If the user has an active trial cookie, the server passes `initialHasAccess={true}` and `initialTrialExpiry` directly to the client, preventing the paywall modal from ever mounting.
+   - Synchronized `GET /api/me/alerts` to recognize the active trial cookie and return both `strategies` and `alerts` arrays.
+
+3. **Client-Side Direct Chart Unlocking (`StrategyChart.tsx`):**
+   - Added `initialTrialExpiry` prop and `trialExpiry` state.
+   - If the API returns `success: true`, `alreadyActive: true`, `TRIAL_ALREADY_USED`, or if `data.error` mentions "already used": immediately unlocks the chart (`setPaywallType("NONE")`), activates alerts, updates trial state, and re-renders the candles. No error alert is ever shown.
+
+4. **Live Real-Time Countdown Timer in Header (`ChartToolbar.tsx` & `globals.css`):**
+   - Added `trialExpiry?: string | null` to `ChartToolbar`.
+   - Built a 1-second interval timer hook (`formatCountdown`) calculating remaining days, hours, minutes, and seconds: `⏱️ 6d 23h 54m 12s`.
+   - Rendered with monospace tabular numerals (`JetBrains Mono`, `tabular-nums`) to ensure smooth ticking without text jitter.
+
+#### Verification:
+- **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
+- **Vitest Suite:** `npm test` -> **34/34 tests passed cleanly**.
+- **End-to-End Simulation:** Tested trader login, trial route (returned HTTP 200 `alreadyActive: true`), and series endpoint (returned 200 OK with all 1,500 candles and 32 markers).
+
 
 
 

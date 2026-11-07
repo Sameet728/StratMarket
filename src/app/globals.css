@@ -2230,16 +2230,32 @@ body:has(.chart-page-fullscreen) main {
   font-weight: 600;
 }
 
-/* Trial Pill */
+/* Trial Pill with Live Countdown */
 .chart-trial-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11px;
   font-weight: 600;
-  padding: 4px 9px;
+  padding: 4px 10px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   color: #ffffff;
   white-space: nowrap;
+}
+
+.chart-trial-pill .chart-trial-clock {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.chart-trial-pill .chart-trial-countdown {
+  font-family: "JetBrains Mono", monospace;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 /* Unified Clean Buttons */

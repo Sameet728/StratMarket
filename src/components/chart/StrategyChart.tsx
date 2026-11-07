@@ -28,6 +28,7 @@ interface Props {
   initialTrialStatus?: string;
   initialDaysLeft?: number;
   initialHasPaid?: boolean;
+  initialTrialExpiry?: string | null;
 }
 
 export function StrategyChart({
@@ -37,6 +38,7 @@ export function StrategyChart({
   initialTrialStatus = "NOT_STARTED",
   initialDaysLeft = 0,
   initialHasPaid = false,
+  initialTrialExpiry = null,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const workspaceRef = useRef<any>(null);
@@ -55,13 +57,14 @@ export function StrategyChart({
   // Entitlement & Trial states
   const [trialStatus, setTrialStatus] = useState<string>(initialTrialStatus);
   const [daysLeft, setDaysLeft] = useState<number>(initialDaysLeft);
+  const [trialExpiry, setTrialExpiry] = useState<string | null>(initialTrialExpiry);
   const [hasPaid, setHasPaid] = useState<boolean>(initialHasPaid);
   const [alertEnabled, setAlertEnabled] = useState(false);
   const [activatingTrial, setActivatingTrial] = useState(false);
   const [paywallType, setPaywallType] = useState<"NONE" | "SIGNIN" | "TRIAL_REQUIRED" | "EXPIRED">(
     initialTrialStatus === "EXPIRED" && !initialHasPaid
       ? "EXPIRED"
-      : initialTrialStatus === "NOT_STARTED" && !initialHasPaid && !initialHasAccess
+      : (initialTrialStatus === "NOT_STARTED" || !initialTrialStatus) && !initialHasPaid && !initialHasAccess
       ? "TRIAL_REQUIRED"
       : "NONE"
   );
@@ -81,9 +84,13 @@ export function StrategyChart({
             setAlertEnabled(Boolean(current.enabled));
             setTrialStatus(current.trialStatus || "NOT_STARTED");
             setDaysLeft(current.daysLeft || 0);
+            if (current.expiryTime) {
+              setTrialExpiry(current.expiryTime);
+            }
             setHasPaid(Boolean(current.hasPaid));
-            if (current.hasPaid || current.trialStatus === "ACTIVE") {
+            if (current.hasPaid || current.trialStatus === "ACTIVE" || current.hasAccess) {
               setPaywallType("NONE");
+              setTrialStatus("ACTIVE");
             } else if (current.trialStatus === "EXPIRED") {
               setPaywallType("EXPIRED");
             } else if (current.trialStatus === "NOT_STARTED") {
@@ -103,9 +110,18 @@ export function StrategyChart({
         method: "POST",
       });
       const data = await res.json();
-      if (res.ok && data.success) {
+      const isTrialAccepted =
+        (res.ok && data.success) ||
+        Boolean(data.alreadyActive) ||
+        data.code === "TRIAL_ALREADY_USED" ||
+        data.error?.toLowerCase().includes("already used");
+
+      if (isTrialAccepted) {
         setTrialStatus("ACTIVE");
-        setDaysLeft(7);
+        setDaysLeft(data.trial?.daysRemaining || 7);
+        if (data.trial?.expiryTime) {
+          setTrialExpiry(data.trial.expiryTime);
+        }
         setPaywallType("NONE");
         setAlertEnabled(true);
         // Force workspace reload
@@ -405,6 +421,7 @@ export function StrategyChart({
         onToggleAlert={handleToggleAlert}
         trialStatus={trialStatus}
         daysLeft={daysLeft}
+        trialExpiry={trialExpiry}
       />
 
       <div className="chart-main-body">

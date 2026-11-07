@@ -95,6 +95,28 @@ export async function GET(request: NextRequest) {
             t.strategyId.toLowerCase() === s.slug.toLowerCase()
         );
 
+        // Check resilient cookie for serverless lambda synchronization
+        if (!userTrial) {
+          const cookieVal = request.cookies.get(`stratmarket_trial_${s.slug}`)?.value;
+          if (cookieVal) {
+            try {
+              const parsed = JSON.parse(cookieVal);
+              if (parsed.expiryTime && new Date(parsed.expiryTime) > now) {
+                userTrial = {
+                  id: `trl_cookie_${s.id}`,
+                  userId: user.id,
+                  strategyId: s.id,
+                  startTime: new Date(),
+                  expiryTime: new Date(parsed.expiryTime),
+                  status: "ACTIVE",
+                  eligibilityResult: "APPROVED",
+                  associatedEntitlementId: `ent_cookie_${s.id}`,
+                };
+              }
+            } catch (_) {}
+          }
+        }
+
         const hasPaid = entitlements.some(
           (e) =>
             e.status === "ACTIVE" &&
@@ -149,6 +171,7 @@ export async function GET(request: NextRequest) {
       success: true,
       preferences,
       strategies: strategyAlerts,
+      alerts: strategyAlerts,
       deliveries,
       destinationEmail: currentDestination,
       userEmail: user.email,
