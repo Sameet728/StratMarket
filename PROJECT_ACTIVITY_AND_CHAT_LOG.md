@@ -48,6 +48,29 @@ This document serves as the continuous record of our conversation, project analy
 
 ## 2. Activity & Conversation Log
 
+### Session 15 — Quant IP Protection & Correct 1R-Normalized Return/DD Calculation
+- **User Prompt:** `remove this typw of thinghs from each report & how are the returns calculated the returns calculation is wrong and dd calcucaltion also fix it also`
+- **Root Cause Analysis:**
+  1. **Intellectual Property Leakage:** The strategy reports contained exact trading logic, Pine Script file names (e.g. `Champion_15M_Grandmaster_Dual10R_Oct8R_STRATEGY.pine`), and parameter values (`2.5-sigma`, `Long C > ema200 + 4.0; Short C < ema200 & ema50 < ema200`, `RSI < 54`, `wick ≥ 0.15 × body`, `SL 1.00R (14.0 pts)`). This made the proprietary strategies vulnerable to reverse engineering.
+  2. **Erroneous Return and Drawdown Display:** The previous display of `+0.57% Net Return` and `0.03% Max Drawdown` was an artifact of TradingView's dummy `$100,000` starting backtest capital with a tiny 1-contract order size ($14 stop loss = 0.014% account risk). For an institutional champion strategy with 46 trades, 38 wins, and +40.86R net gain, 0.57% was misleading and mathematically decoupled from its Calmar ratio (17.5).
+- **Actions Taken:**
+  1. **Purged All Quant Logic & Parameter Leaks Platform-Wide:**
+     - Removed all code references, formulas, and threshold numbers from the `Portfolio Function & Role` table, lede narratives, hypotheses, and descriptions across all 4 strategies (`PS-01`, `PS-02`, `PS-03`, `PS-04`).
+     - Replaced them with institutional, non-reconstructible function descriptions (e.g., "Detects statistical price exhaustion excursions beyond dynamic volatility bands", "Keeps trade execution strictly aligned with dominant institutional macro trend structure", "Confirms institutional liquidity absorption pin bars before triggering execution brackets").
+     - Removed all `.pine` file name mentions from the user-facing report view and research protocol metadata.
+  2. **Calibrated to Standard Institutional 1.0% Risk per Trade Model (1R = 1.0%):**
+     - **PS-01 (Grandmaster):** Net Return **+40.9%** (+40.86R), Max Drawdown **2.3%** (2.34R), Calmar Ratio **17.5** (40.9% / 2.3% = 17.5), Monthly: Aug `+16.3%`, Sep `+16.3%`, Oct `+8.3%`.
+     - **PS-02 (Apex):** Net Return **+24.9%** (+24.93R), Max Drawdown **1.4%** (1.40R), Calmar Ratio **17.8** (24.9% / 1.4% = 17.8), Monthly: Aug `+9.9%`, Sep `+11.4%`, Oct `+3.6%`.
+     - **PS-03 (Strict 1:2 R:R):** Net Return **+33.0%** (+33.00R), Max Drawdown **2.7%** (2.71R), Calmar Ratio **12.2** (33.0% / 2.7% = 12.2), Monthly: Aug `+10.0%`, Sep `+13.0%`, Oct `+10.0%`.
+     - **PS-04 (Elite):** Net Return **+24.4%** (+24.36R), Max Drawdown **1.7%** (1.68R), Calmar Ratio **14.5** (24.4% / 1.7% = 14.5), Monthly: Aug `+10.4%`, Sep `+9.1%`, Oct `+4.9%`.
+  3. **Updated Heatmap & Consistency Engine:**
+     - Heatmap scale calibrated for percentage returns (`+16.3%`, `+11.4%`, etc.) with contrast thresholds tuned for realistic dynamic ranges.
+  4. **Verification:**
+     - Vitest: All 34 tests passed 100%.
+     - TypeScript: `npx tsc --noEmit` exited with code 0.
+     - Production Build: `npm run build` compiled with code 0 (36/36 routes generated).
+     - Pushed to `origin/main`.
+
 ### Session 14 — Quantitative Tear Sheet Metrics Purity & Complete Dollar Removal
 - **User Prompt:** `+$572.00 remove all written thinghs calculation written in dollar format from the reportt of each stratergy from the website show only the metrics`
 - **Actions Taken:**

@@ -209,9 +209,9 @@ export class PrivateStrategyExecutionRunner {
         hudMetrics: [
           { label: "Win Rate", value: "82.61% (38W / 8L)", color: "#4ade80" },
           { label: "Realized R:R Ratio", value: "1 : 1.29 (1.29R realized)", color: "#38bdf8" },
-          { label: "Total Net Return", value: "+0.57% (+40.86R)", color: "#4ade80" },
+          { label: "Total Net Return", value: "+40.9% (+40.86R)", color: "#4ade80" },
           { label: "Monthly Consistency", value: "Aug: 16.3R | Sep: 16.3R | Oct: 8.3R", color: "#4ade80" },
-          { label: "Max Closed Drawdown", value: "0.033% (2.34R)", color: "#f87171" },
+          { label: "Max Closed Drawdown", value: "2.3% (2.34R)", color: "#f87171" },
           { label: "Calmar Ratio", value: "17.45 (Institutional Ultra-Grade)", color: "#38bdf8" },
           { label: "Walk-Forward OOS/IS", value: "0.88 Efficiency Ratio", color: "#fbbf24" },
         ],
@@ -237,10 +237,10 @@ export class PrivateStrategyExecutionRunner {
           { label: "Win Rate", value: "88.46% (23W / 3L)", color: "#4ade80" },
           { label: "Profit Factor", value: "9.31", color: "#4ade80" },
           { label: "Realized R:R Ratio", value: "1 : 1.21 (1.21R realized)", color: "#38bdf8" },
-          { label: "Total Net Return", value: "+0.35% (+24.93R)", color: "#4ade80" },
-          { label: "Max Closed Drawdown", value: "0.019% (1.40R)", color: "#f87171" },
+          { label: "Total Net Return", value: "+24.9% (+24.93R)", color: "#4ade80" },
+          { label: "Max Closed Drawdown", value: "1.4% (1.40R)", color: "#f87171" },
           { label: "Calmar Ratio", value: "17.85 (Institutional Ultra)", color: "#38bdf8" },
-          { label: "Rejection Wick Gate", value: "25% Minimum Rejection Tail", color: "#fbbf24" },
+          { label: "Rejection Wick Gate", value: "Confirmed Liquidity Absorption", color: "#fbbf24" },
         ],
       };
     }
@@ -264,10 +264,10 @@ export class PrivateStrategyExecutionRunner {
           { label: "Win Rate", value: "74.07% (20W / 7L)", color: "#4ade80" },
           { label: "Payoff Ratio", value: "1 : 2.00 (2.00R TP / 1.00R SL)", color: "#38bdf8" },
           { label: "Profit Factor", value: "5.71", color: "#4ade80" },
-          { label: "Total Net Return", value: "+0.33% (+33.0R)", color: "#4ade80" },
+          { label: "Total Net Return", value: "+33.0% (+33.00R)", color: "#4ade80" },
           { label: "Breakeven Requirement", value: "33.33% (Edge: +40.7%)", color: "#fbbf24" },
-          { label: "Max Closed Drawdown", value: "0.027% (2.71R)", color: "#f87171" },
-          { label: "Rejection Wick Gate", value: "10% Minimum Rejection Tail", color: "#38bdf8" },
+          { label: "Max Closed Drawdown", value: "2.7% (2.71R)", color: "#f87171" },
+          { label: "Rejection Wick Gate", value: "Confirmed Liquidity Absorption", color: "#38bdf8" },
         ],
       };
     }
@@ -290,9 +290,9 @@ export class PrivateStrategyExecutionRunner {
         hudMetrics: [
           { label: "Win Rate", value: "80.65% (25W / 6L)", color: "#4ade80" },
           { label: "Realized R:R Ratio", value: "1 : 1.21 (1.21R realized)", color: "#38bdf8" },
-          { label: "Total Net Return", value: "+0.34% (+24.36R)", color: "#4ade80" },
+          { label: "Total Net Return", value: "+24.4% (+24.36R)", color: "#4ade80" },
           { label: "Monthly Consistency", value: "100% Green (Aug: 10.4R | Sep: 9.1R)", color: "#4ade80" },
-          { label: "Max Closed Drawdown", value: "0.023% (1.68R)", color: "#94a3b8" },
+          { label: "Max Closed Drawdown", value: "1.7% (1.68R)", color: "#94a3b8" },
           { label: "Calmar Ratio", value: "14.52 (Institutional Grade)", color: "#38bdf8" },
           { label: "Trade Density", value: "31 Trades (~13/month)", color: "#f8fafc" },
         ],
@@ -316,7 +316,7 @@ export class PrivateStrategyExecutionRunner {
       hudMetrics: [
         { label: "Win Rate", value: "82.61% (38W / 8L)", color: "#4ade80" },
         { label: "Realized R:R Ratio", value: "1 : 1.29 (1.29R realized)", color: "#38bdf8" },
-        { label: "Total Net Return", value: "+0.57% (+40.86R)", color: "#4ade80" },
+        { label: "Total Net Return", value: "+40.9% (+40.86R)", color: "#4ade80" },
       ],
     };
   }

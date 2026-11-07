@@ -158,12 +158,12 @@ export function StrategyReportView({ strategy }: Props) {
   const formatPnl = (v: number | null) => {
     if (v === null || v === undefined) return "—";
     const sign = v >= 0 ? "+" : "−";
-    return `${sign}${Math.abs(v).toFixed(2)}%`;
+    return `${sign}${Math.abs(v).toFixed(1)}%`;
   };
 
   const getHeatmapBg = (v: number | null) => {
     if (v === null || v === undefined) return "rgba(255,255,255,0.015)";
-    const intensity = Math.min(1, Math.abs(v) / 0.4);
+    const intensity = Math.min(1, Math.abs(v) / 20);
     if (v >= 0) {
       return `rgba(255, 255, 255, ${0.1 + intensity * 0.75})`;
     } else {

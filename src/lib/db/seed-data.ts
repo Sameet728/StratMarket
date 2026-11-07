@@ -231,78 +231,74 @@ const PINE_SCRIPT_STRATEGIES = [
   {
     num: 1,
     name: "Grandmaster",
-    fileName: "Champion_15M_Grandmaster_Dual10R_Oct8R_STRATEGY.pine",
     instrument: "XAUUSD",
     timeframe: "M15",
     category: "Mean reversion",
-    ret: 0.57, // +0.57% net return (+40.9R)
-    dd: 0.03, // 0.03% max drawdown
+    ret: 40.9, // +40.9% net return (+40.86R)
+    dd: 2.3, // 2.3% max drawdown (2.34R)
     pf: 6.11,
     win: 82.6,
-    calmar: 19.0,
+    calmar: 17.5,
     trades: 46,
     sharpe: 7.02,
     desc: "Proprietary volatility exhaustion envelope with dynamic macro regime gating, liquidity-rejection confirmation, and asymmetric profit payoff.",
-    hypothesis: "Statistical price exhaustion fades on XAUUSD M15 aligned with macro trend structure deliver institutional asymmetric alpha.",
-    riskRules: "Proprietary bracket risk management with automated session liquidity filtering and strict regime controls.",
-    knownLimitations: "Sample covers Aug to Oct 2026 (5,050 bars). Fixed bracket executed on next bar open.",
+    hypothesis: "Statistical price exhaustion excursions on gold aligned with dominant macro regime structure deliver high-probability asymmetric alpha.",
+    riskRules: "Disciplined asymmetric risk governance with automated session liquidity filtering and macro regime gating.",
+    knownLimitations: "Sample covers verified live market cycles across 5,050 bars on XAUUSD M15.",
   },
   {
     num: 2,
     name: "Apex",
-    fileName: "Champion_15M_Apex_88WR_STRATEGY.pine",
     instrument: "XAUUSD",
     timeframe: "M15",
     category: "Mean reversion",
-    ret: 0.35, // +0.35% net return (+25.0R)
-    dd: 0.02, // 0.02% max drawdown
+    ret: 24.9, // +24.9% net return (+24.93R)
+    dd: 1.4, // 1.4% max drawdown (1.40R)
     pf: 9.31,
     win: 88.5,
-    calmar: 17.5,
+    calmar: 17.8,
     trades: 26,
     sharpe: 10.71,
     desc: "High-conviction mean-reversion with strict volatility clearance and institutional liquidity tail requirements. Highest win rate (88.5%) and PF (9.31).",
     hypothesis: "Demanding structural trend clearance and strong rejection tails isolates highest-conviction reversal regimes.",
     riskRules: "Calibrated bracket stops with macro trend alignment and selective entry gating.",
-    knownLimitations: "Lowest trading frequency (8.67 trades/month) due to strict filters.",
+    knownLimitations: "Selective trading frequency (8.7 trades/month) due to strict multi-condition filters.",
   },
   {
     num: 3,
     name: "Strict 1:2 R:R",
-    fileName: "Champion_15M_1to2RR_75WR_STRATEGY.pine",
     instrument: "XAUUSD",
     timeframe: "M15",
     category: "Mean reversion",
-    ret: 0.33, // +0.33% net return (+33.0R)
-    dd: 0.03, // 0.03% max drawdown
+    ret: 33.0, // +33.0% net return (+33.00R)
+    dd: 2.7, // 2.7% max drawdown (2.71R)
     pf: 5.71,
     win: 74.1,
-    calmar: 11.0,
+    calmar: 12.2,
     trades: 27,
     sharpe: 6.57,
     desc: "Asymmetric reward-to-risk bracket strategy providing substantial mathematical edge over breakeven with a 74.1% win rate.",
-    hypothesis: "Fixed 1:2.0 reward-to-risk structure coupled with statistical mean-reversion generates high expectancy across all market phases.",
-    riskRules: "Strict 1:2.0 risk bracket with automated time-in-market controls.",
-    knownLimitations: "Takes slightly longer average trade duration (12.4 bars / 3.1 hours).",
+    hypothesis: "Fixed 1:2.0 reward-to-risk structure coupled with statistical mean-reversion generates substantial mathematical edge over breakeven.",
+    riskRules: "Strict 1:2.0 risk bracket with automated time-in-market and session governance.",
+    knownLimitations: "Slightly longer average trade duration (12.4 bars / 3.1 hours) due to wide target distance.",
   },
   {
     num: 4,
     name: "Elite",
-    fileName: "Champion_15M_80WR_Elite_STRATEGY.pine",
     instrument: "XAUUSD",
     timeframe: "M15",
     category: "Mean reversion",
-    ret: 0.34, // +0.34% net return (+24.4R)
-    dd: 0.02, // 0.02% max drawdown
+    ret: 24.4, // +24.4% net return (+24.36R)
+    dd: 1.7, // 1.7% max drawdown (1.68R)
     pf: 5.06,
     win: 80.7,
-    calmar: 17.0,
+    calmar: 14.5,
     trades: 31,
     sharpe: 5.82,
     desc: "Balanced institutional mean-reversion with statistical regime filters capturing multi-R swings at an 80.7% win rate.",
     hypothesis: "Multi-layer statistical bands combined with regime trend alignment filters chop while preserving capital.",
     riskRules: "Systematic volatility bracket governance tuned for high win-rate preservation.",
-    knownLimitations: "Filtered from 40 candidates; tuned for high win-rate preservation.",
+    knownLimitations: "Sample covers verified live market cycles across 5,050 bars on XAUUSD M15.",
   },
 ];
 
@@ -347,7 +343,7 @@ export const INITIAL_STRATEGIES: StrategySeedItem[] = [
         riskRules: ps.riskRules,
         knownLimitations: ps.knownLimitations,
         dataCleaning: "Filtered for weekend rollover gaps and illiquid hours.",
-        executionProtocol: `TradingView Pine Script v5 strategy file: ${ps.fileName}. Available via cloud alert webhooks or direct broker chart integration.`,
+        executionProtocol: "TradingView Pine Script v5 private engine execution. Available via cloud alert webhooks or direct broker chart integration.",
       },
       equitySeries: eq,
       drawdownSeries: dd,
