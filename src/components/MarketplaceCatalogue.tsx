@@ -18,7 +18,7 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
   const [instrument, setInstrument] = useState("All instruments");
   const [timeframe, setTimeframe] = useState("All timeframes");
   const [category, setCategory] = useState("All categories");
-  const [sort, setSort] = useState<"order" | "name" | "upd" | "pf" | "dd">("order");
+  const [sort, setSort] = useState<"order" | "name" | "upd" | "pf" | "dd" | "win" | "calmar">("order");
   const [selectedStrategy, setSelectedStrategy] = useState<StrategySeedItem | null>(null);
 
   const clearFilters = () => {
@@ -62,6 +62,12 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
         if (sort === "order") return getStrategySortOrder(a) - getStrategySortOrder(b);
         if (sort === "name") return a.name.localeCompare(b.name);
         if (sort === "pf") return b.metrics.profitFactor - a.metrics.profitFactor;
+        if (sort === "win") return b.metrics.winRate - a.metrics.winRate;
+        if (sort === "calmar") {
+          const calmarA = a.metrics.calmarRatio ?? (a.metrics.maxDrawdown > 0 ? a.metrics.netReturn / a.metrics.maxDrawdown : 0);
+          const calmarB = b.metrics.calmarRatio ?? (b.metrics.maxDrawdown > 0 ? b.metrics.netReturn / b.metrics.maxDrawdown : 0);
+          return calmarB - calmarA;
+        }
         if (sort === "dd") return a.metrics.maxDrawdown - b.metrics.maxDrawdown;
         if (sort === "upd") return b.metrics.netReturn - a.metrics.netReturn;
         return getStrategySortOrder(a) - getStrategySortOrder(b);
@@ -122,10 +128,10 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
           onChange={(e) => setSort(e.target.value as any)}
         >
           <option value="order">Strategy ID (PS-01 to PS-04)</option>
+          <option value="win">Win rate (highest)</option>
+          <option value="pf">Profit factor (highest)</option>
+          <option value="calmar">Calmar ratio (highest)</option>
           <option value="name">Alphabetical</option>
-          <option value="upd">Net return</option>
-          <option value="pf">Profit factor</option>
-          <option value="dd">Max drawdown (lowest)</option>
         </select>
       </div>
 
@@ -187,13 +193,13 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
                 <p>{s.description}</p>
                 <div className="mm">
                   <div>
-                    Net return*<b style={{ color: "#ffffff" }}>+{s.metrics.netReturn}%</b>
+                    Win rate*<b style={{ color: "#ffffff" }}>{s.metrics.winRate}%</b>
                   </div>
                   <div>
-                    Max DD*<b style={{ color: "#ffffff" }}>{s.metrics.maxDrawdown}%</b>
+                    Profit factor*<b style={{ color: "#ffffff" }}>{s.metrics.profitFactor}</b>
                   </div>
                   <div>
-                    Profit factor*<b>{s.metrics.profitFactor}</b>
+                    Calmar ratio*<b style={{ color: "#ffffff" }}>{s.metrics.calmarRatio ?? (s.metrics.maxDrawdown > 0 ? (s.metrics.netReturn / s.metrics.maxDrawdown).toFixed(1) : "—")}</b>
                   </div>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: "12px", gap: "8px", flexWrap: "wrap" }}>

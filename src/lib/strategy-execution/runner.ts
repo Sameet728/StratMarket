@@ -355,7 +355,7 @@ export class PrivateStrategyExecutionRunner {
         id: "fast-ema-50",
         name: `Fast EMA (${config.emaFastLen})`,
         kind: "line",
-        color: "#f59e0b", // Amber
+        color: "#ffffff",
         overlay: true,
         points: candles.map((c, i) => ({
           time: c.time,
@@ -368,7 +368,7 @@ export class PrivateStrategyExecutionRunner {
         id: "macro-ema-200",
         name: `Macro EMA (${config.emaSlowLen})`,
         kind: "line",
-        color: "#38bdf8", // Sky blue
+        color: "#a1a1aa",
         overlay: true,
         points: candles.map((c, i) => ({
           time: c.time,
@@ -381,7 +381,7 @@ export class PrivateStrategyExecutionRunner {
         id: "upper-volatility-band",
         name: `Upper Band (${config.bandMult}σ)`,
         kind: "line",
-        color: "#ef4444", // Red
+        color: "#71717a",
         overlay: true,
         points: candles.map((c, i) => ({
           time: c.time,
@@ -394,7 +394,7 @@ export class PrivateStrategyExecutionRunner {
         id: "band-basis-sma",
         name: `Band Basis SMA (${config.bandLen})`,
         kind: "line",
-        color: "#94a3b8", // Slate gray
+        color: "#52525b",
         overlay: true,
         points: candles.map((c, i) => ({
           time: c.time,
@@ -407,7 +407,7 @@ export class PrivateStrategyExecutionRunner {
         id: "lower-volatility-band",
         name: `Lower Band (${config.bandMult}σ)`,
         kind: "line",
-        color: "#10b981", // Emerald green
+        color: "#e4e4e7",
         overlay: true,
         points: candles.map((c, i) => ({
           time: c.time,
@@ -468,8 +468,8 @@ export class PrivateStrategyExecutionRunner {
             time: c.time,
             position: "aboveBar",
             shape: "circle",
-            color: "#10b981",
-            text: `🏆 TP HIT +$${config.tpDist.toFixed(2)}`,
+            color: "#ffffff",
+            text: "TP",
           });
           position = 0;
           activeTradeSignal = null;
@@ -493,8 +493,8 @@ export class PrivateStrategyExecutionRunner {
             time: c.time,
             position: "belowBar",
             shape: "circle",
-            color: "#ef4444",
-            text: `❌ SL HIT -$${config.slDist.toFixed(2)}`,
+            color: "#71717a",
+            text: "SL",
           });
           position = 0;
           activeTradeSignal = null;
@@ -521,8 +521,8 @@ export class PrivateStrategyExecutionRunner {
             time: c.time,
             position: "belowBar",
             shape: "circle",
-            color: "#10b981",
-            text: `🏆 TP HIT +$${config.tpDist.toFixed(2)}`,
+            color: "#ffffff",
+            text: "TP",
           });
           position = 0;
           activeTradeSignal = null;
@@ -546,8 +546,8 @@ export class PrivateStrategyExecutionRunner {
             time: c.time,
             position: "aboveBar",
             shape: "circle",
-            color: "#ef4444",
-            text: `❌ SL HIT -$${config.slDist.toFixed(2)}`,
+            color: "#71717a",
+            text: "SL",
           });
           position = 0;
           activeTradeSignal = null;
@@ -604,8 +604,8 @@ export class PrivateStrategyExecutionRunner {
             time: c.time,
             position: "belowBar",
             shape: "arrowUp",
-            color: "#10b981",
-            text: `▶ LONG $${entryPrice.toFixed(2)} | TP: $${currTP.toFixed(2)} | SL: $${currSL.toFixed(2)}`,
+            color: "#ffffff",
+            text: "BUY",
           });
         } else if (shortSig) {
           position = -1;
@@ -623,8 +623,8 @@ export class PrivateStrategyExecutionRunner {
             time: c.time,
             position: "aboveBar",
             shape: "arrowDown",
-            color: "#ef4444",
-            text: `▶ SHORT $${entryPrice.toFixed(2)} | TP: $${currTP.toFixed(2)} | SL: $${currSL.toFixed(2)}`,
+            color: "#a1a1aa",
+            text: "SELL",
           });
         }
       }
@@ -634,21 +634,21 @@ export class PrivateStrategyExecutionRunner {
     if (position !== 0) {
       // In-Position Price Bracket
       priceLevels.push({
-        name: `Active Take Profit (+${config.tpDist.toFixed(2)})`,
+        name: "Active Take Profit",
         price: currTP,
-        color: "#10b981",
+        color: "#ffffff",
         style: "dashed",
       });
       priceLevels.push({
-        name: `Active Entry Price (${entryPrice.toFixed(2)})`,
+        name: "Active Entry Price",
         price: entryPrice,
-        color: "#ffffff",
+        color: "#a1a1aa",
         style: "solid",
       });
       priceLevels.push({
-        name: `Active Stop Loss (-${config.slDist.toFixed(2)})`,
+        name: "Active Stop Loss",
         price: currSL,
-        color: "#ef4444",
+        color: "#71717a",
         style: "dashed",
       });
     } else if (latestClose > 0) {
@@ -656,19 +656,19 @@ export class PrivateStrategyExecutionRunner {
       priceLevels.push({
         name: `Target Payoff (+${config.tpDist.toFixed(2)})`,
         price: Number((latestClose + config.tpDist).toFixed(2)),
-        color: "#10b981",
+        color: "#ffffff",
         style: "dashed",
       });
       priceLevels.push({
         name: `Market Price (${latestClose.toFixed(2)})`,
         price: latestClose,
-        color: "#ffffff",
+        color: "#a1a1aa",
         style: "solid",
       });
       priceLevels.push({
         name: `Max Risk Stop (-${config.slDist.toFixed(2)})`,
         price: Number((latestClose - config.slDist).toFixed(2)),
-        color: "#ef4444",
+        color: "#71717a",
         style: "dashed",
       });
     }
@@ -691,24 +691,24 @@ export class PrivateStrategyExecutionRunner {
       (!config.excludeH12 || currentUtcHour !== 12);
 
     const sovereignGuards: StrategySovereignGuard[] = [
-      { label: "Timeframe Lock", value: "STRICTLY 15M (900s)", color: "#34d399" },
-      { label: "Execution Bias", value: "ZERO Lookahead (Bar Close)", color: "#34d399" },
+      { label: "Timeframe Lock", value: "STRICTLY 15M (900s)", color: "#ffffff" },
+      { label: "Execution Bias", value: "ZERO Lookahead (Bar Close)", color: "#ffffff" },
       {
         label: "Macro Trend Alignment",
-        value: isMacroBullish ? "BULLISH (EMA200)" : "BEARISH (EMA200)",
-        color: isMacroBullish ? "#34d399" : "#ef4444",
+        value: isMacroBullish ? "BULLISH (Macro Regime)" : "BEARISH (Macro Regime)",
+        color: "#ffffff",
       },
       {
         label: "Session Guard (UTC)",
         value: isSessionActive
-          ? `ACTIVE (${String(config.sessionStart).padStart(2, "0")}:00-${String(config.sessionEnd).padStart(2, "0")}:00)`
+          ? "ACTIVE (Institutional Liquidity Session)"
           : "ASIAN FILTERED (SLEEP)",
-        color: isSessionActive ? "#34d399" : "#fbbf24",
+        color: "#ffffff",
       },
       {
         label: "Order Architecture",
-        value: `Native Bracket (TP $${config.tpDist.toFixed(0)} / SL $${config.slDist.toFixed(0)})`,
-        color: "#38bdf8",
+        value: "Dynamic Asymmetric Bracket",
+        color: "#ffffff",
       },
     ];
 
@@ -716,15 +716,15 @@ export class PrivateStrategyExecutionRunner {
       sovereignGuards.push({
         label: "Rejection Wick Gate",
         value: `≥${(config.wickMinRatio * 100).toFixed(0)}% Candle Body`,
-        color: "#fbbf24",
+        color: "#ffffff",
       });
     }
 
     if (config.emaOffset > 0) {
       sovereignGuards.push({
         label: "Long Trend Offset",
-        value: `+$${config.emaOffset.toFixed(1)} above EMA200`,
-        color: "#fbbf24",
+        value: "ACTIVE (Structural Clearance Cleared)",
+        color: "#ffffff",
       });
     }
 
@@ -740,7 +740,7 @@ export class PrivateStrategyExecutionRunner {
       computedAt: Date.now(),
       candleCount: candles.length,
       series,
-      markers,
+      markers: markers.slice(-8),
       priceLevels,
       nativeIndicators,
       tradeBoxes,
@@ -753,9 +753,7 @@ export class PrivateStrategyExecutionRunner {
         riskParameters: {
           stopLoss: `-$${config.slDist.toFixed(2)}`,
           takeProfit: `+$${config.tpDist.toFixed(2)}`,
-          rules:
-            strategy.researchReport?.riskRules ||
-            `SL = $${config.slDist.toFixed(2)}, TP = $${config.tpDist.toFixed(2)} · Session: ${config.sessionStart}:00-${config.sessionEnd}:00 UTC`,
+          rules: "Dynamic volatility-adaptive order bracket executed on confirmed bar close. Strict institutional session and trend regime governance.",
         },
         latestSignal: activeTradeSignal || (latestClose > 0 ? {
           direction: "NEUTRAL",

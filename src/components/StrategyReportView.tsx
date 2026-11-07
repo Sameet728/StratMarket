@@ -129,47 +129,31 @@ export function StrategyReportView({ strategy }: Props) {
     }
   };
 
-  const pineScriptSample = `//@version=5
-strategy("${strategy.name}", overlay=true, initial_capital=100000, default_qty_type=strategy.fixed, default_qty_value=1)
-
-// StratMarket Champion M15 Mean-Reversion Architecture
-// Instrument: ${strategy.instrument} | Timeframe: ${strategy.timeframe}
-bandPeriod = input.int(20, "Bollinger Envelope Length")
-bandDev    = input.float(2.5, "Standard Deviation Multiplier")
-emaGate    = ta.ema(close, 200)
-rsiVal     = ta.rsi(close, 14)
-
-[basis, upper, lower] = ta.bb(close, bandPeriod, bandDev)
-lowerWick = math.min(open, close) - low
-bodySize  = math.abs(close - open)
-
-// Macro Trend Gate & Rejection Wick Entry
-longFilter  = close > (emaGate + 4.0) and rsiVal < 54 and (lowerWick >= 0.15 * bodySize)
-shortFilter = close < emaGate and rsiVal > 46
-
-if (ta.crossunder(close, lower) and longFilter)
-    strategy.entry("Long Reversal", strategy.long)
-    strategy.exit("Bracket Long", "Long Reversal", stop=close - 14.0, limit=close + 18.0)
-
-if (ta.crossover(close, upper) and shortFilter)
-    strategy.entry("Short Reversal", strategy.short)
-    strategy.exit("Bracket Short", "Short Reversal", stop=close + 14.0, limit=close - 18.0)
-`;
+  const payoff = reportData.payoff || {
+    payoffRatio: "1.29:1",
+    avgWin: "+$18.00",
+    avgLoss: "−$14.00",
+    maxConsecWins: 12,
+    maxConsecLosses: 2,
+    winRate: "82.6%",
+    profitFactor: "6.11",
+    expectancy: "+$12.43",
+    lossRate: "17.4%",
+    totalTrades: 46,
+    avgR: "1.29R",
+    distribution: [
+      { label: "> +3R", count: 0, pct: 0 },
+      { label: "+2R to +3R", count: 0, pct: 0 },
+      { label: "+1R to +2R", count: 38, pct: 82.6 },
+      { label: "0 to +1R", count: 0, pct: 0 },
+      { label: "-1R to 0", count: 8, pct: 17.4 },
+    ],
+  };
 
   // Heatmap months & helper
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const scriptData = reportData.scriptData || {};
   const maxYearVal = scriptData.mx || 30000;
-  const payoff = reportData.payoff || {
-    avgWin: "+$1,397.16",
-    avgLoss: "-$195.81",
-    payoffRatio: "7.14 : 1",
-    breakevenWinRate: "12.29%",
-    actualWinRate: "22.41%",
-    expectancy: "+$161.13",
-    totalTrades: "781",
-    totalPnl: "+$125,840.22"
-  };
 
   const formatPnl = (v: number | null) => {
     if (v === null || v === undefined) return "—";
@@ -298,7 +282,7 @@ if (ta.crossover(close, upper) and shortFilter)
           <table className="report-table">
             <thead>
               <tr>
-                <th style={{ minWidth: "260px" }}>Engine / Component</th>
+                <th style={{ minWidth: "260px" }}>Quantitative Subsystem</th>
                 <th style={{ minWidth: "160px" }}>Conviction Weight</th>
                 <th className="n" style={{ minWidth: "130px" }}>Solo PnL</th>
                 <th className="n" style={{ minWidth: "100px" }}>Solo PF</th>
@@ -311,11 +295,6 @@ if (ta.crossover(close, upper) and shortFilter)
                 <tr key={i}>
                   <td>
                     <b style={{ color: "var(--tx)", fontSize: "14.5px", display: "block" }}>{row.engine}</b>
-                    {row.script && (
-                      <span style={{ fontSize: "11.5px", color: "var(--mut)", fontFamily: "JetBrains Mono, monospace", display: "inline-block", marginTop: "3px", padding: "1px 6px", background: "rgba(255,255,255,0.04)", borderRadius: "4px" }}>
-                        {row.script}
-                      </span>
-                    )}
                   </td>
                   <td>
                     <span style={{ color: "#ffffff", fontWeight: 700, padding: "3px 8px", background: "rgba(255, 255, 255, 0.08)", borderRadius: "6px", display: "inline-block" }}>
@@ -986,51 +965,57 @@ if (ta.crossover(close, upper) and shortFilter)
             </button>
 
             <span className="badge pn">Pine Script v5</span>{" "}
-            <span className="note">{strategy.id} · TradingView Script</span>
+            <span className="note">{strategy.id} · Private TradingView Access</span>
 
             <h2 style={{ marginTop: "12px" }}>{strategy.name} on TradingView</h2>
             <p className="note" style={{ fontSize: "14px", marginTop: "4px" }}>
-              Add this quantitative script directly to your TradingView charts or configure cloud alert webhooks.
+              TradingView Private Indicator Access & Webhook Signal Automation
             </p>
 
-            <div style={{ position: "relative", marginTop: "16px" }}>
-              <pre
-                style={{
-                  background: "#080c0b",
-                  border: "1px solid var(--line)",
-                  borderRadius: "8px",
-                  padding: "16px",
-                  fontSize: "12.5px",
-                  overflowX: "auto",
-                  color: "#d8d8d8",
-                  maxHeight: "260px",
-                }}
-              >
-                <code>{pineScriptSample}</code>
-              </pre>
-              <button
-                className="chip"
-                onClick={() => {
-                  navigator.clipboard.writeText(pineScriptSample);
-                  setCopiedCode(true);
-                  setTimeout(() => setCopiedCode(false), 2000);
-                }}
-                style={{ position: "absolute", top: "10px", right: "10px" }}
-              >
-                {copiedCode ? "Copied!" : "Copy Pine Script"}
-              </button>
+            <div
+              style={{
+                position: "relative",
+                marginTop: "16px",
+                background: "rgba(255, 255, 255, 0.02)",
+                border: "1px solid var(--line)",
+                borderRadius: "12px",
+                padding: "20px",
+                color: "#e4e4e7",
+                fontSize: "13.5px",
+                lineHeight: 1.6,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                <span style={{ fontSize: "18px" }}>🔒</span>
+                <strong style={{ color: "#ffffff", fontSize: "14px" }}>
+                  Proprietary Institutional Script Delivery
+                </strong>
+              </div>
+              <p style={{ margin: "0 0 12px", color: "var(--mut)" }}>
+                To safeguard Elvaris Capital quantitative IP and ensure zero reverse-engineering, execution logic is delivered through secure channels:
+              </p>
+              <ul style={{ margin: "0 0 16px", paddingLeft: "20px", display: "grid", gap: "8px", color: "#d4d4d8" }}>
+                <li><b>Private TradingView Invite-Only Script:</b> Activated directly on your TradingView account handle.</li>
+                <li><b>Institutional Webhook Signals:</b> Direct real-time execution alerts with verified HMAC signatures.</li>
+                <li><b>LuxAlgo Vela Live Terminal:</b> Real-time candlestick charting with automated Long/Short trade brackets.</li>
+              </ul>
+              <div style={{ padding: "10px 14px", background: "rgba(255, 255, 255, 0.05)", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.08)", fontSize: "12px", color: "#a1a1aa" }}>
+                Your active 7-Day Trial or Pro subscription includes instantaneous access routing to this strategy.
+              </div>
             </div>
 
             <div style={{ marginTop: "20px", display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+              <Link href={`/chart/${strategy.id}`} className="pill sm">
+                Open Live Chart Workspace ↗
+              </Link>
               <a
-                href="https://www.tradingview.com/chart"
+                href="https://www.tradingview.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="pill sm"
+                className="pill g sm"
               >
-                Open TradingView Chart ↗
+                TradingView Terminal ↗
               </a>
-              <span className="note">Compatible with TradingView Essential, Plus, and Premium</span>
             </div>
           </div>
         </div>

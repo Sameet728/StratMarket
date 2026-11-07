@@ -123,13 +123,13 @@ export function IndexPreview({ initialStrategies }: IndexPreviewProps) {
             </svg>
             <div className="mm">
               <div>
-                Return*<b>{hoveredStrategy.metrics.netReturn}%</b>
-              </div>
-              <div>
-                Max DD*<b>{hoveredStrategy.metrics.maxDrawdown}%</b>
+                Win rate*<b>{hoveredStrategy.metrics.winRate}%</b>
               </div>
               <div>
                 PF*<b>{hoveredStrategy.metrics.profitFactor}</b>
+              </div>
+              <div>
+                Calmar*<b>{hoveredStrategy.metrics.calmarRatio ?? (hoveredStrategy.metrics.maxDrawdown > 0 ? (hoveredStrategy.metrics.netReturn / hoveredStrategy.metrics.maxDrawdown).toFixed(1) : "—")}</b>
               </div>
             </div>
             <span className="note">*Illustrative</span>

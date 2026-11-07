@@ -262,8 +262,8 @@ export function StrategyChart({
         );
         marks?.forEach((el) => el.remove());
 
-        // Plot authentic Long/Short Position Tool boxes with exact Entry, SL, and TP prices
-        if (data.contract?.tradeBoxes && ws.chart?.drawings) {
+        // Plot ONLY the latest active/most recent trade setup position box (clean, institutional, un-overwritten)
+        if (showBoxes && data.contract?.tradeBoxes && ws.chart?.drawings) {
           const lockDrawing = (d: any) => {
             if (!d) return;
             try {
@@ -274,56 +274,55 @@ export function StrategyChart({
             } catch (_) {}
           };
 
-          for (const tb of data.contract.tradeBoxes) {
-            try {
-              const riskAmount = Math.abs(tb.entryPrice - tb.slPrice).toFixed(2);
-              const rewardAmount = Math.abs(tb.tpPrice - tb.entryPrice).toFixed(2);
+          const boxesToPlot = (data.contract.tradeBoxes || []).slice(-1);
 
-              // 1. Reward Zone Box (Take Profit - Emerald Green) - Locked & unmoveable
+          for (const tb of boxesToPlot) {
+            try {
+              // 1. Reward Zone Box (Take Profit - Subtle Frosted White)
               const d1 = ws.chart.drawings.add("box", {
                 anchors: [
                   { time: tb.entryTime, price: tb.entryPrice },
                   { time: tb.exitTime, price: tb.tpPrice },
                 ],
                 style: {
-                  fillColor: "rgba(16, 185, 129, 0.20)",
-                  lineColor: "#10b981",
+                  fillColor: "rgba(255, 255, 255, 0.08)",
+                  lineColor: "#ffffff",
                   lineWidth: 1.5,
                   lineStyle: "solid",
                 },
               });
               lockDrawing(d1);
 
-              // 2. Risk Zone Box (Stop Loss - Crimson Red) - Locked & unmoveable
+              // 2. Risk Zone Box (Stop Loss - Dark Zinc)
               const d2 = ws.chart.drawings.add("box", {
                 anchors: [
                   { time: tb.entryTime, price: tb.entryPrice },
                   { time: tb.exitTime, price: tb.slPrice },
                 ],
                 style: {
-                  fillColor: "rgba(239, 68, 68, 0.20)",
-                  lineColor: "#ef4444",
+                  fillColor: "rgba(255, 255, 255, 0.03)",
+                  lineColor: "#71717a",
                   lineWidth: 1.5,
                   lineStyle: "solid",
                 },
               });
               lockDrawing(d2);
 
-              // 3. Center Entry Price Line (Dashed) - Locked & unmoveable
+              // 3. Center Entry Price Line (Dashed)
               const d3 = ws.chart.drawings.add("trendline", {
                 anchors: [
                   { time: tb.entryTime, price: tb.entryPrice },
                   { time: tb.exitTime, price: tb.entryPrice },
                 ],
                 style: {
-                  lineColor: "#cbd5e1",
+                  lineColor: "#e4e4e7",
                   lineStyle: "dashed",
                   lineWidth: 1.5,
                 },
               });
               lockDrawing(d3);
 
-              // 4. Dedicated Single Entry Price Pin - Locked & unmoveable
+              // 4. Single Clean Entry Price Pin
               const d4 = ws.chart.drawings.add("text", {
                 anchors: [
                   { time: tb.entryTime, price: tb.entryPrice },
@@ -337,56 +336,6 @@ export function StrategyChart({
                 },
               });
               lockDrawing(d4);
-
-              // 5. Dedicated Single Stop Loss Pin - Locked & unmoveable
-              const d5 = ws.chart.drawings.add("text", {
-                anchors: [
-                  { time: tb.entryTime, price: tb.slPrice },
-                ],
-                text: {
-                  value: `SL: $${tb.slPrice.toFixed(2)} (-$${riskAmount})`,
-                  color: "#f87171",
-                  size: "small",
-                  hAlign: "left",
-                  vAlign: "center",
-                },
-              });
-              lockDrawing(d5);
-
-              // 6. Dedicated Single Take Profit Pin - Locked & unmoveable
-              const d6 = ws.chart.drawings.add("text", {
-                anchors: [
-                  { time: tb.entryTime, price: tb.tpPrice },
-                ],
-                text: {
-                  value: `TP: $${tb.tpPrice.toFixed(2)} (+$${rewardAmount})`,
-                  color: "#34d399",
-                  size: "small",
-                  hAlign: "left",
-                  vAlign: "center",
-                },
-              });
-              lockDrawing(d6);
-
-              // 7. Dedicated Trade Exit Outcome Pin - Shows TP HIT / SL HIT with exact price & outcome
-              const isWin = tb.isWin ?? (tb.profitUsd > 0);
-              const cleanBadge = (tb.exitBadge || "").replace(/\n/g, " ");
-              const exitText = cleanBadge || (isWin ? `🏆 TP HIT +$${rewardAmount}` : `❌ SL HIT -$${riskAmount}`);
-              const exitColor = isWin ? "#34d399" : "#f87171";
-
-              const d7 = ws.chart.drawings.add("text", {
-                anchors: [
-                  { time: tb.exitTime, price: tb.exitPrice },
-                ],
-                text: {
-                  value: `${exitText} @ $${tb.exitPrice.toFixed(2)}`,
-                  color: exitColor,
-                  size: "small",
-                  hAlign: "left",
-                  vAlign: "center",
-                },
-              });
-              lockDrawing(d7);
             } catch (_) {}
           }
         }

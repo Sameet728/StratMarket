@@ -190,27 +190,55 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
         <div className="panel-section">
           <div className="section-title">Plotted Overlays ({contract.series.length})</div>
           <div className="overlays-list">
-            {contract.series.map((s) => (
-              <div key={s.id} className="overlay-item">
-                <span className="overlay-color-chip" style={{ backgroundColor: s.color }} />
-                <span className="overlay-name">{s.name}</span>
-              </div>
-            ))}
-            {contract.priceLevels.map((lvl) => (
-              <div key={lvl.name} className="overlay-item">
-                <span
-                  className="overlay-color-chip"
-                  style={{
-                    backgroundColor: lvl.color,
-                    borderStyle: lvl.style,
-                    borderWidth: 1,
-                  }}
-                />
-                <span className="overlay-name">
-                  {lvl.name}: ${lvl.price.toFixed(2)}
-                </span>
-              </div>
-            ))}
+            {contract.series.map((s) => {
+              const displayName = s.name.startsWith("Fast EMA")
+                ? "Fast Trend Velocity"
+                : s.name.startsWith("Macro EMA")
+                ? "Macro Regime Baseline"
+                : s.name.startsWith("Upper Band")
+                ? "Upper Volatility Barrier"
+                : s.name.startsWith("Band Basis")
+                ? "Mean Reversion Median"
+                : s.name.startsWith("Lower Band")
+                ? "Lower Volatility Barrier"
+                : s.name;
+              return (
+                <div key={s.id} className="overlay-item">
+                  <span className="overlay-color-chip" style={{ backgroundColor: s.color }} />
+                  <span className="overlay-name">{displayName}</span>
+                </div>
+              );
+            })}
+            {contract.priceLevels.map((lvl) => {
+              const displayLvl = lvl.name.includes("Target Payoff")
+                ? "Target Payoff Level"
+                : lvl.name.includes("Max Risk Stop")
+                ? "Max Risk Stop Level"
+                : lvl.name.includes("Active Entry")
+                ? "Active Position Entry"
+                : lvl.name.includes("Active Take Profit")
+                ? "Active Target Payoff"
+                : lvl.name.includes("Active Stop Loss")
+                ? "Active Risk Stop"
+                : lvl.name.includes("Market Price")
+                ? "Market Price"
+                : lvl.name;
+              return (
+                <div key={lvl.name} className="overlay-item">
+                  <span
+                    className="overlay-color-chip"
+                    style={{
+                      backgroundColor: lvl.color,
+                      borderStyle: lvl.style,
+                      borderWidth: 1,
+                    }}
+                  />
+                  <span className="overlay-name">
+                    {displayLvl}: ${lvl.price.toFixed(2)}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 

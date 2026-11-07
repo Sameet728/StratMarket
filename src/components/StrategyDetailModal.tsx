@@ -134,16 +134,16 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
         {/* Key Performance Indicators */}
         <div className="kp">
           <div>
-            Net return<b>{s.metrics.netReturn}%</b>
-          </div>
-          <div>
-            Max drawdown<b>{s.metrics.maxDrawdown}%</b>
+            Win rate<b>{s.metrics.winRate}%</b>
           </div>
           <div>
             Profit factor<b>{s.metrics.profitFactor}</b>
           </div>
           <div>
-            Win rate<b>{s.metrics.winRate}%</b>
+            Calmar ratio<b>{s.metrics.calmarRatio ?? (s.metrics.maxDrawdown > 0 ? (s.metrics.netReturn / s.metrics.maxDrawdown).toFixed(1) : "—")}</b>
+          </div>
+          <div>
+            Max drawdown<b>{s.metrics.maxDrawdown}%</b>
           </div>
         </div>
 

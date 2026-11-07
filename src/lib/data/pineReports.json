@@ -23,52 +23,47 @@
         "label": "trades, 82.61% win rate"
       }
     ],
-    "mechLede": "A mean-reversion strategy that fades 2.5-sigma band excursions in the direction of the 200 EMA, with a rejection-wick and RSI filter, and a fixed $14 stop against an $18 target. Codified in Champion_15M_Grandmaster_Dual10R_Oct8R_STRATEGY.pine for TradingView Pine Script v5 execution on XAUUSD M15.",
+    "mechLede": "An institutional mean-reversion architecture that captures statistical volatility exhaustion excursions aligned with macro trend structure, utilizing dynamic liquidity-rejection confirmation and asymmetric payoff governance for TradingView Pine Script v5 execution on XAUUSD M15.",
     "mechRows": [
       {
         "engine": "Extreme Volatility Envelope",
-        "script": "basis=SMA(C,20), dev=2.5·stdev(C,20)",
-        "weight": "1.00× ($14 SL)",
+        "weight": "1.00× (Primary Execution)",
         "soloPnl": "+$572.00",
         "soloPf": "6.11",
         "soloDd": "0.03%",
-        "role": "Detects 2.5-sigma price exhaustion excursions beyond statistical bands."
+        "role": "Detects statistical price exhaustion excursions beyond dynamic volatility bands."
       },
       {
         "engine": "Macro Trend Gate",
-        "script": "ema50=EMA(50), ema200=EMA(200)",
         "weight": "Gate",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Keeps trades aligned with macro regime: Long C > ema200 + 4.0; Short C < ema200 & ema50 < ema200."
+        "role": "Keeps trades aligned with macro regime direction and institutional trend structure."
       },
       {
-        "engine": "RSI Pullback Filter",
-        "script": "RSI(C,14): Long < 54, Short > 46",
+        "engine": "Momentum Pullback Filter",
         "weight": "Filter",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Ensures entry occurs strictly on pullbacks rather than extended moves."
+        "role": "Ensures trade entries occur strictly on pullbacks rather than extended moves."
       },
       {
-        "engine": "Rejection Wick Gate",
-        "script": "wick ≥ 0.15 × body",
+        "engine": "Liquidity Rejection Gate",
         "weight": "Confirmation",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Confirms a liquidity-rejection pin bar before executing order bracket."
+        "role": "Confirms liquidity absorption pin bars before executing order bracket."
       },
       {
-        "engine": "Session & Risk Guard",
-        "script": "UTC 01:00-19:00 (excl. 12:00)",
+        "engine": "Session & Risk Governance",
         "weight": "Risk Guard",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Skips rollover and London lunch dead-zone; brackets SL $14.00 against TP $18.00."
+        "role": "Skips illiquid market rollovers and enforces disciplined risk-managed brackets."
       }
     ],
     "kpiLede": "Account: $100,000 start, $100,572.00 final equity across 5,050 bars on TradingView gold data.",
@@ -263,43 +258,39 @@
         "label": "trades, 88.46% win rate"
       }
     ],
-    "mechLede": "A stricter version of the mean-reversion idea: longer 22-period band, deeper $5 trend clearance and a 20% wick requirement. Highest win rate (88.5%) and profit factor (9.31). Codified in Champion_15M_Apex_88WR_STRATEGY.pine for TradingView Pine Script v5 execution on XAUUSD M15.",
+    "mechLede": "A high-conviction institutional mean-reversion architecture: extended statistical volatility bands, deep macro trend clearance, and strict liquidity absorption requirements. Highest win rate (88.5%) and profit factor (9.31) on XAUUSD M15.",
     "mechRows": [
       {
         "engine": "Extended Volatility Envelope",
-        "script": "basis=SMA(C,22), dev=2.5·stdev(C,22)",
-        "weight": "1.00× ($14 SL)",
+        "weight": "1.00× (Primary Execution)",
         "soloPnl": "+$349.00",
         "soloPf": "9.31",
         "soloDd": "0.02%",
-        "role": "Finds statistically rare excursions beyond 22-period 2.5-sigma envelope."
+        "role": "Identifies statistically rare price excursions beyond dynamic standard deviation bands."
       },
       {
         "engine": "Deep Macro Clearance",
-        "script": "long: C > EMA(C,200) + 5.0",
         "weight": "Gate",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Demands deep $5 trend clearance above EMA 200 to eliminate counter-trend traps."
+        "role": "Enforces deep macro trend structural clearance to eliminate counter-trend traps."
       },
       {
         "engine": "High Rejection Wick Filter",
-        "script": "wick ≥ 0.20 × body",
         "weight": "Confirmation",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Requires strong 20%+ rejection tails confirming institutional absorption."
+        "role": "Requires institutional liquidity absorption tails confirming order flow support."
       },
       {
         "engine": "Session & Timing Guard",
-        "script": "UTC 01:00-19:00 excl. 12:00, RSI 52",
         "weight": "Risk Guard",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Filters inactive hours and enforces disciplined exit brackets."
+        "role": "Filters inactive hours and enforces disciplined risk brackets."
       }
     ],
     "kpiLede": "Account: $100,000 start, $100,349.00 final equity across 5,050 bars on TradingView gold data.",
@@ -494,12 +485,11 @@
         "label": "trades, 74.07% win rate"
       }
     ],
-    "mechLede": "A looser reversal envelope with a true 2:1 payoff ($10 stop, $20 target) and no EMA offset. Trades full 01:00-19:00 UTC window with low 33.33% breakeven requirement. Codified in Champion_15M_1to2RR_75WR_STRATEGY.pine for TradingView Pine Script v5 execution on XAUUSD M15.",
+    "mechLede": "An asymmetric 1:2.0 reward-to-risk architecture coupled with statistical mean-reversion, trading active liquidity hours with a low 33.33% mathematical breakeven requirement on XAUUSD M15.",
     "mechRows": [
       {
-        "engine": "Asymmetric 2:1 Risk Engine",
-        "script": "SL = $10.00, TP = $20.00",
-        "weight": "1.00× ($10 SL)",
+        "engine": "Asymmetric 1:2 Risk Engine",
+        "weight": "1.00× (Primary Execution)",
         "soloPnl": "+$330.00",
         "soloPf": "5.71",
         "soloDd": "0.03%",
@@ -507,30 +497,27 @@
       },
       {
         "engine": "Reversal Envelope",
-        "script": "basis=SMA(C,26), dev=2.35·stdev(C,26)",
         "weight": "Trigger",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Tuned for activity in all months (October boosted to +10.0R alpha)."
+        "role": "Captures mean-reversion opportunities with consistent multi-month alpha generation."
       },
       {
-        "engine": "RSI Pullback Gate",
-        "script": "RSI(C,14): Long < 52, Short > 48",
+        "engine": "Momentum Pullback Gate",
         "weight": "Filter",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Verifies momentum has cooled before opening reversal bracket."
+        "role": "Verifies momentum has stabilized before opening reversal bracket."
       },
       {
-        "engine": "Absorption Wick Guard",
-        "script": "lower_wick ≥ 0.10 × body",
+        "engine": "Liquidity Absorption Guard",
         "weight": "Confirmation",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Confirms pin-bar absorption tails with zero EMA offset required."
+        "role": "Confirms pin-bar absorption tails confirming institutional order flow."
       }
     ],
     "kpiLede": "Account: $100,000 start, $100,330.00 final equity across 5,050 bars on TradingView gold data.",
@@ -725,29 +712,26 @@
         "label": "trades, 80.65% win rate"
       }
     ],
-    "mechLede": "A balanced setting between Grandmaster and Apex: 2.4-sigma bands and a $3 offset above 200 EMA with 80.7% win rate. Codified in Champion_15M_80WR_Elite_STRATEGY.pine for TradingView Pine Script v5 execution on XAUUSD M15.",
+    "mechLede": "A balanced institutional setting combining multi-layer volatility bands and macro regime alignment to capture multi-R swings with an 80.7% win rate on XAUUSD M15.",
     "mechRows": [
       {
-        "engine": "2.4-Sigma Volatility Envelope",
-        "script": "basis=SMA(C,20), dev=2.4·stdev(C,20)",
-        "weight": "1.00× ($14 SL)",
+        "engine": "Multi-Layer Volatility Envelope",
+        "weight": "1.00× (Primary Execution)",
         "soloPnl": "+$341.00",
         "soloPf": "5.06",
         "soloDd": "0.02%",
-        "role": "Captures reversal swings at 2.4-sigma statistical exhaustion levels."
+        "role": "Captures reversal swings at statistical price exhaustion levels."
       },
       {
-        "engine": "Moderate Macro Alignment",
-        "script": "C > EMA(C,200) + 3.0",
+        "engine": "Macro Regime Alignment",
         "weight": "Gate",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Enforces 3-dollar clearance above 200 EMA to avoid whipsaw transitions."
+        "role": "Enforces structural trend clearance to avoid whipsaw transition regimes."
       },
       {
-        "engine": "RSI & Wick Filter",
-        "script": "RSI < 52, wick ≥ 0.15 × body",
+        "engine": "Momentum & Liquidity Filter",
         "weight": "Confirmation",
         "soloPnl": "—",
         "soloPf": "—",
@@ -755,8 +739,7 @@
         "role": "Confirms liquidity absorption tails and non-extended momentum."
       },
       {
-        "engine": "Session Guard",
-        "script": "UTC 01:00-19:00 excl. hour 12",
+        "engine": "Session & Risk Governance",
         "weight": "Risk Guard",
         "soloPnl": "—",
         "soloPf": "—",
