@@ -132,6 +132,7 @@ class RepositoryStore {
   connections: Map<string, TradingConnectionRecord> = new Map();
   auditEvents: AuditEventRecord[] = [];
   subscriptions: Map<string, SubscriptionRecord> = new Map();
+  orders: Map<string, any> = new Map();
 
   private initialized = false;
 
@@ -745,6 +746,8 @@ export const db = {
       expiryTime,
     };
 
+    globalStore.orders.set(orderId, order);
+
     const mdb = await getMongoDb();
     if (mdb) {
       try {
@@ -770,6 +773,41 @@ export const db = {
     } catch (_) {}
 
     return { entitlement, order };
+  },
+
+  async getUserOrders(userId: string): Promise<any[]> {
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        const docs = await mdb.collection("orders").find({ userId }).sort({ createdAt: -1 }).toArray();
+        if (docs.length > 0) {
+          return docs.map((d: any) => ({
+            id: d.id || d._id?.toString(),
+            userId: d.userId,
+            userEmail: d.userEmail,
+            planSlug: d.planSlug,
+            strategyId: d.strategyId,
+            amount: d.amount,
+            currency: d.currency || "USD",
+            status: d.status || "COMPLETED",
+            paymentProvider: d.paymentProvider || "DIRECT_CARD",
+            entitlementId: d.entitlementId,
+            createdAt: d.createdAt ? new Date(d.createdAt).toISOString() : new Date().toISOString(),
+            expiryTime: d.expiryTime ? new Date(d.expiryTime).toISOString() : undefined,
+          }));
+        }
+      } catch (e) {
+        console.warn("[MongoDB] getUserOrders fallback to memory:", e);
+      }
+    }
+
+    const results: any[] = [];
+    for (const o of globalStore.orders.values()) {
+      if (o.userId === userId) {
+        results.push({ ...o });
+      }
+    }
+    return results.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   },
 
   async checkUserStrategyAccess(

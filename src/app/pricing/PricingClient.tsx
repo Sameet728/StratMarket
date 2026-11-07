@@ -35,12 +35,38 @@ interface UserProfile {
   email: string;
 }
 
+export interface EntitlementItem {
+  id: string;
+  planId?: string;
+  strategyId?: string | null;
+  planName?: string;
+  strategyName?: string;
+  entitlementType: string;
+  expiryTime?: string;
+  daysLeft?: number;
+  isActive?: boolean;
+}
+
+export interface OrderItem {
+  id: string;
+  planSlug: string;
+  strategyId?: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  paymentProvider?: string;
+  createdAt: string;
+  expiryTime?: string;
+}
+
 interface Props {
   plans: PlanItem[];
   strategies: StrategyItem[];
   initialUser: UserProfile | null;
   initialPlanSlug?: string;
   initialStrategyId?: string;
+  initialEntitlements?: EntitlementItem[];
+  initialOrders?: OrderItem[];
 }
 
 export function PricingClient({
@@ -49,11 +75,17 @@ export function PricingClient({
   initialUser,
   initialPlanSlug,
   initialStrategyId,
+  initialEntitlements = [],
+  initialOrders = [],
 }: Props) {
   const router = useRouter();
 
   // Billing Cycle
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+
+  // Entitlements & Order History State
+  const [entitlements, setEntitlements] = useState<EntitlementItem[]>(initialEntitlements);
+  const [orders, setOrders] = useState<OrderItem[]>(initialOrders);
 
   // Selected Strategy for Single Strategy Plan
   const defaultStrategy =
@@ -102,6 +134,24 @@ export function PricingClient({
   const selectedStrategyObj = strategies.find((s) => s.id === selectedStrategyId) || strategies[0];
   const checkoutStrategyObj = strategies.find((s) => s.id === checkoutStrategyId) || strategies[0];
 
+  // Evaluate Active Paid Plans
+  const activeAllAccessEntitlement = entitlements.find(
+    (e) => e.isActive && (e.planId === "all-access" || e.planId === "professional" || e.strategyId === null)
+  );
+
+  const activeSingleEntitlements = entitlements.filter(
+    (e) => e.isActive && e.strategyId !== null && e.entitlementType === "PAID"
+  );
+
+  const isSelectedStrategyOwned = Boolean(
+    activeAllAccessEntitlement ||
+    activeSingleEntitlements.some(
+      (e) =>
+        e.strategyId?.toUpperCase() === selectedStrategyId.toUpperCase() ||
+        e.strategyId?.toLowerCase() === selectedStrategyId.toLowerCase()
+    )
+  );
+
   // Helper to open checkout with plan and strategy
   const openCheckout = (plan: PlanItem, strategyId?: string) => {
     setActivePlan(plan);
@@ -146,6 +196,16 @@ export function PricingClient({
 
       setUser(data.user);
       setCardholderName(data.user.name);
+
+      // Fetch user entitlements and past orders immediately
+      try {
+        const entRes = await fetch("/api/me/entitlements");
+        const entData = await entRes.json();
+        if (entData.success) {
+          if (entData.entitlements) setEntitlements(entData.entitlements);
+          if (entData.orders) setOrders(entData.orders);
+        }
+      } catch (_) {}
     } catch {
       setAuthError("Network error during sign-in. Please try again.");
     } finally {
@@ -190,6 +250,22 @@ export function PricingClient({
 
       setOrderResult(data);
       setCheckoutStep("SUCCESS");
+
+      // Update client-side state dynamically with 0ms latency
+      if (data.order) {
+        setOrders((prev) => [data.order, ...prev]);
+      }
+      if (data.entitlement) {
+        setEntitlements((prev) => [
+          {
+            ...data.entitlement,
+            planId: activePlan.slug,
+            isActive: true,
+            daysLeft: data.entitlement.daysRemaining || 30,
+          },
+          ...prev,
+        ]);
+      }
     } catch (err: any) {
       setCheckoutError("Connection error processing institutional transaction. Please retry.");
     } finally {
@@ -200,7 +276,7 @@ export function PricingClient({
   return (
     <div>
       {/* 1. Header & Hero Section */}
-      <div style={{ textAlign: "center", marginBottom: 48 }}>
+      <div style={{ textAlign: "center", marginBottom: 36 }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", borderRadius: 20, background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.25)", color: "#d4af37", fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
           <span>⚡</span>
           <span>INSTITUTIONAL QUANTITATIVE SUITE · DIRECT STRATEGY CHECKOUT</span>
@@ -213,6 +289,61 @@ export function PricingClient({
         <p style={{ maxWidth: 680, margin: "0 auto 28px", color: "var(--mut)", fontSize: 16, lineHeight: 1.6 }}>
           Deploy battle-tested quantitative algorithms developed by Elvaris Capital. Stream real-time TradingView candlestick charts, receive low-latency email signals, and automate MetaTrader 5 execution.
         </p>
+
+        {/* Active Subscription Banner (If user has paid membership) */}
+        {(activeAllAccessEntitlement || activeSingleEntitlements.length > 0) && (
+          <div
+            style={{
+              maxWidth: 760,
+              margin: "0 auto 28px",
+              padding: "16px 20px",
+              borderRadius: 14,
+              border: "1px solid rgba(16, 185, 129, 0.4)",
+              background: "linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(5,150,105,0.04) 100%)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 12,
+              textAlign: "left",
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: 18 }}>💎</span>
+                <span style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>
+                  {activeAllAccessEntitlement
+                    ? "All-Access Portfolio Active"
+                    : `Single Strategy Active: ${activeSingleEntitlements.map((e) => e.strategyId).join(", ")}`}
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 12, background: "rgba(16,185,129,0.25)", color: "#34d399", border: "1px solid rgba(16,185,129,0.4)" }}>
+                  ● PRO ACTIVE
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: "#cbd5e1" }}>
+                Signal emails delivering to <b style={{ color: "#38bdf8" }}>{user?.email}</b> ·{" "}
+                {activeAllAccessEntitlement?.daysLeft || activeSingleEntitlements[0]?.daysLeft || 30} days remaining
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <Link href="/dashboard" className="pill g sm" style={{ fontSize: 12 }}>
+                Trader Dashboard →
+              </Link>
+              <Link
+                href={
+                  activeSingleEntitlements[0]?.strategyId
+                    ? `/chart/${activeSingleEntitlements[0].strategyId.toLowerCase()}`
+                    : "/chart/ps-01"
+                }
+                className="pill sm"
+                style={{ fontSize: 12, background: "linear-gradient(135deg, #10b981, #059669)", border: "none" }}
+              >
+                Open Live Chart Terminal →
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Trust Badges */}
         <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap", marginBottom: 32 }}>
@@ -287,8 +418,10 @@ export function PricingClient({
         <div
           style={{
             borderRadius: 16,
-            border: "1px solid var(--line)",
-            background: "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(10,10,12,0.95) 100%)",
+            border: isSelectedStrategyOwned ? "2px solid #10b981" : "1px solid var(--line)",
+            background: isSelectedStrategyOwned
+              ? "linear-gradient(180deg, rgba(16,185,129,0.06) 0%, rgba(10,12,16,0.98) 100%)"
+              : "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(10,10,12,0.95) 100%)",
             padding: 32,
             display: "flex",
             flexDirection: "column",
@@ -301,6 +434,11 @@ export function PricingClient({
               <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "rgba(56, 189, 248, 0.12)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.25)", letterSpacing: "0.05em" }}>
                 SPECIALIZED ALPHA
               </span>
+              {isSelectedStrategyOwned && (
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "rgba(16, 185, 129, 0.2)", color: "#34d399", border: "1px solid rgba(16, 185, 129, 0.4)" }}>
+                  ✓ OWNED &amp; ACTIVE
+                </span>
+              )}
             </div>
 
             <h3 style={{ fontSize: 24, fontWeight: 800, color: "#fff", margin: "0 0 6px" }}>Single Strategy</h3>
@@ -397,38 +535,62 @@ export function PricingClient({
             </ul>
           </div>
 
-          <button
-            onClick={() => {
-              const plan = plans.find((p) => p.slug === "single-strategy") || plans[0];
-              openCheckout(plan, selectedStrategyId);
-            }}
-            className="pill g"
-            style={{
-              width: "100%",
-              padding: "13px 20px",
-              fontSize: 14,
-              fontWeight: 700,
-              borderRadius: 10,
-              cursor: "pointer",
-              textAlign: "center",
-            }}
-          >
-            Direct Pay ${billingCycle === "annual" ? "63" : "79"} · Unlock {selectedStrategyId} →
-          </button>
+          {isSelectedStrategyOwned ? (
+            <Link
+              href={`/chart/${selectedStrategyId.toLowerCase()}`}
+              className="pill"
+              style={{
+                width: "100%",
+                padding: "13px 20px",
+                fontSize: 14,
+                fontWeight: 700,
+                borderRadius: 10,
+                textAlign: "center",
+                textDecoration: "none",
+                background: "linear-gradient(135deg, #10b981, #059669)",
+                color: "#fff",
+              }}
+            >
+              ✓ Active Pro · Open {selectedStrategyId} Terminal →
+            </Link>
+          ) : (
+            <button
+              onClick={() => {
+                const plan = plans.find((p) => p.slug === "single-strategy") || plans[0];
+                openCheckout(plan, selectedStrategyId);
+              }}
+              className="pill g"
+              style={{
+                width: "100%",
+                padding: "13px 20px",
+                fontSize: 14,
+                fontWeight: 700,
+                borderRadius: 10,
+                cursor: "pointer",
+                textAlign: "center",
+              }}
+            >
+              Direct Pay ${billingCycle === "annual" ? "63" : "79"} · Unlock {selectedStrategyId} →
+            </button>
+          )}
         </div>
 
         {/* CARD 2: ALL-ACCESS (MOST POPULAR) */}
         <div
           style={{
             borderRadius: 16,
-            border: "2px solid #d4af37",
-            background: "linear-gradient(180deg, rgba(212,175,55,0.06) 0%, rgba(10,12,16,0.98) 100%)",
+            border: activeAllAccessEntitlement ? "2px solid #10b981" : "2px solid #d4af37",
+            background: activeAllAccessEntitlement
+              ? "linear-gradient(180deg, rgba(16,185,129,0.08) 0%, rgba(10,12,16,0.98) 100%)"
+              : "linear-gradient(180deg, rgba(212,175,55,0.06) 0%, rgba(10,12,16,0.98) 100%)",
             padding: 32,
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
             position: "relative",
-            boxShadow: "0 0 35px rgba(212,175,55,0.12)",
+            boxShadow: activeAllAccessEntitlement
+              ? "0 0 35px rgba(16,185,129,0.18)"
+              : "0 0 35px rgba(212,175,55,0.12)",
           }}
         >
           {/* Most Popular Ribbon */}
@@ -438,8 +600,10 @@ export function PricingClient({
               top: -12,
               left: "50%",
               transform: "translateX(-50%)",
-              background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
-              color: "#000",
+              background: activeAllAccessEntitlement
+                ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                : "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
+              color: activeAllAccessEntitlement ? "#fff" : "#000",
               fontWeight: 800,
               fontSize: 11,
               letterSpacing: "0.08em",
@@ -448,7 +612,9 @@ export function PricingClient({
               textTransform: "uppercase",
             }}
           >
-            ⭐ MOST POPULAR • ALL 14 STRATEGIES INCLUDED
+            {activeAllAccessEntitlement
+              ? "✓ YOUR CURRENT ACTIVE PLAN (ALL 14 UNLOCKED)"
+              : "⭐ MOST POPULAR • ALL 14 STRATEGIES INCLUDED"}
           </div>
 
           <div>
@@ -510,28 +676,49 @@ export function PricingClient({
             </ul>
           </div>
 
-          <button
-            onClick={() => {
-              const plan = plans.find((p) => p.slug === "all-access") || plans[1] || plans[0];
-              openCheckout(plan, undefined);
-            }}
-            className="pill"
-            style={{
-              width: "100%",
-              padding: "14px 20px",
-              fontSize: 14,
-              fontWeight: 800,
-              borderRadius: 10,
-              cursor: "pointer",
-              textAlign: "center",
-              background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
-              color: "#000",
-              boxShadow: "0 4px 20px rgba(212,175,55,0.3)",
-              border: "none",
-            }}
-          >
-            Direct Pay ${billingCycle === "annual" ? "159" : "199"} · Unlock All 14 Strategies →
-          </button>
+          {activeAllAccessEntitlement ? (
+            <Link
+              href="/dashboard"
+              className="pill"
+              style={{
+                width: "100%",
+                padding: "14px 20px",
+                fontSize: 14,
+                fontWeight: 800,
+                borderRadius: 10,
+                textAlign: "center",
+                textDecoration: "none",
+                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                color: "#fff",
+                boxShadow: "0 4px 20px rgba(16,185,129,0.3)",
+              }}
+            >
+              ✓ Portfolio Active · Open Dashboard →
+            </Link>
+          ) : (
+            <button
+              onClick={() => {
+                const plan = plans.find((p) => p.slug === "all-access") || plans[1] || plans[0];
+                openCheckout(plan, undefined);
+              }}
+              className="pill"
+              style={{
+                width: "100%",
+                padding: "14px 20px",
+                fontSize: 14,
+                fontWeight: 800,
+                borderRadius: 10,
+                cursor: "pointer",
+                textAlign: "center",
+                background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
+                color: "#000",
+                boxShadow: "0 4px 20px rgba(212,175,55,0.3)",
+                border: "none",
+              }}
+            >
+              Direct Pay ${billingCycle === "annual" ? "159" : "199"} · Unlock All 14 Strategies →
+            </button>
+          )}
         </div>
 
         {/* CARD 3: PROFESSIONAL / INSTITUTIONAL */}
@@ -625,7 +812,119 @@ export function PricingClient({
         </div>
       </div>
 
-      {/* 3. DIRECT PAYMENT CHECKOUT MODAL */}
+      {/* 3. TRANSACTION & BUYING HISTORY SECTION */}
+      {orders.length > 0 && (
+        <div
+          style={{
+            border: "1px solid var(--line)",
+            borderRadius: 16,
+            background: "rgba(255,255,255,0.015)",
+            padding: 28,
+            marginBottom: 48,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
+            <div>
+              <h2 style={{ fontSize: 20, margin: 0, fontWeight: 700 }}>
+                📜 Your Subscription Purchases &amp; Transaction History
+              </h2>
+              <p className="note" style={{ margin: "4px 0 0", fontSize: 13 }}>
+                Authoritative record of direct plan activations and institutional entitlements.
+              </p>
+            </div>
+            <Link href="/profile" className="pill g sm" style={{ fontSize: 12 }}>
+              Manage Profile &amp; Alerts →
+            </Link>
+          </div>
+
+          <div style={{ display: "grid", gap: 12 }}>
+            {orders.map((ord) => {
+              const formattedDate = new Date(ord.createdAt).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+
+              return (
+                <div
+                  key={ord.id}
+                  style={{
+                    border: "1px solid var(--line)",
+                    borderRadius: 12,
+                    padding: "16px 20px",
+                    background: "rgba(0,0,0,0.3)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 14,
+                  }}
+                >
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <code style={{ fontSize: 13, color: "#38bdf8", fontWeight: 700 }}>
+                        {ord.id}
+                      </code>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: "2px 8px",
+                          borderRadius: 12,
+                          background: "rgba(16,185,129,0.15)",
+                          color: "#34d399",
+                          border: "1px solid rgba(16,185,129,0.3)",
+                        }}
+                      >
+                        ✓ {ord.status}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>
+                      {ord.planSlug === "single-strategy"
+                        ? `Single Strategy Access: ${ord.strategyId || "Custom"}`
+                        : ord.planSlug === "all-access"
+                        ? "All-Access Quantitative Portfolio (All 14 Strategies)"
+                        : "Professional Institutional Desk"}
+                    </div>
+
+                    <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 4 }}>
+                      Purchased: {formattedDate} · Direct Card Processing
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", fontFamily: "'JetBrains Mono', monospace" }}>
+                        ${ord.amount} {ord.currency || "USD"}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--mut)" }}>Billed Directly</div>
+                    </div>
+
+                    {ord.strategyId ? (
+                      <Link
+                        href={`/chart/${ord.strategyId.toLowerCase()}`}
+                        className="pill g sm"
+                        style={{ fontSize: 12 }}
+                      >
+                        Open Live Chart →
+                      </Link>
+                    ) : (
+                      <Link href="/dashboard" className="pill g sm" style={{ fontSize: 12 }}>
+                        Dashboard →
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 4. DIRECT PAYMENT CHECKOUT MODAL */}
       {checkoutOpen && activePlan && (
         <div
           style={{

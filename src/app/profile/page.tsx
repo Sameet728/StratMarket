@@ -48,6 +48,8 @@ export default function ProfilePage() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [strategies, setStrategies] = useState<any[]>([]);
   const [trials, setTrials] = useState<Trial[]>([]);
+  const [entitlements, setEntitlements] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<AlertPref[]>([]);
   const [deliveries, setDeliveries] = useState<EmailDelivery[]>([]);
   const [profileTab, setProfileTab] = useState<"ALL" | "PINE" | "PYTHON">("ALL");
@@ -70,11 +72,13 @@ export default function ProfilePage() {
         }
         setUser(meData.user);
 
-        // Load trials and entitlements
+        // Load trials, entitlements and purchase orders
         const entRes = await fetch("/api/me/entitlements");
         const entData = await entRes.json();
         if (entData.success) {
           setTrials(entData.trials || []);
+          setEntitlements(entData.entitlements || []);
+          setOrders(entData.orders || []);
         }
 
         // Load alert preferences & destination email
@@ -292,6 +296,7 @@ export default function ProfilePage() {
 
   const activeTrials = trials.filter((t) => !t.isExpired);
   const expiredTrials = trials.filter((t) => t.isExpired);
+  const activePaidSubs = entitlements.filter((e) => e.isActive && e.entitlementType === "PAID");
 
   return (
     <div className="page" id="p-profile">
@@ -318,14 +323,14 @@ export default function ProfilePage() {
                     width: 48,
                     height: 48,
                     borderRadius: "50%",
-                    background: "linear-gradient(135deg, #3b82f6 0%, #10b981 100%)",
+                    background: "linear-gradient(135deg, #d4af37 0%, #10b981 100%)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     fontWeight: 800,
                     fontSize: 20,
-                    color: "#fff",
-                    boxShadow: "0 4px 14px rgba(59,130,246,0.35)",
+                    color: "#000",
+                    boxShadow: "0 4px 14px rgba(212,175,55,0.35)",
                   }}
                 >
                   {user?.name ? user.name.charAt(0).toUpperCase() : "T"}
@@ -335,7 +340,7 @@ export default function ProfilePage() {
                   <div style={{ fontSize: 13, color: "var(--mut)", marginTop: 2 }}>
                     {user?.email} ·{" "}
                     <span style={{ color: "#10b981", fontWeight: 600 }}>
-                      ● {user?.role === "ADMIN" ? "Administrator" : "Active Member"}
+                      ● {user?.role === "ADMIN" ? "Administrator" : activePaidSubs.length > 0 ? "Pro Subscriber" : "Active Member"}
                     </span>
                   </div>
                 </div>
@@ -346,8 +351,8 @@ export default function ProfilePage() {
               <Link href="/dashboard" className="pill g sm" style={{ fontSize: 13 }}>
                 📊 Open Dashboard
               </Link>
-              <Link href="/market" className="pill sm" style={{ fontSize: 13 }}>
-                Explore Strategies →
+              <Link href="/pricing" className="pill sm" style={{ fontSize: 13, background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)", color: "#000", fontWeight: 800 }}>
+                Subscription Plans →
               </Link>
               <button
                 type="button"
@@ -362,7 +367,303 @@ export default function ProfilePage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 32 }}>
 
-            {/* 1. STRATEGY 7-DAY TRIALS & SUBSCRIPTION PURCHASES */}
+            {/* 1. ACTIVE PAID PRO SUBSCRIPTIONS */}
+            <div
+              className="card"
+              style={{
+                padding: "28px",
+                border: activePaidSubs.length > 0 ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid var(--line)",
+                borderRadius: 16,
+                background: activePaidSubs.length > 0
+                  ? "linear-gradient(180deg, rgba(16, 185, 129, 0.04) 0%, rgba(255,255,255,0.015) 100%)"
+                  : "rgba(255,255,255,0.02)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 12,
+                  marginBottom: 16,
+                }}
+              >
+                <div>
+                  <h2 style={{ fontSize: 20, margin: 0, fontWeight: 700 }}>
+                    💎 Active Paid Pro Subscriptions
+                  </h2>
+                  <p className="note" style={{ margin: "4px 0 0", fontSize: 13 }}>
+                    Unconstrained live execution terminals, candlestick charting feeds, and real-time VPS signal delivery.
+                  </p>
+                </div>
+                <Link
+                  href="/pricing"
+                  className="pill g sm"
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                  }}
+                >
+                  Manage / Upgrade Plans →
+                </Link>
+              </div>
+
+              {activePaidSubs.length > 0 ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))", gap: 16, marginTop: 18 }}>
+                  {activePaidSubs.map((sub) => {
+                    const expiry = sub.expiryTime ? new Date(sub.expiryTime) : null;
+                    const expiryDateStr = expiry
+                      ? expiry.toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : "30 Days";
+
+                    const progressPercent = Math.max(5, Math.min(100, Math.round(((sub.daysLeft || 30) / 30) * 100)));
+
+                    return (
+                      <div
+                        key={sub.id}
+                        style={{
+                          border: "1px solid rgba(16, 185, 129, 0.35)",
+                          borderRadius: 12,
+                          padding: 20,
+                          background: "rgba(16, 185, 129, 0.03)",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
+                          boxShadow: "0 4px 20px rgba(16, 185, 129, 0.06)",
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                padding: "3px 8px",
+                                borderRadius: 6,
+                                background: "rgba(16, 185, 129, 0.2)",
+                                color: "#34d399",
+                                border: "1px solid rgba(16, 185, 129, 0.4)",
+                              }}
+                            >
+                              ● PRO ACTIVE
+                            </span>
+                            <span style={{ fontSize: 12, color: "var(--mut)", fontFamily: "'JetBrains Mono', monospace" }}>
+                              {sub.instrument || "XAUUSD"} · {sub.timeframe || "M5 / M15"}
+                            </span>
+                          </div>
+
+                          <h3 style={{ fontSize: 17, margin: "6px 0 4px", fontWeight: 800, color: "#fff" }}>
+                            {sub.strategyName || (sub.strategyId ? `Strategy ${sub.strategyId}` : "All 14 Quant Strategies")}
+                          </h3>
+                          <div style={{ fontSize: 12, color: "#38bdf8", fontWeight: 600 }}>
+                            Plan: {sub.planName || "Pro Membership"}
+                          </div>
+
+                          {/* Countdown Bar */}
+                          <div style={{ marginTop: 14, marginBottom: 14 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
+                              <span style={{ color: "var(--mut)" }}>Subscription Validity:</span>
+                              <strong style={{ color: "#10b981" }}>
+                                {sub.daysLeft} days remaining
+                              </strong>
+                            </div>
+                            <div
+                              style={{
+                                width: "100%",
+                                height: 6,
+                                background: "rgba(255,255,255,0.06)",
+                                borderRadius: 4,
+                                overflow: "hidden",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: `${progressPercent}%`,
+                                  height: "100%",
+                                  background: "linear-gradient(90deg, #10b981, #d4af37)",
+                                  borderRadius: 4,
+                                }}
+                              />
+                            </div>
+                            <div style={{ fontSize: 11, color: "var(--mut)", marginTop: 6 }}>
+                              Renews / Expires: <b>{expiryDateStr}</b>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line)", display: "flex", gap: 8 }}>
+                          <Link
+                            href={sub.strategyId ? `/chart/${sub.strategyId.toLowerCase()}` : "/chart/ps-01"}
+                            className="pill sm"
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              fontSize: 12,
+                              background: "linear-gradient(135deg, #10b981, #059669)",
+                              color: "#fff",
+                              fontWeight: 700,
+                              textDecoration: "none",
+                              border: "none",
+                            }}
+                          >
+                            📈 Open Live Chart Terminal →
+                          </Link>
+                          <Link
+                            href="/dashboard"
+                            className="pill g sm"
+                            style={{ flex: 1, textAlign: "center", fontSize: 12 }}
+                          >
+                            Dashboard
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    padding: 24,
+                    textAlign: "center",
+                    border: "1px dashed var(--line)",
+                    borderRadius: 12,
+                    marginTop: 16,
+                  }}
+                >
+                  <p style={{ margin: "0 0 12px", color: "var(--mut)", fontSize: 14 }}>
+                    You do not currently have any active paid subscriptions. Upgrade to unlock 24/7 institutional signals and live execution terminals.
+                  </p>
+                  <Link
+                    href="/pricing"
+                    className="pill sm"
+                    style={{
+                      background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
+                      color: "#000",
+                      fontWeight: 800,
+                      display: "inline-block",
+                    }}
+                  >
+                    View All Subscription Plans ($79/mo) →
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* 2. SUBSCRIPTION PURCHASES & TRANSACTION HISTORY */}
+            {orders.length > 0 && (
+              <div
+                className="card"
+                style={{
+                  padding: "28px",
+                  border: "1px solid var(--line)",
+                  borderRadius: 16,
+                  background: "rgba(255,255,255,0.02)",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
+                  <div>
+                    <h2 style={{ fontSize: 20, margin: 0, fontWeight: 700 }}>
+                      📜 Subscription Purchases &amp; Transaction History
+                    </h2>
+                    <p className="note" style={{ margin: "4px 0 0", fontSize: 13 }}>
+                      Complete transaction history of all direct strategy payments and plan subscriptions.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gap: 12, marginTop: 14 }}>
+                  {orders.map((ord) => {
+                    const formattedDate = new Date(ord.createdAt).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+
+                    return (
+                      <div
+                        key={ord.id}
+                        style={{
+                          border: "1px solid var(--line)",
+                          borderRadius: 12,
+                          padding: "16px 20px",
+                          background: "rgba(0,0,0,0.3)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          gap: 14,
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                            <code style={{ fontSize: 13, color: "#38bdf8", fontWeight: 700 }}>
+                              {ord.id}
+                            </code>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                padding: "2px 8px",
+                                borderRadius: 12,
+                                background: "rgba(16,185,129,0.15)",
+                                color: "#34d399",
+                                border: "1px solid rgba(16,185,129,0.3)",
+                              }}
+                            >
+                              ✓ {ord.status}
+                            </span>
+                          </div>
+
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>
+                            {ord.planSlug === "single-strategy"
+                              ? `Single Strategy Access: ${ord.strategyId || "Custom"}`
+                              : ord.planSlug === "all-access"
+                              ? "All-Access Quantitative Portfolio (All 14 Strategies)"
+                              : "Professional Institutional Desk"}
+                          </div>
+
+                          <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 4 }}>
+                            Purchased: {formattedDate} · Direct Card Processing
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", fontFamily: "'JetBrains Mono', monospace" }}>
+                              ${ord.amount} {ord.currency || "USD"}
+                            </div>
+                            <div style={{ fontSize: 11, color: "var(--mut)" }}>Billed Directly</div>
+                          </div>
+
+                          {ord.strategyId ? (
+                            <Link
+                              href={`/chart/${ord.strategyId.toLowerCase()}`}
+                              className="pill g sm"
+                              style={{ fontSize: 12 }}
+                            >
+                              Open Live Chart →
+                            </Link>
+                          ) : (
+                            <Link href="/dashboard" className="pill g sm" style={{ fontSize: 12 }}>
+                              Dashboard →
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 3. STRATEGY 7-DAY TRIALS */}
             <div
               className="card"
               style={{
