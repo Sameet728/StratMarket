@@ -47,7 +47,7 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
         <div className="panel-section">
           <div className="panel-row">
             <span className="label">Platform</span>
-            <span className="value-pine">{isPine ? "🌲 Pine Script v5" : "🐍 Python MT5"}</span>
+            <span className="value-pine">{isPine ? "Pine Script v5" : "Python MT5"}</span>
           </div>
           <div className="panel-row">
             <span className="label">Asset & Timeframe</span>
@@ -68,7 +68,6 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
           <div className="section-title">Execution Security</div>
           <div className="security-card">
             <div className="security-header">
-              <span className="security-icon">🛡️</span>
               <span className="security-text">Private Execution Boundary</span>
             </div>
             <p className="security-desc">
@@ -113,22 +112,16 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
                     textTransform: "uppercase",
                     backgroundColor:
                       contract.summary.latestSignal.direction === "BUY"
-                        ? "rgba(16, 185, 129, 0.15)"
-                        : contract.summary.latestSignal.direction === "SELL"
-                        ? "rgba(239, 68, 68, 0.15)"
-                        : "rgba(148, 163, 184, 0.15)",
+                        ? "#ffffff"
+                        : "rgba(255, 255, 255, 0.1)",
                     color:
                       contract.summary.latestSignal.direction === "BUY"
-                        ? "#10b981"
-                        : contract.summary.latestSignal.direction === "SELL"
-                        ? "#ef4444"
-                        : "#94a3b8",
+                        ? "#000000"
+                        : "#ffffff",
                     border: `1px solid ${
                       contract.summary.latestSignal.direction === "BUY"
-                        ? "rgba(16, 185, 129, 0.3)"
-                        : contract.summary.latestSignal.direction === "SELL"
-                        ? "rgba(239, 68, 68, 0.3)"
-                        : "rgba(148, 163, 184, 0.3)"
+                        ? "#ffffff"
+                        : "rgba(255, 255, 255, 0.25)"
                     }`,
                   }}
                 >
@@ -168,7 +161,7 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
               {contract.summary.hudMetrics.map((m, idx) => (
                 <div key={idx} className="panel-row">
                   <span className="label">{m.label}</span>
-                  <span className="value" style={{ color: m.color || "#4cc79a" }}>
+                  <span className="value" style={{ color: "#ffffff" }}>
                     {m.value}
                   </span>
                 </div>

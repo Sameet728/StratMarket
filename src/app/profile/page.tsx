@@ -323,14 +323,14 @@ export default function ProfilePage() {
                     width: 48,
                     height: 48,
                     borderRadius: "50%",
-                    background: "linear-gradient(135deg, #d4af37 0%, #10b981 100%)",
+                    background: "linear-gradient(135deg, #ffffff 0%, #71717a 100%)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     fontWeight: 800,
                     fontSize: 20,
                     color: "#000",
-                    boxShadow: "0 4px 14px rgba(212,175,55,0.35)",
+                    boxShadow: "0 4px 14px rgba(255, 255, 255, 0.12)",
                   }}
                 >
                   {user?.name ? user.name.charAt(0).toUpperCase() : "T"}
@@ -339,7 +339,7 @@ export default function ProfilePage() {
                   <h1 style={{ fontSize: 26, margin: 0, fontWeight: 800 }}>{user?.name || "Trader Account"}</h1>
                   <div style={{ fontSize: 13, color: "var(--mut)", marginTop: 2 }}>
                     {user?.email} ·{" "}
-                    <span style={{ color: "#10b981", fontWeight: 600 }}>
+                    <span style={{ color: "#ffffff", fontWeight: 600 }}>
                       ● {user?.role === "ADMIN" ? "Administrator" : activePaidSubs.length > 0 ? "Pro Subscriber" : "Active Member"}
                     </span>
                   </div>
@@ -351,7 +351,7 @@ export default function ProfilePage() {
               <Link href="/dashboard" className="pill g sm" style={{ fontSize: 13 }}>
                 📊 Open Dashboard
               </Link>
-              <Link href="/pricing" className="pill sm" style={{ fontSize: 13, background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)", color: "#000", fontWeight: 800 }}>
+              <Link href="/pricing" className="pill sm" style={{ fontSize: 13, background: "#ffffff", color: "#000", fontWeight: 800 }}>
                 Subscription Plans →
               </Link>
               <button
@@ -372,10 +372,10 @@ export default function ProfilePage() {
               className="card"
               style={{
                 padding: "28px",
-                border: activePaidSubs.length > 0 ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid var(--line)",
+                border: activePaidSubs.length > 0 ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid var(--line)",
                 borderRadius: 16,
                 background: activePaidSubs.length > 0
-                  ? "linear-gradient(180deg, rgba(16, 185, 129, 0.04) 0%, rgba(255,255,255,0.015) 100%)"
+                  ? "rgba(255, 255, 255, 0.02)"
                   : "rgba(255,255,255,0.02)",
               }}
             >
@@ -427,14 +427,14 @@ export default function ProfilePage() {
                       <div
                         key={sub.id}
                         style={{
-                          border: "1px solid rgba(16, 185, 129, 0.35)",
+                          border: "1px solid rgba(255, 255, 255, 0.12)",
                           borderRadius: 12,
                           padding: 20,
-                          background: "rgba(16, 185, 129, 0.03)",
+                          background: "rgba(255, 255, 255, 0.12)",
                           display: "flex",
                           flexDirection: "column",
                           justifyContent: "space-between",
-                          boxShadow: "0 4px 20px rgba(16, 185, 129, 0.06)",
+                          boxShadow: "0 4px 20px rgba(255, 255, 255, 0.12)",
                         }}
                       >
                         <div>
@@ -445,9 +445,9 @@ export default function ProfilePage() {
                                 fontWeight: 700,
                                 padding: "3px 8px",
                                 borderRadius: 6,
-                                background: "rgba(16, 185, 129, 0.2)",
-                                color: "#34d399",
-                                border: "1px solid rgba(16, 185, 129, 0.4)",
+                                background: "rgba(255, 255, 255, 0.12)",
+                                color: "#ffffff",
+                                border: "1px solid rgba(255, 255, 255, 0.12)",
                               }}
                             >
                               ● PRO ACTIVE
@@ -460,7 +460,7 @@ export default function ProfilePage() {
                           <h3 style={{ fontSize: 17, margin: "6px 0 4px", fontWeight: 800, color: "#fff" }}>
                             {sub.strategyName || (sub.strategyId ? `Strategy ${sub.strategyId}` : "All 14 Quant Strategies")}
                           </h3>
-                          <div style={{ fontSize: 12, color: "#38bdf8", fontWeight: 600 }}>
+                          <div style={{ fontSize: 12, color: "#ffffff", fontWeight: 600 }}>
                             Plan: {sub.planName || "Pro Membership"}
                           </div>
 
@@ -468,7 +468,7 @@ export default function ProfilePage() {
                           <div style={{ marginTop: 14, marginBottom: 14 }}>
                             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
                               <span style={{ color: "var(--mut)" }}>Subscription Validity:</span>
-                              <strong style={{ color: "#10b981" }}>
+                              <strong style={{ color: "#ffffff" }}>
                                 {sub.daysLeft} days remaining
                               </strong>
                             </div>
@@ -485,7 +485,7 @@ export default function ProfilePage() {
                                 style={{
                                   width: `${progressPercent}%`,
                                   height: "100%",
-                                  background: "linear-gradient(90deg, #10b981, #d4af37)",
+                                  background: "linear-gradient(90deg, #52525b, #ffffff)",
                                   borderRadius: 4,
                                 }}
                               />
@@ -504,8 +504,7 @@ export default function ProfilePage() {
                               flex: 1,
                               textAlign: "center",
                               fontSize: 12,
-                              background: "linear-gradient(135deg, #10b981, #059669)",
-                              color: "#fff",
+                              background: "#ffffff", color: "#000000",
                               fontWeight: 700,
                               textDecoration: "none",
                               border: "none",
@@ -542,7 +541,7 @@ export default function ProfilePage() {
                     href="/pricing"
                     className="pill sm"
                     style={{
-                      background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
+                      background: "#ffffff",
                       color: "#000",
                       fontWeight: 800,
                       display: "inline-block",
@@ -603,7 +602,7 @@ export default function ProfilePage() {
                       >
                         <div>
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                            <code style={{ fontSize: 13, color: "#38bdf8", fontWeight: 700 }}>
+                            <code style={{ fontSize: 13, color: "#ffffff", fontWeight: 700 }}>
                               {ord.id}
                             </code>
                             <span
@@ -612,9 +611,9 @@ export default function ProfilePage() {
                                 fontWeight: 700,
                                 padding: "2px 8px",
                                 borderRadius: 12,
-                                background: "rgba(16,185,129,0.15)",
-                                color: "#34d399",
-                                border: "1px solid rgba(16,185,129,0.3)",
+                                background: "rgba(255, 255, 255, 0.12)",
+                                color: "#ffffff",
+                                border: "1px solid rgba(255, 255, 255, 0.12)",
                               }}
                             >
                               ✓ {ord.status}
@@ -695,9 +694,9 @@ export default function ProfilePage() {
                   href="/pricing"
                   className="pill sm"
                   style={{
-                    background: "linear-gradient(135deg, #10b981, #059669)",
+                    background: "#ffffff",
                     border: "none",
-                    color: "#fff",
+                    color: "#000000",
                     fontWeight: 700,
                     fontSize: 13,
                   }}
@@ -728,10 +727,10 @@ export default function ProfilePage() {
                       <div
                         key={t.id}
                         style={{
-                          border: isEndingSoon ? "1px solid rgba(245, 158, 11, 0.5)" : "1px solid var(--line)",
+                          border: isEndingSoon ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid var(--line)",
                           borderRadius: 12,
                           padding: 20,
-                          background: isEndingSoon ? "rgba(245, 158, 11, 0.04)" : "rgba(255,255,255,0.015)",
+                          background: isEndingSoon ? "rgba(255, 255, 255, 0.12)" : "rgba(255,255,255,0.015)",
                           display: "flex",
                           flexDirection: "column",
                           justifyContent: "space-between",
@@ -746,9 +745,9 @@ export default function ProfilePage() {
                                 fontWeight: 700,
                                 padding: "3px 8px",
                                 borderRadius: 6,
-                                background: isEndingSoon ? "rgba(245, 158, 11, 0.2)" : "rgba(16, 185, 129, 0.15)",
-                                color: isEndingSoon ? "#f59e0b" : "#10b981",
-                                border: isEndingSoon ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid rgba(16, 185, 129, 0.3)",
+                                background: isEndingSoon ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.12)",
+                                color: isEndingSoon ? "#ffffff" : "#ffffff",
+                                border: isEndingSoon ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(255, 255, 255, 0.12)",
                               }}
                             >
                               {isEndingSoon ? "⚠️ ENDING SOON" : "● TRIAL ACTIVE"}
@@ -766,7 +765,7 @@ export default function ProfilePage() {
                           <div style={{ marginTop: 14, marginBottom: 14 }}>
                             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
                               <span style={{ color: "var(--mut)" }}>Trial Status:</span>
-                              <strong style={{ color: isEndingSoon ? "#f59e0b" : "#10b981" }}>
+                              <strong style={{ color: isEndingSoon ? "#ffffff" : "#ffffff" }}>
                                 {t.daysLeft === 1 ? "Ends today / 24h" : `${t.daysLeft} days remaining`}
                               </strong>
                             </div>
@@ -784,8 +783,8 @@ export default function ProfilePage() {
                                   width: `${progressPercent}%`,
                                   height: "100%",
                                   background: isEndingSoon
-                                    ? "linear-gradient(90deg, #f59e0b, #ef4444)"
-                                    : "linear-gradient(90deg, #10b981, #3b82f6)",
+                                    ? "linear-gradient(90deg, #71717a, #ffffff)"
+                                    : "linear-gradient(90deg, #52525b, #ffffff)",
                                   borderRadius: 4,
                                 }}
                               />
@@ -813,8 +812,8 @@ export default function ProfilePage() {
                               textAlign: "center",
                               fontSize: 12,
                               background: isEndingSoon
-                                ? "linear-gradient(135deg, #f59e0b, #d97706)"
-                                : "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                                ? "#ffffff"
+                                : "#ffffff",
                               color: "#fff",
                               border: "none",
                               fontWeight: 600,
@@ -914,11 +913,11 @@ export default function ProfilePage() {
                     style={{
                       fontSize: 11,
                       fontWeight: 600,
-                      background: "rgba(16,185,129,0.15)",
-                      color: "#10b981",
+                      background: "rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
                       padding: "2px 8px",
                       borderRadius: 10,
-                      border: "1px solid rgba(16,185,129,0.3)",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
                     }}
                   >
                     Institutional Gateway • Domain: elvariscapital.in
@@ -958,10 +957,10 @@ export default function ProfilePage() {
                     disabled={savingEmail}
                     className="pill sm"
                     style={{
-                      background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                      background: "#ffffff",
                       border: "none",
-                      color: "#fff",
-                      fontWeight: 600,
+                      color: "#000000",
+                      fontWeight: 700,
                       fontSize: 13,
                       padding: "0 20px",
                     }}
@@ -987,7 +986,7 @@ export default function ProfilePage() {
                     style={{
                       marginTop: 10,
                       fontSize: 13,
-                      color: emailStatusMsg.ok ? "#10b981" : "#ef4444",
+                      color: emailStatusMsg.ok ? "#ffffff" : "#ef4444",
                     }}
                   >
                     {emailStatusMsg.ok ? "✓ " : "✕ "}
@@ -1001,10 +1000,10 @@ export default function ProfilePage() {
                       marginTop: 10,
                       padding: "10px 14px",
                       borderRadius: 8,
-                      background: testResult.ok ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
-                      border: testResult.ok ? "1px solid rgba(16,185,129,0.25)" : "1px solid rgba(239,68,68,0.25)",
+                      background: testResult.ok ? "rgba(255, 255, 255, 0.12)" : "rgba(239,68,68,0.08)",
+                      border: testResult.ok ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(239,68,68,0.25)",
                       fontSize: 13,
-                      color: testResult.ok ? "#10b981" : "#ef4444",
+                      color: testResult.ok ? "#ffffff" : "#ef4444",
                     }}
                   >
                     {testResult.ok ? "✓ " : "✕ "}
@@ -1076,12 +1075,12 @@ export default function ProfilePage() {
                             key={s.id}
                             style={{
                               border: s.enabled
-                                ? "1px solid rgba(16,185,129,0.35)"
+                                ? "1px solid rgba(255, 255, 255, 0.12)"
                                 : "1px solid var(--line)",
                               borderRadius: 10,
                               padding: "14px 18px",
                               background: s.enabled
-                                ? "linear-gradient(135deg, rgba(16,185,129,0.03) 0%, rgba(15,23,42,0.2) 100%)"
+                                ? "rgba(255, 255, 255, 0.02)"
                                 : "rgba(255,255,255,0.015)",
                               display: "flex",
                               justifyContent: "space-between",
@@ -1110,9 +1109,9 @@ export default function ProfilePage() {
                                 </span>
                               </div>
                               <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 4 }}>
-                                Delivering to: <code style={{ color: "#38bdf8" }}>{signalEmail}</code>
+                                Delivering to: <code style={{ color: "#ffffff" }}>{signalEmail}</code>
                                 {s.trialStatus === "ACTIVE" && (
-                                  <span style={{ color: "#10b981", marginLeft: 10 }}>
+                                  <span style={{ color: "#ffffff", marginLeft: 10 }}>
                                     ● 7-Day Trial Active ({s.daysLeft}d left)
                                   </span>
                                 )}
@@ -1129,7 +1128,7 @@ export default function ProfilePage() {
                                   borderRadius: 8,
                                   border: "1px solid rgba(56,189,248,0.3)",
                                   background: "rgba(56,189,248,0.08)",
-                                  color: "#38bdf8",
+                                  color: "#ffffff",
                                   textDecoration: "none",
                                   display: "inline-flex",
                                   alignItems: "center",
@@ -1149,10 +1148,10 @@ export default function ProfilePage() {
                                   fontSize: 12,
                                   fontWeight: 700,
                                   cursor: updatingAlert === s.id ? "wait" : "pointer",
-                                  border: s.enabled ? "1px solid #10b981" : "1px solid rgba(255,255,255,0.18)",
-                                  background: s.enabled ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.04)",
-                                  color: s.enabled ? "#10b981" : "var(--tx)",
-                                  boxShadow: s.enabled ? "0 0 12px rgba(16,185,129,0.25)" : "none",
+                                  border: s.enabled ? "1px solid #ffffff" : "1px solid rgba(255,255,255,0.18)",
+                                  background: s.enabled ? "rgba(255, 255, 255, 0.12)" : "rgba(255,255,255,0.04)",
+                                  color: s.enabled ? "#ffffff" : "var(--tx)",
+                                  boxShadow: s.enabled ? "0 0 12px rgba(255, 255, 255, 0.12)" : "none",
                                   transition: "all 0.15s ease",
                                 }}
                               >
@@ -1180,7 +1179,7 @@ export default function ProfilePage() {
                   <div style={{ fontSize: 13, color: "var(--mut)", display: "flex", alignItems: "center", gap: 8 }}>
                     <span>📧 Recent signal delivery log:</span>
                     <strong style={{ color: "var(--tx)" }}>{deliveries.length} emails dispatched</strong>
-                    <span style={{ color: "#10b981" }}>
+                    <span style={{ color: "#ffffff" }}>
                       ({deliveries.filter((d) => d.deliveryStatus === "SENT").length} delivered successfully)
                     </span>
                   </div>
@@ -1210,9 +1209,9 @@ export default function ProfilePage() {
                   Authentication and session parameters handled with JWT HTTP-only cookies and bcrypt password hashing.
                 </p>
                 <div style={{ fontSize: 13, color: "var(--mut)", lineHeight: 1.8 }}>
-                  <div>Status: <span style={{ color: "#10b981", fontWeight: 600 }}>Active</span></div>
+                  <div>Status: <span style={{ color: "#ffffff", fontWeight: 600 }}>Active</span></div>
                   <div>Role: <span style={{ color: "var(--tx)", fontWeight: 600 }}>{user?.role}</span></div>
-                  <div>Sender: <span style={{ color: "#38bdf8" }}>StratMarket &lt;alerts@elvariscapital.in&gt;</span></div>
+                  <div>Sender: <span style={{ color: "#ffffff" }}>StratMarket &lt;alerts@elvariscapital.in&gt;</span></div>
                 </div>
               </div>
 
@@ -1222,7 +1221,7 @@ export default function ProfilePage() {
                   padding: 24,
                   border: "1px solid var(--line)",
                   borderRadius: 14,
-                  background: "linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(16,185,129,0.05) 100%)",
+                  background: "linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(255, 255, 255, 0.12) 100%)",
                 }}
               >
                 <h3 style={{ fontSize: 16, marginBottom: 8, fontWeight: 700 }}>Upgrade to Unlimited Access</h3>
@@ -1235,8 +1234,7 @@ export default function ProfilePage() {
                   style={{
                     display: "inline-block",
                     fontSize: 13,
-                    background: "linear-gradient(135deg, #10b981, #059669)",
-                    color: "#fff",
+                    background: "#ffffff", color: "#000000",
                     border: "none",
                     fontWeight: 700,
                   }}

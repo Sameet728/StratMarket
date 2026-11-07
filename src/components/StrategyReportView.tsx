@@ -181,7 +181,7 @@ if (ta.crossover(close, upper) and shortFilter)
     if (v === null || v === undefined) return "rgba(255,255,255,0.015)";
     const intensity = Math.min(1, Math.abs(v) / 5500);
     if (v >= 0) {
-      return `rgba(76, 199, 154, ${0.18 + intensity * 0.72})`;
+      return `rgba(255, 255, 255, ${0.1 + intensity * 0.75})`;
     } else {
       return `rgba(229, 116, 106, ${0.20 + intensity * 0.72})`;
     }
@@ -208,12 +208,12 @@ if (ta.crossover(close, upper) and shortFilter)
             {strategy.instrument} · {strategy.timeframe}
           </span>
           {strategy.metrics.maxDrawdown < 10 && (
-            <span className="badge" style={{ background: "rgba(76, 199, 154, 0.15)", color: "#4cc79a", padding: "4px 10px", fontSize: "12px", borderRadius: "6px", fontWeight: 700 }}>
+            <span className="badge" style={{ background: "rgba(255, 255, 255, 0.08)", color: "#ffffff", padding: "4px 10px", fontSize: "12px", borderRadius: "6px", fontWeight: 700 }}>
               Single-Digit DD ({strategy.metrics.maxDrawdown}%)
             </span>
           )}
           {strategy.netProfitUsd && (
-            <span className="badge" style={{ background: "rgba(232, 196, 106, 0.15)", color: "#e8c46a", padding: "4px 10px", fontSize: "12px", borderRadius: "6px", fontWeight: 700 }}>
+            <span className="badge" style={{ background: "rgba(255, 255, 255, 0.08)", color: "#ffffff", padding: "4px 10px", fontSize: "12px", borderRadius: "6px", fontWeight: 700 }}>
               {strategy.netProfitUsd} Net PnL
             </span>
           )}
@@ -222,8 +222,8 @@ if (ta.crossover(close, upper) and shortFilter)
 
       {/* Hero Header */}
       <section className="report-hero" style={{ padding: "0 0 36px", borderBottom: "1px solid var(--line)" }}>
-        <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "5px 14px", borderRadius: "99px", border: isPython ? "1px solid rgba(232, 196, 106, 0.3)" : "1px solid rgba(76, 199, 154, 0.3)" }}>
-          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: isPython ? "#e8c46a" : "#4cc79a", display: "inline-block", boxShadow: isPython ? "0 0 8px #e8c46a" : "0 0 8px #4cc79a" }}></span>
+        <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "5px 14px", borderRadius: "99px", border: isPython ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(255, 255, 255, 0.08)" }}>
+          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: isPython ? "#ffffff" : "#ffffff", display: "inline-block", boxShadow: isPython ? "0 0 8px #ffffff" : "0 0 8px #ffffff" }}></span>
           <b>StratMarket Verified</b> · {isPython ? "MetaTrader 5 Quantitative Tear Sheet" : "TradingView Pine Script v5 Tear Sheet"}
         </span>
         
@@ -240,7 +240,7 @@ if (ta.crossover(close, upper) and shortFilter)
           {reportData.bigStats && reportData.bigStats.length > 0 ? (
             reportData.bigStats.map((st: any, idx: number) => (
               <div key={idx} className="hero-stat-card">
-                <b style={{ color: idx === 0 ? "#e8c46a" : idx === 2 ? "#4cc79a" : "#ffffff" }}>
+                <b style={{ color: idx === 0 ? "#ffffff" : idx === 2 ? "#ffffff" : "#ffffff" }}>
                   {st.val}
                 </b>
                 <span>{st.label}</span>
@@ -249,7 +249,7 @@ if (ta.crossover(close, upper) and shortFilter)
           ) : (
             <>
               <div className="hero-stat-card">
-                <b style={{ color: "#e8c46a" }}>
+                <b style={{ color: "#ffffff" }}>
                   {strategy.netProfitUsd || `+${strategy.metrics.netReturn}%`}
                 </b>
                 <span>Net return on $25,000 capital</span>
@@ -261,7 +261,7 @@ if (ta.crossover(close, upper) and shortFilter)
                 <span>Profit factor</span>
               </div>
               <div className="hero-stat-card">
-                <b style={{ color: "#4cc79a" }}>
+                <b style={{ color: "#ffffff" }}>
                   {strategy.metrics.maxDrawdown}%
                 </b>
                 <span>Max drawdown</span>
@@ -318,7 +318,7 @@ if (ta.crossover(close, upper) and shortFilter)
                     )}
                   </td>
                   <td>
-                    <span style={{ color: "#4cc79a", fontWeight: 700, padding: "3px 8px", background: "rgba(76, 199, 154, 0.1)", borderRadius: "6px", display: "inline-block" }}>
+                    <span style={{ color: "#ffffff", fontWeight: 700, padding: "3px 8px", background: "rgba(255, 255, 255, 0.08)", borderRadius: "6px", display: "inline-block" }}>
                       {row.weight}
                     </span>
                   </td>
@@ -364,26 +364,26 @@ if (ta.crossover(close, upper) and shortFilter)
               Asymmetric risk-to-reward architecture: winning trades are massive multi-R runners that overwhelm controlled losses.
             </p>
           </div>
-          <span className="badge" style={{ background: "rgba(232, 196, 106, 0.15)", color: "#e8c46a", padding: "6px 14px", borderRadius: "99px", fontSize: "13px", fontWeight: 700 }}>
+          <span className="badge" style={{ background: "rgba(255, 255, 255, 0.08)", color: "#ffffff", padding: "6px 14px", borderRadius: "99px", fontSize: "13px", fontWeight: 700 }}>
             {payoff.payoffRatio} Asymmetric Payoff
           </span>
         </div>
 
         {/* 4 Clear Visual Payoff Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "16px", marginBottom: "20px" }}>
-          <div className="report-card" style={{ borderLeft: "4px solid #4cc79a", padding: "18px 18px", overflow: "hidden", minWidth: 0 }}>
+          <div className="report-card" style={{ borderLeft: "3px solid #ffffff", padding: "18px 18px", overflow: "hidden", minWidth: 0 }}>
             <span style={{ fontSize: "13px", color: "var(--mut)", display: "block", marginBottom: "6px" }}>Average Winning Trade</span>
-            <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "clamp(19px, 2.1vw, 24px)", color: "#4cc79a", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "clamp(19px, 2.1vw, 24px)", color: "#ffffff", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {payoff.avgWin}
             </b>
-            <span style={{ fontSize: "12px", color: "#4cc79a", display: "block", marginTop: "4px" }}>
+            <span style={{ fontSize: "12px", color: "#ffffff", display: "block", marginTop: "4px" }}>
               {payoff.payoffRatio} larger than average loss
             </span>
           </div>
 
-          <div className="report-card" style={{ borderLeft: "4px solid #e5746a", padding: "18px 18px", overflow: "hidden", minWidth: 0 }}>
+          <div className="report-card" style={{ borderLeft: "3px solid #71717a", padding: "18px 18px", overflow: "hidden", minWidth: 0 }}>
             <span style={{ fontSize: "13px", color: "var(--mut)", display: "block", marginBottom: "6px" }}>Average Losing Trade</span>
-            <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "clamp(19px, 2.1vw, 24px)", color: "#e5746a", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "clamp(19px, 2.1vw, 24px)", color: "#a1a1aa", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {payoff.avgLoss}
             </b>
             <span style={{ fontSize: "12px", color: "var(--mut)", display: "block", marginTop: "4px" }}>
@@ -391,15 +391,15 @@ if (ta.crossover(close, upper) and shortFilter)
             </span>
           </div>
 
-          <div className="report-card" style={{ borderLeft: "4px solid #e8c46a", padding: "18px 18px", overflow: "hidden", minWidth: 0 }}>
+          <div className="report-card" style={{ borderLeft: "3px solid #d4d4d8", padding: "18px 18px", overflow: "hidden", minWidth: 0 }}>
             <span style={{ fontSize: "13px", color: "var(--mut)", display: "block", marginBottom: "6px" }}>Breakeven vs Actual Win Rate</span>
             <div style={{ display: "flex", alignItems: "baseline", gap: "8px", flexWrap: "wrap" }}>
-              <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "clamp(19px, 2.1vw, 24px)", color: "#e8c46a", whiteSpace: "nowrap" }}>
+              <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "clamp(19px, 2.1vw, 24px)", color: "#ffffff", whiteSpace: "nowrap" }}>
                 {payoff.actualWinRate}
               </b>
               <span style={{ fontSize: "13px", color: "var(--mut)" }}>vs {payoff.breakevenWinRate} needed</span>
             </div>
-            <span style={{ fontSize: "12px", color: "#4cc79a", display: "block", marginTop: "4px" }}>
+            <span style={{ fontSize: "12px", color: "#ffffff", display: "block", marginTop: "4px" }}>
               +10.1% edge above breakeven
             </span>
           </div>
@@ -409,7 +409,7 @@ if (ta.crossover(close, upper) and shortFilter)
             <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "clamp(19px, 2.1vw, 24px)", color: "#ffffff", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {payoff.expectancy}
             </b>
-            <span style={{ fontSize: "12px", color: "#4cc79a", display: "block", marginTop: "4px" }}>
+            <span style={{ fontSize: "12px", color: "#ffffff", display: "block", marginTop: "4px" }}>
               Cumulative: {strategy.netProfitUsd || payoff.totalPnl}
             </span>
           </div>
@@ -422,28 +422,28 @@ if (ta.crossover(close, upper) and shortFilter)
           <div style={{ display: "grid", gap: "16px" }}>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", marginBottom: "6px" }}>
-                <span style={{ color: "#4cc79a", fontWeight: 600 }}>Average Winning Trade ({payoff.avgWin})</span>
+                <span style={{ color: "#ffffff", fontWeight: 600 }}>Average Winning Trade ({payoff.avgWin})</span>
                 <span style={{ color: "var(--mut)" }}>100% Full Reward Scale</span>
               </div>
               <div style={{ height: "20px", background: "rgba(255,255,255,0.04)", borderRadius: "6px", overflow: "hidden" }}>
-                <div style={{ width: "100%", height: "100%", background: "linear-gradient(90deg, #1e7a58, #4cc79a)", borderRadius: "6px" }}></div>
+                <div style={{ width: "100%", height: "100%", background: "linear-gradient(90deg, #71717a, #ffffff)", borderRadius: "6px" }}></div>
               </div>
             </div>
 
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", marginBottom: "6px" }}>
-                <span style={{ color: "#e5746a", fontWeight: 600 }}>Average Losing Trade ({payoff.avgLoss})</span>
+                <span style={{ color: "#a1a1aa", fontWeight: 600 }}>Average Losing Trade ({payoff.avgLoss})</span>
                 <span style={{ color: "var(--mut)" }}>Only 14% of Win Amount</span>
               </div>
               <div style={{ height: "20px", background: "rgba(255,255,255,0.04)", borderRadius: "6px", overflow: "hidden" }}>
-                <div style={{ width: "14%", height: "100%", background: "#e5746a", borderRadius: "6px" }}></div>
+                <div style={{ width: "14%", height: "100%", background: "#52525b", borderRadius: "6px" }}></div>
               </div>
             </div>
           </div>
 
           <div style={{ marginTop: "20px", padding: "16px 20px", background: "rgba(255,255,255,0.02)", borderRadius: "10px", border: "1px solid var(--line)" }}>
             <p style={{ margin: 0, fontSize: "14px", color: "var(--mut)", lineHeight: 1.6 }}>
-              <b style={{ color: "#ffffff" }}>How it works:</b> Because winning trades average <b style={{ color: "#4cc79a" }}>{payoff.avgWin}</b> while losses are tightly capped at <b style={{ color: "#e5746a" }}>{payoff.avgLoss}</b>, the strategy only requires a <b>{payoff.breakevenWinRate}</b> win rate to break even. The actual win rate of <b>{payoff.actualWinRate}</b> generates an expected net profit of <b style={{ color: "#ffffff" }}>{payoff.expectancy}</b> on every single trade placed.
+              <b style={{ color: "#ffffff" }}>How it works:</b> Because winning trades average <b style={{ color: "#ffffff" }}>{payoff.avgWin}</b> while losses are tightly capped at <b style={{ color: "#a1a1aa" }}>{payoff.avgLoss}</b>, the strategy only requires a <b>{payoff.breakevenWinRate}</b> win rate to break even. The actual win rate of <b>{payoff.actualWinRate}</b> generates an expected net profit of <b style={{ color: "#ffffff" }}>{payoff.expectancy}</b> on every single trade placed.
             </p>
           </div>
         </div>
@@ -461,10 +461,10 @@ if (ta.crossover(close, upper) and shortFilter)
             <div className="report-card" style={{ padding: "28px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "22px", paddingBottom: "16px", borderBottom: "1px solid var(--line)" }}>
                 <b style={{ fontSize: "18px", color: "var(--tx)", display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#4cc79a", display: "inline-block" }}></span>
+                  <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ffffff", display: "inline-block" }}></span>
                   Long Trades
                 </b>
-                <span className="badge" style={{ background: "rgba(76, 199, 154, 0.15)", color: "#4cc79a", padding: "4px 10px", borderRadius: "6px", fontWeight: 700 }}>
+                <span className="badge" style={{ background: "rgba(255, 255, 255, 0.08)", color: "#ffffff", padding: "4px 10px", borderRadius: "6px", fontWeight: 700 }}>
                   {reportData.longStats.trades}
                 </span>
               </div>
@@ -484,7 +484,7 @@ if (ta.crossover(close, upper) and shortFilter)
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ color: "var(--mut)", fontSize: "14px" }}>Profit Factor</span>
-                  <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "16px", color: "#e8c46a" }}>
+                  <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "16px", color: "#ffffff" }}>
                     {reportData.longStats.pf}
                   </b>
                 </div>
@@ -496,10 +496,10 @@ if (ta.crossover(close, upper) and shortFilter)
             <div className="report-card" style={{ padding: "28px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "22px", paddingBottom: "16px", borderBottom: "1px solid var(--line)" }}>
                 <b style={{ fontSize: "18px", color: "var(--tx)", display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#e8c46a", display: "inline-block" }}></span>
+                  <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ffffff", display: "inline-block" }}></span>
                   Short Trades
                 </b>
-                <span className="badge" style={{ background: "rgba(232, 196, 106, 0.15)", color: "#e8c46a", padding: "4px 10px", borderRadius: "6px", fontWeight: 700 }}>
+                <span className="badge" style={{ background: "rgba(255, 255, 255, 0.08)", color: "#ffffff", padding: "4px 10px", borderRadius: "6px", fontWeight: 700 }}>
                   {reportData.shortStats.trades}
                 </span>
               </div>
@@ -519,7 +519,7 @@ if (ta.crossover(close, upper) and shortFilter)
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ color: "var(--mut)", fontSize: "14px" }}>Profit Factor</span>
-                  <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "16px", color: "#e8c46a" }}>
+                  <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "16px", color: "#ffffff" }}>
                     {reportData.shortStats.pf}
                   </b>
                 </div>
@@ -690,7 +690,7 @@ if (ta.crossover(close, upper) and shortFilter)
       {/* DEDICATED ACTION ZONE DIRECTLY BELOW THE REPORT */}
       <div className="report-action-zone" style={{ marginTop: "56px", padding: "52px 36px", border: "1px solid var(--line)", borderRadius: "18px", background: "linear-gradient(180deg, rgba(22, 22, 26, 0.95) 0%, rgba(10, 10, 12, 0.98) 100%)", boxShadow: "0 24px 60px -15px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.1)" }}>
         <div className="action-zone-inner" style={{ textAlign: "center", maxWidth: "720px", margin: "0 auto" }}>
-          <span className="badge" style={{ background: "rgba(232, 196, 106, 0.15)", color: "#e8c46a", marginBottom: "16px", display: "inline-block", fontWeight: 700, padding: "5px 14px", borderRadius: "99px" }}>
+          <span className="badge" style={{ background: "rgba(255, 255, 255, 0.08)", color: "#ffffff", marginBottom: "16px", display: "inline-block", fontWeight: 700, padding: "5px 14px", borderRadius: "99px" }}>
             EXECUTION DISPATCH READY
           </span>
           <h2 style={{ fontSize: "clamp(28px, 4vw, 38px)", marginBottom: "14px", fontWeight: 700, letterSpacing: "-0.03em" }}>

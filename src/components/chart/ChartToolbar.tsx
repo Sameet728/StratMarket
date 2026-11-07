@@ -112,12 +112,13 @@ export function ChartToolbar({
               fontWeight: 700,
               padding: "3px 8px",
               borderRadius: 6,
-              background: "rgba(16,185,129,0.15)",
-              color: "#34d399",
-              border: "1px solid rgba(16,185,129,0.3)",
+              background: "rgba(255, 255, 255, 0.08)",
+              color: "#ffffff",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              whiteSpace: "nowrap",
             }}
           >
-            ⏱️ 7-Day Trial Active ({daysLeft}d left)
+            Trial Active ({daysLeft}d left)
           </span>
         )}
 
@@ -148,12 +149,12 @@ export function ChartToolbar({
             onClick={onToggleAlert}
             title={alertEnabled ? "Email alerts active - click to mute" : "Click to enable real-time email trade alerts"}
             style={{
-              background: alertEnabled ? "rgba(16,185,129,0.2)" : undefined,
-              borderColor: alertEnabled ? "#10b981" : undefined,
-              color: alertEnabled ? "#4ade80" : undefined,
+              background: alertEnabled ? "rgba(255, 255, 255, 0.12)" : undefined,
+              borderColor: alertEnabled ? "#ffffff" : undefined,
+              color: alertEnabled ? "#ffffff" : undefined,
             }}
           >
-            <span>{alertEnabled ? "🔔 Alerts ON" : "🔕 Alerts OFF"}</span>
+            <span>{alertEnabled ? "Alerts ON" : "Alerts OFF"}</span>
           </button>
         )}
 

@@ -450,17 +450,34 @@ export function StrategyChart({
                 position: "absolute",
                 inset: 0,
                 zIndex: 100,
-                background: "rgba(5, 8, 17, 0.94)",
-                backdropFilter: "blur(12px)",
+                background: "rgba(0, 0, 0, 0.88)",
+                backdropFilter: "blur(24px)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: 24,
+                padding: "24px 16px",
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: 44, marginBottom: 12 }}>🔒</div>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "50%",
+                  background: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.16)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
               <div
                 style={{
                   display: "inline-block",
@@ -468,11 +485,11 @@ export function StrategyChart({
                   borderRadius: 20,
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "#d4af37",
-                  border: "1px solid rgba(212, 175, 55, 0.4)",
-                  background: "rgba(212, 175, 55, 0.1)",
+                  color: "#ffffff",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  background: "rgba(255, 255, 255, 0.08)",
                   marginBottom: 12,
-                  fontFamily: "'SF Mono', monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   textTransform: "uppercase",
                 }}
               >
@@ -481,7 +498,7 @@ export function StrategyChart({
               <h2 style={{ fontSize: 24, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>
                 Authentication Required to Stream Live Chart
               </h2>
-              <p style={{ maxWidth: 480, color: "#94a3b8", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
+              <p style={{ maxWidth: 480, color: "#a1a1aa", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
                 Live TradingView tick streaming, Long/Short execution overlays, and 24/7 VPS signals for <b>{contract?.name || strategyId}</b> are available exclusively to authenticated traders with an active 7-Day Free Trial or Pro Membership.
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
@@ -492,14 +509,15 @@ export function StrategyChart({
                     fontSize: 14,
                     padding: "12px 28px",
                     textDecoration: "none",
-                    background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
-                    color: "#000",
-                    fontWeight: 800,
+                    background: "#ffffff",
+                    color: "#000000",
+                    fontWeight: 700,
+                    border: "none",
                   }}
                 >
                   Sign In / Create Account →
                 </Link>
-                <Link href="/market" className="pill g sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none" }}>
+                <Link href="/market" className="pill g sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.2)", color: "#ffffff" }}>
                   Explore Strategies
                 </Link>
               </div>
@@ -513,17 +531,33 @@ export function StrategyChart({
                 position: "absolute",
                 inset: 0,
                 zIndex: 100,
-                background: "rgba(5, 8, 17, 0.94)",
-                backdropFilter: "blur(12px)",
+                background: "rgba(0, 0, 0, 0.88)",
+                backdropFilter: "blur(24px)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: 24,
+                padding: "24px 16px",
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: 44, marginBottom: 12 }}>🛡️</div>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "50%",
+                  background: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.16)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </div>
               <div
                 style={{
                   display: "inline-block",
@@ -531,11 +565,11 @@ export function StrategyChart({
                   borderRadius: 20,
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "#d4af37",
-                  border: "1px solid rgba(212, 175, 55, 0.4)",
-                  background: "rgba(212, 175, 55, 0.1)",
+                  color: "#ffffff",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  background: "rgba(255, 255, 255, 0.08)",
                   marginBottom: 12,
-                  fontFamily: "'SF Mono', monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   textTransform: "uppercase",
                 }}
               >
@@ -544,7 +578,7 @@ export function StrategyChart({
               <h2 style={{ fontSize: 24, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>
                 Unlock {contract?.name || strategyId} Live Terminal
               </h2>
-              <p style={{ maxWidth: 480, color: "#94a3b8", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
+              <p style={{ maxWidth: 480, color: "#a1a1aa", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
                 Access to private LuxAlgo Vela live market charting, real-time Long/Short trade execution boxes, and 24/7 VPS signal alerts is reserved for active 7-Day Trial and StratMarket Pro members.
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
@@ -556,17 +590,18 @@ export function StrategyChart({
                     fontSize: 14,
                     padding: "12px 28px",
                     cursor: activatingTrial ? "wait" : "pointer",
-                    background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
-                    color: "#000",
-                    fontWeight: 800,
+                    background: "#ffffff",
+                    color: "#000000",
+                    fontWeight: 700,
+                    border: "none",
                   }}
                 >
-                  {activatingTrial ? "Activating 7-Day Trial..." : "⚡ Start 7-Day Free Trial (Instant Access)"}
+                  {activatingTrial ? "Activating 7-Day Trial..." : "Start 7-Day Free Trial (Instant Access)"}
                 </button>
-                <Link href="/pricing" className="pill g sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none" }}>
+                <Link href="/pricing" className="pill g sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.2)", color: "#ffffff" }}>
                   Upgrade to Pro
                 </Link>
-                <Link href="/dashboard" className="pill sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none" }}>
+                <Link href="/dashboard" className="pill sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.2)", color: "#ffffff" }}>
                   Dashboard
                 </Link>
               </div>
@@ -580,28 +615,45 @@ export function StrategyChart({
                 position: "absolute",
                 inset: 0,
                 zIndex: 100,
-                background: "rgba(5, 8, 17, 0.94)",
-                backdropFilter: "blur(12px)",
+                background: "rgba(0, 0, 0, 0.88)",
+                backdropFilter: "blur(24px)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: 24,
+                padding: "24px 16px",
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: 44, marginBottom: 12 }}>🔒</div>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "50%",
+                  background: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.16)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
               <h2 style={{ fontSize: 24, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>
                 7-Day Free Trial Concluded
               </h2>
-              <p style={{ maxWidth: 480, color: "#94a3b8", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
+              <p style={{ maxWidth: 480, color: "#a1a1aa", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
                 Your 7-day evaluation period for <b>{contract?.name || strategyId}</b> has ended. Upgrade to StratMarket Pro to unlock continuous 24/7 autonomous VPS signals, candlestick streaming, and execution overlays.
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-                <Link href="/pricing" className="pill action-btn" style={{ fontSize: 14, padding: "12px 28px", textDecoration: "none" }}>
+                <Link href="/pricing" className="pill action-btn" style={{ fontSize: 14, padding: "12px 28px", textDecoration: "none", background: "#ffffff", color: "#000000", fontWeight: 700, border: "none" }}>
                   Upgrade to StratMarket Pro →
                 </Link>
-                <Link href="/dashboard" className="pill g sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none" }}>
+                <Link href="/dashboard" className="pill g sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.2)", color: "#ffffff" }}>
                   Back to Dashboard
                 </Link>
               </div>

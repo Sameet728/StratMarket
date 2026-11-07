@@ -277,7 +277,7 @@ export function PricingClient({
     <div>
       {/* 1. Header & Hero Section */}
       <div style={{ textAlign: "center", marginBottom: 36 }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", borderRadius: 20, background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.25)", color: "#d4af37", fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", borderRadius: 20, background: "rgba(255, 255, 255, 0.12)", border: "1px solid rgba(255, 255, 255, 0.12)", color: "#ffffff", fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
           <span>⚡</span>
           <span>INSTITUTIONAL QUANTITATIVE SUITE · DIRECT STRATEGY CHECKOUT</span>
         </div>
@@ -298,8 +298,8 @@ export function PricingClient({
               margin: "0 auto 28px",
               padding: "16px 20px",
               borderRadius: 14,
-              border: "1px solid rgba(16, 185, 129, 0.4)",
-              background: "linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(5,150,105,0.04) 100%)",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              background: "rgba(255,255,255,0.03)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -316,12 +316,12 @@ export function PricingClient({
                     ? "All-Access Portfolio Active"
                     : `Single Strategy Active: ${activeSingleEntitlements.map((e) => e.strategyId).join(", ")}`}
                 </span>
-                <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 12, background: "rgba(16,185,129,0.25)", color: "#34d399", border: "1px solid rgba(16,185,129,0.4)" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 12, background: "rgba(255, 255, 255, 0.12)", color: "#ffffff", border: "1px solid rgba(255, 255, 255, 0.12)" }}>
                   ● PRO ACTIVE
                 </span>
               </div>
               <div style={{ fontSize: 12, color: "#cbd5e1" }}>
-                Signal emails delivering to <b style={{ color: "#38bdf8" }}>{user?.email}</b> ·{" "}
+                Signal emails delivering to <b style={{ color: "#ffffff" }}>{user?.email}</b> ·{" "}
                 {activeAllAccessEntitlement?.daysLeft || activeSingleEntitlements[0]?.daysLeft || 30} days remaining
               </div>
             </div>
@@ -337,7 +337,7 @@ export function PricingClient({
                     : "/chart/ps-01"
                 }
                 className="pill sm"
-                style={{ fontSize: 12, background: "linear-gradient(135deg, #10b981, #059669)", border: "none" }}
+                style={{ fontSize: 12, background: "#ffffff", color: "#000000", fontWeight: 700, border: "none" }}
               >
                 Open Live Chart Terminal →
               </Link>
@@ -348,16 +348,16 @@ export function PricingClient({
         {/* Trust Badges */}
         <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap", marginBottom: 32 }}>
           <span style={{ fontSize: 12, color: "#94a3b8", display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <span style={{ color: "#10b981" }}>✓</span> Instant Live Strategy Activation
+            <span style={{ color: "#ffffff" }}>✓</span> Instant Live Strategy Activation
           </span>
           <span style={{ fontSize: 12, color: "#94a3b8", display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <span style={{ color: "#10b981" }}>✓</span> 256-Bit Encrypted Direct Gateway
+            <span style={{ color: "#ffffff" }}>✓</span> 256-Bit Encrypted Direct Gateway
           </span>
           <span style={{ fontSize: 12, color: "#94a3b8", display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <span style={{ color: "#10b981" }}>✓</span> Real-Time 24/7 VPS Signal Feeds
+            <span style={{ color: "#ffffff" }}>✓</span> Real-Time 24/7 VPS Signal Feeds
           </span>
           <span style={{ fontSize: 12, color: "#94a3b8", display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <span style={{ color: "#10b981" }}>✓</span> Cancel or Switch Plans Anytime
+            <span style={{ color: "#ffffff" }}>✓</span> Cancel or Switch Plans Anytime
           </span>
         </div>
 
@@ -392,12 +392,12 @@ export function PricingClient({
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              background: billingCycle === "annual" ? "linear-gradient(135deg, #d4af37 0%, #b89728 100%)" : "transparent",
+              background: billingCycle === "annual" ? "#ffffff" : "transparent",
               color: billingCycle === "annual" ? "#000000" : "var(--mut)",
             }}
           >
             <span>Annual Billing</span>
-            <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 10, background: billingCycle === "annual" ? "#000" : "rgba(212,175,55,0.2)", color: billingCycle === "annual" ? "#d4af37" : "#d4af37", fontWeight: 800 }}>
+            <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 10, background: billingCycle === "annual" ? "#000" : "rgba(255, 255, 255, 0.12)", color: billingCycle === "annual" ? "#ffffff" : "#ffffff", fontWeight: 800 }}>
               SAVE 20%
             </span>
           </button>
@@ -408,7 +408,7 @@ export function PricingClient({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           gap: 24,
           alignItems: "stretch",
           marginBottom: 48,
@@ -418,9 +418,9 @@ export function PricingClient({
         <div
           style={{
             borderRadius: 16,
-            border: isSelectedStrategyOwned ? "2px solid #10b981" : "1px solid var(--line)",
+            border: isSelectedStrategyOwned ? "2px solid #ffffff" : "1px solid var(--line)",
             background: isSelectedStrategyOwned
-              ? "linear-gradient(180deg, rgba(16,185,129,0.06) 0%, rgba(10,12,16,0.98) 100%)"
+              ? "linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(10,10,12,0.98) 100%)"
               : "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(10,10,12,0.95) 100%)",
             padding: 32,
             display: "flex",
@@ -431,11 +431,11 @@ export function PricingClient({
         >
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "rgba(56, 189, 248, 0.12)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.25)", letterSpacing: "0.05em" }}>
+              <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "rgba(255, 255, 255, 0.12)", color: "#ffffff", border: "1px solid rgba(255, 255, 255, 0.12)", letterSpacing: "0.05em" }}>
                 SPECIALIZED ALPHA
               </span>
               {isSelectedStrategyOwned && (
-                <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "rgba(16, 185, 129, 0.2)", color: "#34d399", border: "1px solid rgba(16, 185, 129, 0.4)" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "rgba(255, 255, 255, 0.12)", color: "#ffffff", border: "1px solid rgba(255, 255, 255, 0.12)" }}>
                   ✓ OWNED &amp; ACTIVE
                 </span>
               )}
@@ -469,8 +469,8 @@ export function PricingClient({
                   width: "100%",
                   padding: "10px 12px",
                   borderRadius: 8,
-                  border: "1px solid rgba(56, 189, 248, 0.3)",
-                  background: "#080c14",
+                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                  background: "#121214",
                   color: "#fff",
                   fontSize: 13,
                   fontWeight: 600,
@@ -501,7 +501,7 @@ export function PricingClient({
               {/* Live Metric Pills */}
               {selectedStrategyObj && (
                 <div style={{ display: "flex", gap: 8, marginTop: 10, fontSize: 11, flexWrap: "wrap" }}>
-                  <span style={{ padding: "2px 8px", borderRadius: 4, background: "rgba(16,185,129,0.12)", color: "#10b981", fontWeight: 700 }}>
+                  <span style={{ padding: "2px 8px", borderRadius: 4, background: "rgba(255, 255, 255, 0.12)", color: "#ffffff", fontWeight: 700 }}>
                     Win Rate: {selectedStrategyObj.winRate}%
                   </span>
                   <span style={{ padding: "2px 8px", borderRadius: 4, background: "rgba(255,255,255,0.06)", color: "#f8fafc", fontWeight: 700 }}>
@@ -517,19 +517,19 @@ export function PricingClient({
             {/* Feature Bullets */}
             <ul style={{ margin: "0 0 24px", padding: 0, listStyle: "none", display: "grid", gap: 10, fontSize: 13, color: "#cbd5e1" }}>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#10b981", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>Unrestricted live LuxAlgo Vela candlestick charting terminal</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#10b981", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>Real-time 24/7 email trade alerts (Entry, Exit, SL &amp; TP)</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#10b981", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>Zero-risk Virtual Paper Simulator execution</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#10b981", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>Full backtest tearsheet &amp; institutional research report</span>
               </li>
             </ul>
@@ -547,8 +547,8 @@ export function PricingClient({
                 borderRadius: 10,
                 textAlign: "center",
                 textDecoration: "none",
-                background: "linear-gradient(135deg, #10b981, #059669)",
-                color: "#fff",
+                background: "#ffffff",
+                color: "#000000",
               }}
             >
               ✓ Active Pro · Open {selectedStrategyId} Terminal →
@@ -579,18 +579,18 @@ export function PricingClient({
         <div
           style={{
             borderRadius: 16,
-            border: activeAllAccessEntitlement ? "2px solid #10b981" : "2px solid #d4af37",
+            border: activeAllAccessEntitlement ? "2px solid #ffffff" : "2px solid #ffffff",
             background: activeAllAccessEntitlement
-              ? "linear-gradient(180deg, rgba(16,185,129,0.08) 0%, rgba(10,12,16,0.98) 100%)"
-              : "linear-gradient(180deg, rgba(212,175,55,0.06) 0%, rgba(10,12,16,0.98) 100%)",
+              ? "linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(10,10,12,0.98) 100%)"
+              : "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(10,10,12,0.98) 100%)",
             padding: 32,
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
             position: "relative",
             boxShadow: activeAllAccessEntitlement
-              ? "0 0 35px rgba(16,185,129,0.18)"
-              : "0 0 35px rgba(212,175,55,0.12)",
+              ? "0 0 35px rgba(255, 255, 255, 0.12)"
+              : "0 0 35px rgba(255, 255, 255, 0.12)",
           }}
         >
           {/* Most Popular Ribbon */}
@@ -601,8 +601,8 @@ export function PricingClient({
               left: "50%",
               transform: "translateX(-50%)",
               background: activeAllAccessEntitlement
-                ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
-                : "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
+                ? "#ffffff"
+                : "#ffffff",
               color: activeAllAccessEntitlement ? "#fff" : "#000",
               fontWeight: 800,
               fontSize: 11,
@@ -619,7 +619,7 @@ export function PricingClient({
 
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, marginTop: 4 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "rgba(212,175,55,0.18)", color: "#facc15", border: "1px solid rgba(212,175,55,0.4)", letterSpacing: "0.05em" }}>
+              <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "rgba(255, 255, 255, 0.12)", color: "#ffffff", border: "1px solid rgba(255, 255, 255, 0.12)", letterSpacing: "0.05em" }}>
                 💎 COMPLETE QUANT SUITE
               </span>
             </div>
@@ -640,8 +640,8 @@ export function PricingClient({
             </div>
 
             {/* Strategy Inclusion Highlight Banner */}
-            <div style={{ padding: "14px", borderRadius: 12, background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.25)", marginBottom: 22 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#fde047", marginBottom: 4 }}>
+            <div style={{ padding: "14px", borderRadius: 12, background: "rgba(255, 255, 255, 0.12)", border: "1px solid rgba(255, 255, 255, 0.12)", marginBottom: 22 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#ffffff", marginBottom: 4 }}>
                 ⚡ Unlocks All 14 Strategies Directly:
               </div>
               <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5 }}>
@@ -654,23 +654,23 @@ export function PricingClient({
             {/* Feature Bullets */}
             <ul style={{ margin: "0 0 24px", padding: 0, listStyle: "none", display: "grid", gap: 10, fontSize: 13, color: "#cbd5e1" }}>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#d4af37", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span><b>Every listed strategy</b> unlocked simultaneously</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#d4af37", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>Real-time priority 24/7 email signal alerts across all 14 feeds</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#d4af37", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>Unrestricted live candlestick charts with Long/Short execution overlays</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#d4af37", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>Multi-asset portfolio diversification and risk weighting matrix</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#d4af37", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>All future strategy releases and quant updates included</span>
               </li>
             </ul>
@@ -688,9 +688,9 @@ export function PricingClient({
                 borderRadius: 10,
                 textAlign: "center",
                 textDecoration: "none",
-                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                color: "#fff",
-                boxShadow: "0 4px 20px rgba(16,185,129,0.3)",
+                background: "#ffffff",
+                color: "#000000",
+                boxShadow: "0 4px 20px rgba(255, 255, 255, 0.12)",
               }}
             >
               ✓ Portfolio Active · Open Dashboard →
@@ -710,9 +710,9 @@ export function PricingClient({
                 borderRadius: 10,
                 cursor: "pointer",
                 textAlign: "center",
-                background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
+                background: "#ffffff",
                 color: "#000",
-                boxShadow: "0 4px 20px rgba(212,175,55,0.3)",
+                boxShadow: "0 4px 20px rgba(255, 255, 255, 0.12)",
                 border: "none",
               }}
             >
@@ -736,7 +736,7 @@ export function PricingClient({
         >
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "rgba(168, 85, 247, 0.12)", color: "#c084fc", border: "1px solid rgba(168, 85, 247, 0.25)", letterSpacing: "0.05em" }}>
+              <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "rgba(255, 255, 255, 0.12)", color: "#ffffff", border: "1px solid rgba(255, 255, 255, 0.12)", letterSpacing: "0.05em" }}>
                 INSTITUTIONAL INFRASTRUCTURE
               </span>
             </div>
@@ -757,8 +757,8 @@ export function PricingClient({
             </div>
 
             {/* Institutional Tag */}
-            <div style={{ padding: "14px", borderRadius: 12, background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.25)", marginBottom: 22 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#e9d5ff", marginBottom: 4 }}>
+            <div style={{ padding: "14px", borderRadius: 12, background: "rgba(255, 255, 255, 0.12)", border: "1px solid rgba(255, 255, 255, 0.12)", marginBottom: 22 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#ffffff", marginBottom: 4 }}>
                 🛡️ Direct Execution Relays:
               </div>
               <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5 }}>
@@ -769,23 +769,23 @@ export function PricingClient({
             {/* Feature Bullets */}
             <ul style={{ margin: "0 0 24px", padding: 0, listStyle: "none", display: "grid", gap: 10, fontSize: 13, color: "#cbd5e1" }}>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#c084fc", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>Everything included in All-Access Portfolio</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#c084fc", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>Low-latency dedicated VPS webhook relay (&lt; 50ms)</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#c084fc", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>Custom parameter overrides for risk governance</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#c084fc", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>1-on-1 monthly quant research briefing</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: "#c084fc", fontWeight: 800 }}>✓</span>
+                <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
                 <span>Dedicated account manager &amp; priority SLA support</span>
               </li>
             </ul>
@@ -864,7 +864,7 @@ export function PricingClient({
                 >
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                      <code style={{ fontSize: 13, color: "#38bdf8", fontWeight: 700 }}>
+                      <code style={{ fontSize: 13, color: "#ffffff", fontWeight: 700 }}>
                         {ord.id}
                       </code>
                       <span
@@ -873,9 +873,9 @@ export function PricingClient({
                           fontWeight: 700,
                           padding: "2px 8px",
                           borderRadius: 12,
-                          background: "rgba(16,185,129,0.15)",
-                          color: "#34d399",
-                          border: "1px solid rgba(16,185,129,0.3)",
+                          background: "rgba(255, 255, 255, 0.12)",
+                          color: "#ffffff",
+                          border: "1px solid rgba(255, 255, 255, 0.12)",
                         }}
                       >
                         ✓ {ord.status}
@@ -949,10 +949,10 @@ export function PricingClient({
             style={{
               width: "100%",
               maxWidth: 620,
-              background: "#0a0d17",
-              border: "1px solid rgba(212,175,55,0.35)",
+              background: "#09090b",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
               borderRadius: 18,
-              boxShadow: "0 25px 60px rgba(0,0,0,0.8), 0 0 35px rgba(212,175,55,0.15)",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.8), 0 0 35px rgba(255, 255, 255, 0.12)",
               overflow: "hidden",
               position: "relative",
             }}
@@ -965,7 +965,7 @@ export function PricingClient({
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                background: "linear-gradient(90deg, rgba(212,175,55,0.08) 0%, rgba(10,13,23,0.5) 100%)",
+                background: "rgba(255,255,255,0.02)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1012,14 +1012,14 @@ export function PricingClient({
                       width: 72,
                       height: 72,
                       borderRadius: "50%",
-                      background: "rgba(16,185,129,0.15)",
-                      border: "2px solid #10b981",
+                      background: "rgba(255, 255, 255, 0.12)",
+                      border: "2px solid #ffffff",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       margin: "0 auto 20px",
                       fontSize: 32,
-                      boxShadow: "0 0 25px rgba(16,185,129,0.3)",
+                      boxShadow: "0 0 25px rgba(255, 255, 255, 0.12)",
                     }}
                   >
                     ✓
@@ -1046,7 +1046,7 @@ export function PricingClient({
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                       <span style={{ color: "var(--mut)" }}>Order Reference:</span>
-                      <code style={{ color: "#38bdf8", fontWeight: 700 }}>{orderResult.order?.id}</code>
+                      <code style={{ color: "#ffffff", fontWeight: 700 }}>{orderResult.order?.id}</code>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                       <span style={{ color: "var(--mut)" }}>Plan / Tier:</span>
@@ -1055,7 +1055,7 @@ export function PricingClient({
                     {activePlan.slug === "single-strategy" && (
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                         <span style={{ color: "var(--mut)" }}>Unlocked Strategy:</span>
-                        <span style={{ color: "#4ade80", fontWeight: 700 }}>{checkoutStrategyId}</span>
+                        <span style={{ color: "#ffffff", fontWeight: 700 }}>{checkoutStrategyId}</span>
                       </div>
                     )}
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
@@ -1064,7 +1064,7 @@ export function PricingClient({
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ color: "var(--mut)" }}>Email Alerts:</span>
-                      <span style={{ color: "#10b981", fontWeight: 600 }}>Active for {user?.email}</span>
+                      <span style={{ color: "#ffffff", fontWeight: 600 }}>Active for {user?.email}</span>
                     </div>
                   </div>
 
@@ -1078,7 +1078,7 @@ export function PricingClient({
                           fontSize: 14,
                           padding: "12px 24px",
                           textDecoration: "none",
-                          background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
+                          background: "#ffffff",
                           color: "#000",
                           fontWeight: 800,
                         }}
@@ -1093,7 +1093,7 @@ export function PricingClient({
                           fontSize: 14,
                           padding: "12px 24px",
                           textDecoration: "none",
-                          background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
+                          background: "#ffffff",
                           color: "#000",
                           fontWeight: 800,
                         }}
@@ -1240,7 +1240,7 @@ export function PricingClient({
                         padding: "12px",
                         fontSize: 14,
                         fontWeight: 700,
-                        background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
+                        background: "#ffffff",
                         color: "#000",
                         marginTop: 4,
                       }}
@@ -1264,7 +1264,7 @@ export function PricingClient({
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                       <div>
-                        <div style={{ fontSize: 11, fontWeight: 800, color: "#d4af37", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        <div style={{ fontSize: 11, fontWeight: 800, color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                           Selected Plan
                         </div>
                         <h4 style={{ fontSize: 17, fontWeight: 800, color: "#fff", margin: "2px 0 0" }}>
@@ -1295,8 +1295,8 @@ export function PricingClient({
                             width: "100%",
                             padding: "8px 10px",
                             borderRadius: 6,
-                            border: "1px solid rgba(56, 189, 248, 0.3)",
-                            background: "#080c14",
+                            border: "1px solid rgba(255, 255, 255, 0.12)",
+                            background: "#121214",
                             color: "#fff",
                             fontSize: 12,
                             fontWeight: 600,
@@ -1326,7 +1326,7 @@ export function PricingClient({
                     )}
 
                     {activePlan.slug !== "single-strategy" && (
-                      <div style={{ paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 12, color: "#10b981", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 12, color: "#ffffff", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
                         <span>✓</span>
                         <span>Directly unlocks all 14 quantitative strategies across Pine Script and MT5</span>
                       </div>
@@ -1346,9 +1346,9 @@ export function PricingClient({
                           fontSize: 11,
                           padding: "3px 8px",
                           borderRadius: 6,
-                          background: "rgba(212,175,55,0.12)",
-                          border: "1px solid rgba(212,175,55,0.3)",
-                          color: "#d4af37",
+                          background: "rgba(255, 255, 255, 0.12)",
+                          border: "1px solid rgba(255, 255, 255, 0.12)",
+                          color: "#ffffff",
                           fontWeight: 700,
                           cursor: "pointer",
                         }}
@@ -1365,8 +1365,8 @@ export function PricingClient({
                           flex: 1,
                           padding: "10px",
                           borderRadius: 8,
-                          border: paymentMethod === "CARD" ? "1px solid #d4af37" : "1px solid var(--line)",
-                          background: paymentMethod === "CARD" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.02)",
+                          border: paymentMethod === "CARD" ? "1px solid #ffffff" : "1px solid var(--line)",
+                          background: paymentMethod === "CARD" ? "rgba(255, 255, 255, 0.12)" : "rgba(255,255,255,0.02)",
                           color: paymentMethod === "CARD" ? "#fff" : "var(--mut)",
                           fontSize: 13,
                           fontWeight: 700,
@@ -1387,8 +1387,8 @@ export function PricingClient({
                           flex: 1,
                           padding: "10px",
                           borderRadius: 8,
-                          border: paymentMethod === "RAZORPAY" ? "1px solid #38bdf8" : "1px solid var(--line)",
-                          background: paymentMethod === "RAZORPAY" ? "rgba(56,189,248,0.1)" : "rgba(255,255,255,0.02)",
+                          border: paymentMethod === "RAZORPAY" ? "1px solid #ffffff" : "1px solid var(--line)",
+                          background: paymentMethod === "RAZORPAY" ? "rgba(255, 255, 255, 0.12)" : "rgba(255,255,255,0.02)",
                           color: paymentMethod === "RAZORPAY" ? "#fff" : "var(--mut)",
                           fontSize: 13,
                           fontWeight: 700,
@@ -1514,9 +1514,9 @@ export function PricingClient({
                       padding: "14px 20px",
                       fontSize: 15,
                       fontWeight: 800,
-                      background: "linear-gradient(135deg, #d4af37 0%, #b89728 100%)",
+                      background: "#ffffff",
                       color: "#000",
-                      boxShadow: "0 4px 20px rgba(212,175,55,0.25)",
+                      boxShadow: "0 4px 20px rgba(255, 255, 255, 0.12)",
                       cursor: isProcessing ? "wait" : "pointer",
                       display: "flex",
                       alignItems: "center",

@@ -370,7 +370,7 @@ export function DashboardClient() {
             width: 36,
             height: 36,
             border: "2px solid var(--line)",
-            borderTopColor: "#10b981",
+            borderTopColor: "#ffffff",
             borderRadius: "50%",
             animation: "spin 0.8s linear infinite",
           }}
@@ -429,9 +429,9 @@ export function DashboardClient() {
                 borderRadius: 20,
                 fontSize: 12,
                 fontWeight: 700,
-                background: "rgba(16,185,129,0.12)",
-                border: "1px solid rgba(16,185,129,0.3)",
-                color: "#10b981",
+                background: "rgba(255, 255, 255, 0.1)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                color: "#ffffff",
               }}
             >
               <span
@@ -439,8 +439,8 @@ export function DashboardClient() {
                   width: 7,
                   height: 7,
                   borderRadius: "50%",
-                  background: "#10b981",
-                  boxShadow: "0 0 8px #10b981",
+                  background: "#ffffff",
+                  boxShadow: "0 0 8px #ffffff",
                 }}
               />
               Live Quant Signals Active · VPS Connected
@@ -483,7 +483,7 @@ export function DashboardClient() {
             background: "rgba(255,255,255,0.02)",
           }}
         >
-          <div style={{ fontSize: 26, fontWeight: 800, color: "#10b981", fontFamily: "'JetBrains Mono', monospace" }}>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#ffffff", fontFamily: "'JetBrains Mono', monospace" }}>
             {activeTrialsCount}
           </div>
           <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>Active 7-Day Trials</div>
@@ -540,7 +540,7 @@ export function DashboardClient() {
           marginBottom: 32,
           borderRadius: 14,
           border: "1px solid rgba(56, 189, 248, 0.25)",
-          background: "linear-gradient(135deg, rgba(14, 165, 233, 0.05) 0%, rgba(15, 23, 42, 0.4) 100%)",
+          background: "linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(10, 10, 10, 0.4) 100%)",
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
@@ -554,9 +554,9 @@ export function DashboardClient() {
                   fontWeight: 600,
                   padding: "2px 8px",
                   borderRadius: 6,
-                  background: "rgba(16,185,129,0.15)",
-                  color: "#10b981",
-                  border: "1px solid rgba(16,185,129,0.3)",
+                  background: "rgba(255, 255, 255, 0.1)",
+                  color: "#ffffff",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
                 Institutional Gateway • Domain: elvariscapital.in
@@ -629,7 +629,7 @@ export function DashboardClient() {
               style={{
                 marginTop: 8,
                 fontSize: 12,
-                color: emailMessage.ok ? "#10b981" : "#ef4444",
+                color: emailMessage.ok ? "#ffffff" : "#ef4444",
               }}
             >
               {emailMessage.ok ? "✓ " : "✕ "}
@@ -642,7 +642,7 @@ export function DashboardClient() {
               style={{
                 marginTop: 8,
                 fontSize: 12,
-                color: testResult.ok ? "#10b981" : "#ef4444",
+                color: testResult.ok ? "#ffffff" : "#ef4444",
               }}
             >
               {testResult.ok ? "✓ " : "✕ "}
@@ -708,8 +708,8 @@ export function DashboardClient() {
             className={`pill ${activeTab === "PINE" ? "" : "g"} sm`}
             style={{
               fontSize: 12,
-              background: activeTab === "PINE" ? "rgba(16,185,129,0.2)" : undefined,
-              borderColor: activeTab === "PINE" ? "#10b981" : undefined,
+              background: activeTab === "PINE" ? "#ffffff" : undefined,
+              borderColor: activeTab === "PINE" ? "#ffffff" : undefined,
               color: activeTab === "PINE" ? "#4ade80" : undefined,
             }}
           >
@@ -720,7 +720,7 @@ export function DashboardClient() {
             className={`pill ${activeTab === "PYTHON" ? "" : "g"} sm`}
             style={{
               fontSize: 12,
-              background: activeTab === "PYTHON" ? "rgba(234,179,8,0.2)" : undefined,
+              background: activeTab === "PYTHON" ? "#ffffff" : undefined,
               borderColor: activeTab === "PYTHON" ? "#eab308" : undefined,
               color: activeTab === "PYTHON" ? "#fde047" : undefined,
             }}
@@ -836,18 +836,18 @@ function StrategyDashboardCard({
     <div
       style={{
         border: strategy.enabled
-          ? "1px solid rgba(16, 185, 129, 0.4)"
+          ? "1px solid rgba(255, 255, 255, 0.1)"
           : "1px solid var(--line)",
         borderRadius: 14,
         padding: "20px",
         background: strategy.enabled
-          ? "linear-gradient(145deg, rgba(16, 185, 129, 0.04) 0%, rgba(15, 23, 42, 0.3) 100%)"
+          ? "linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, rgba(10, 10, 10, 0.4) 100%)"
           : "rgba(255,255,255,0.015)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         transition: "all 0.25s ease",
-        boxShadow: strategy.enabled ? "0 4px 20px rgba(16, 185, 129, 0.08)" : "none",
+        boxShadow: strategy.enabled ? "0 4px 20px rgba(255, 255, 255, 0.1)" : "none",
       }}
     >
       <div>
@@ -860,9 +860,9 @@ function StrategyDashboardCard({
                 fontWeight: 700,
                 padding: "2px 8px",
                 borderRadius: 6,
-                background: isPine ? "rgba(76, 199, 154, 0.15)" : "rgba(234, 179, 8, 0.15)",
+                background: isPine ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.08)",
                 color: isPine ? "#4ade80" : "#fde047",
-                border: isPine ? "1px solid rgba(76, 199, 154, 0.3)" : "1px solid rgba(234, 179, 8, 0.3)",
+                border: isPine ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(255, 255, 255, 0.08)",
               }}
             >
               {isPine ? "🌲 PINE SCRIPT v5" : "🐍 PYTHON MT5"}
@@ -904,9 +904,9 @@ function StrategyDashboardCard({
                   fontWeight: 700,
                   padding: "2px 8px",
                   borderRadius: 6,
-                  background: "rgba(16, 185, 129, 0.15)",
+                  background: "rgba(255, 255, 255, 0.1)",
                   color: "#34d399",
-                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
                 ⏱️ Trial: {countdown || `${strategy.daysLeft}d left`}
@@ -1017,12 +1017,12 @@ function StrategyDashboardCard({
                 padding: "9px 14px",
                 borderRadius: 8,
                 border: strategy.enabled
-                  ? "1px solid rgba(16, 185, 129, 0.5)"
+                  ? "1px solid rgba(255, 255, 255, 0.1)"
                   : "1px solid var(--line)",
                 background: strategy.enabled
-                  ? "linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.25) 100%)"
+                  ? "linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.15) 100%)"
                   : "rgba(255,255,255,0.03)",
-                color: strategy.enabled ? "#10b981" : "var(--mut)",
+                color: strategy.enabled ? "#ffffff" : "var(--mut)",
                 fontWeight: 700,
                 fontSize: 13,
                 cursor: "pointer",
@@ -1048,7 +1048,7 @@ function StrategyDashboardCard({
                   fontSize: 11,
                   padding: "2px 8px",
                   borderRadius: 12,
-                  background: strategy.enabled ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.06)",
+                  background: strategy.enabled ? "rgba(255, 255, 255, 0.1)" : "rgba(255,255,255,0.06)",
                   color: strategy.enabled ? "#fff" : "var(--mut)",
                 }}
               >

@@ -138,7 +138,7 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
             }`}
             onClick={() => setType(t)}
           >
-            {t === "All" ? "All strategies (14)" : t === "Python" ? "🐍 Python MT5 (10)" : "🌲 Pine Script v5 (4)"}
+            {t === "All" ? "All strategies (14)" : t === "Python" ? "Python MT5 (10)" : "Pine Script v5 (4)"}
           </button>
         ))}
       </div>
@@ -182,17 +182,17 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
                 <h3>{s.name}</h3>
                 <div className="row" style={{ fontSize: "12.5px" }}>
                   <span>{s.instrument} · {s.timeframe} · {s.category}</span>
-                  <span style={{ color: isPython ? "#e8c46a" : "#4cc79a", fontWeight: 600 }}>
+                  <span style={{ color: "#ffffff", fontWeight: 600 }}>
                     {isPython ? "MetaTrader 5" : "TradingView"}
                   </span>
                 </div>
                 <p>{s.description}</p>
                 <div className="mm">
                   <div>
-                    Net return*<b style={{ color: isPython ? "#e8c46a" : "#4cc79a" }}>+{s.metrics.netReturn}%</b>
+                    Net return*<b style={{ color: "#ffffff" }}>+{s.metrics.netReturn}%</b>
                   </div>
                   <div>
-                    Max DD*<b style={{ color: "#4cc79a" }}>{s.metrics.maxDrawdown}%</b>
+                    Max DD*<b style={{ color: "#ffffff" }}>{s.metrics.maxDrawdown}%</b>
                   </div>
                   <div>
                     Profit factor*<b>{s.metrics.profitFactor}</b>
@@ -208,10 +208,10 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
                       onClick={(e) => e.stopPropagation()}
                       title={`Open ${s.name} on LuxAlgo Vela live chart`}
                     >
-                      📈 View Strategy on Chart ↗
+                      View Live Chart ↗
                     </a>
                   ) : (
-                    <span className="note-tag-py">⚡ Full Automation</span>
+                    <span className="note-tag-py">Institutional MT5</span>
                   )}
                   <a
                     href={`/strategies/${s.slug}`}

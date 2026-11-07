@@ -877,9 +877,9 @@ section h2 {
 
 /* PYTHON STRATEGIES: CHAMPAGNE GOLD (Signature Elvaris Capital Accent) */
 .card-python {
-  border: 1px solid rgba(232, 196, 106, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   background: linear-gradient(180deg, rgba(16, 16, 18, 0.9) 0%, rgba(8, 8, 10, 0.98) 100%) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(232, 196, 106, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
 }
 
 .card-python .card-top-accent {
@@ -888,26 +888,26 @@ section h2 {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, rgba(232, 196, 106, 0.8), rgba(232, 196, 106, 0.2), transparent);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12), transparent);
   opacity: 0.85;
   transition: opacity 0.3s ease;
 }
 
 .card-python:hover {
-  border-color: rgba(232, 196, 106, 0.45) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -15px rgba(232, 196, 106, 0.12), inset 0 1px 0 rgba(232, 196, 106, 0.25) !important;
+  box-shadow: 0 20px 40px -15px rgba(255, 255, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
 }
 
 .card-python:hover .card-top-accent {
   opacity: 1;
-  box-shadow: 0 0 10px rgba(232, 196, 106, 0.6);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
 }
 
 .badge-python {
-  background: rgba(232, 196, 106, 0.08) !important;
-  color: #e8c46a !important;
-  border: 1px solid rgba(232, 196, 106, 0.28) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   font-weight: 700 !important;
 }
 
@@ -915,13 +915,13 @@ section h2 {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #e8c46a;
-  box-shadow: 0 0 6px #e8c46a;
+  background: #ffffff;
+  box-shadow: 0 0 6px #ffffff;
   display: inline-block;
 }
 
 .note-tag-py {
-  color: #e8c46a;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 600;
   display: inline-flex;
@@ -931,9 +931,9 @@ section h2 {
 
 /* PINE SCRIPT STRATEGIES: PINE EMERALD (Website Verified Accent) */
 .card-pine {
-  border: 1px solid rgba(76, 199, 154, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   background: linear-gradient(180deg, rgba(16, 16, 18, 0.9) 0%, rgba(8, 8, 10, 0.98) 100%) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(76, 199, 154, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
 }
 
 .card-pine .card-top-accent {
@@ -942,26 +942,26 @@ section h2 {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, rgba(76, 199, 154, 0.8), rgba(76, 199, 154, 0.2), transparent);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12), transparent);
   opacity: 0.85;
   transition: opacity 0.3s ease;
 }
 
 .card-pine:hover {
-  border-color: rgba(76, 199, 154, 0.45) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -15px rgba(76, 199, 154, 0.12), inset 0 1px 0 rgba(76, 199, 154, 0.25) !important;
+  box-shadow: 0 20px 40px -15px rgba(255, 255, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
 }
 
 .card-pine:hover .card-top-accent {
   opacity: 1;
-  box-shadow: 0 0 10px rgba(76, 199, 154, 0.6);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
 }
 
 .badge-pine {
-  background: rgba(76, 199, 154, 0.08) !important;
-  color: #4cc79a !important;
-  border: 1px solid rgba(76, 199, 154, 0.28) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   font-weight: 700 !important;
 }
 
@@ -969,13 +969,13 @@ section h2 {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #4cc79a;
-  box-shadow: 0 0 6px #4cc79a;
+  background: #ffffff;
+  box-shadow: 0 0 6px #ffffff;
   display: inline-block;
 }
 
 .note-tag-pn {
-  color: #4cc79a;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 600;
   display: inline-flex;
@@ -985,17 +985,17 @@ section h2 {
 
 /* FILTER CHIPS */
 .chip.chip-py.on {
-  background: rgba(232, 196, 106, 0.14) !important;
-  color: #e8c46a !important;
-  border-color: rgba(232, 196, 106, 0.4) !important;
-  box-shadow: 0 0 14px rgba(232, 196, 106, 0.2);
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.12);
 }
 
 .chip.chip-pn.on {
-  background: rgba(76, 199, 154, 0.14) !important;
-  color: #4cc79a !important;
-  border-color: rgba(76, 199, 154, 0.4) !important;
-  box-shadow: 0 0 14px rgba(76, 199, 154, 0.2);
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.12);
 }
 
 /* HOMEPAGE INDEX LIST MINI BADGES */
@@ -1004,9 +1004,9 @@ section h2 {
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 4px;
-  background: rgba(232, 196, 106, 0.1);
-  color: #e8c46a;
-  border: 1px solid rgba(232, 196, 106, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   margin-right: 8px;
   display: inline-block;
 }
@@ -1016,9 +1016,9 @@ section h2 {
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 4px;
-  background: rgba(76, 199, 154, 0.1);
-  color: #4cc79a;
-  border: 1px solid rgba(76, 199, 154, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   margin-right: 8px;
   display: inline-block;
 }
@@ -1824,7 +1824,7 @@ footer p {
 }
 
 .pos-text {
-  color: #4cc79a !important;
+  color: #ffffff !important;
 }
 
 .neg-text {
@@ -1992,7 +1992,7 @@ footer p {
   bottom: 0;
   left: 0;
   border-radius: 6px;
-  background: linear-gradient(90deg, #1e7a58, #4cc79a);
+  background: linear-gradient(90deg, #1e7a58, #ffffff);
   transition: width 0.6s ease;
 }
 
@@ -2134,9 +2134,9 @@ body:has(.chart-page-fullscreen) main {
 }
 
 .chart-id-chip {
-  background: rgba(76, 199, 154, 0.12);
-  color: #4cc79a;
-  border: 1px solid rgba(76, 199, 154, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   font-weight: 700;
@@ -2165,8 +2165,8 @@ body:has(.chart-page-fullscreen) main {
 }
 
 .chart-strategy-select:hover {
-  border-color: #4cc79a;
-  background: rgba(76, 199, 154, 0.08);
+  border-color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .chart-strategy-select option {
@@ -2187,7 +2187,7 @@ body:has(.chart-page-fullscreen) main {
 
 .chart-symbol {
   font-weight: 700;
-  color: #e8c46a;
+  color: #ffffff;
 }
 
 .chart-tf-tag {
@@ -2232,10 +2232,10 @@ body:has(.chart-page-fullscreen) main {
 }
 
 .chart-tf-btn.active {
-  background: #27272a;
-  color: #4cc79a;
+  background: #ffffff;
+  color: #000000;
   font-weight: 700;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 .chart-depth-group {
@@ -2276,10 +2276,10 @@ body:has(.chart-page-fullscreen) main {
 }
 
 .chart-depth-btn.active {
-  background: rgba(76, 199, 154, 0.15);
-  color: #4cc79a;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
   font-weight: 700;
-  border: 1px solid rgba(76, 199, 154, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* Toolbar Right */
@@ -2300,15 +2300,15 @@ body:has(.chart-page-fullscreen) main {
 }
 
 .chart-status-pill.live {
-  background: rgba(76, 199, 154, 0.1);
-  color: #4cc79a;
-  border: 1px solid rgba(76, 199, 154, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .chart-status-pill.connecting {
-  background: rgba(232, 196, 106, 0.1);
-  color: #e8c46a;
-  border: 1px solid rgba(232, 196, 106, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .chart-status-dot {
@@ -2348,9 +2348,9 @@ body:has(.chart-page-fullscreen) main {
 }
 
 .chart-icon-btn.active {
-  background: rgba(76, 199, 154, 0.12);
-  color: #4cc79a;
-  border-color: rgba(76, 199, 154, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 /* Main Body Layout */
@@ -2388,8 +2388,8 @@ body:has(.chart-page-fullscreen) main {
 .chart-spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid rgba(76, 199, 154, 0.15);
-  border-top-color: #4cc79a;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: #ffffff;
   border-radius: 50%;
   animation: spin 0.9s linear infinite;
 }
@@ -2460,8 +2460,8 @@ body:has(.chart-page-fullscreen) main {
 }
 
 .panel-id-badge {
-  background: rgba(76, 199, 154, 0.12);
-  color: #4cc79a;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   font-weight: 700;
@@ -2525,7 +2525,7 @@ body:has(.chart-page-fullscreen) main {
 }
 
 .panel-row .value-pine {
-  color: #4cc79a;
+  color: #ffffff;
   font-weight: 700;
 }
 
@@ -2561,9 +2561,9 @@ body:has(.chart-page-fullscreen) main {
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: #4cc79a;
+  color: #ffffff;
   font-weight: 600;
-  background: rgba(76, 199, 154, 0.08);
+  background: rgba(255, 255, 255, 0.12);
   padding: 3px 8px;
   border-radius: 6px;
 }
@@ -2572,7 +2572,7 @@ body:has(.chart-page-fullscreen) main {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #4cc79a;
+  background: #ffffff;
 }
 
 /* Risk Grid */
@@ -2601,7 +2601,7 @@ body:has(.chart-page-fullscreen) main {
 .risk-val-tp {
   font-size: 14px;
   font-weight: 700;
-  color: #4cc79a;
+  color: #ffffff;
   font-family: "JetBrains Mono", monospace;
 }
 
@@ -2659,9 +2659,9 @@ body:has(.chart-page-fullscreen) main {
 .panel-btn-report {
   display: block;
   text-align: center;
-  background: rgba(76, 199, 154, 0.12);
-  border: 1px solid rgba(76, 199, 154, 0.35);
-  color: #4cc79a;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
   font-size: 13px;
   font-weight: 700;
   padding: 10px 14px;
@@ -2671,8 +2671,8 @@ body:has(.chart-page-fullscreen) main {
 }
 
 .panel-btn-report:hover {
-  background: rgba(76, 199, 154, 0.2);
-  box-shadow: 0 0 16px rgba(76, 199, 154, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.12);
 }
 
 .panel-btn-back {
@@ -2769,9 +2769,9 @@ body:has(.chart-page-fullscreen) main {
   gap: 5px;
   font-size: 12px;
   font-weight: 700;
-  color: #4cc79a;
-  background: rgba(76, 199, 154, 0.08);
-  border: 1px solid rgba(76, 199, 154, 0.25);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 4px 10px;
   border-radius: 6px;
   text-decoration: none;
@@ -2779,9 +2779,9 @@ body:has(.chart-page-fullscreen) main {
 }
 
 .card-chart-link:hover {
-  background: rgba(76, 199, 154, 0.18);
-  border-color: #4cc79a;
-  box-shadow: 0 0 10px rgba(76, 199, 154, 0.3);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
 
@@ -2789,9 +2789,9 @@ body:has(.chart-page-fullscreen) main {
 .chart-bars-badge {
   display: flex;
   align-items: center;
-  background: rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  color: #38bdf8;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   font-weight: 700;
@@ -2820,9 +2820,9 @@ body:has(.chart-page-fullscreen) main {
 }
 
 .chart-toggle-pill.active {
-  background: rgba(76, 199, 154, 0.12);
-  border-color: rgba(76, 199, 154, 0.35);
-  color: #4cc79a;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
   font-weight: 700;
 }
 
@@ -2835,8 +2835,8 @@ body:has(.chart-page-fullscreen) main {
 }
 
 .chart-toggle-pill.active .pill-dot {
-  background: #4cc79a;
-  box-shadow: 0 0 6px #4cc79a;
+  background: #ffffff;
+  box-shadow: 0 0 6px #ffffff;
 }
 
 /* Floating On-Chart HUD Tables (TradingView Engine Sync) */
@@ -2884,14 +2884,14 @@ body:has(.chart-page-fullscreen) main {
 .tv-hud-header-title {
   font-size: 10.5px;
   font-weight: 800;
-  color: #38bdf8;
+  color: #ffffff;
   letter-spacing: 0.04em;
 }
 
 .tv-hud-header-sub {
   font-size: 10px;
   font-weight: 700;
-  color: #38bdf8;
+  color: #ffffff;
 }
 
 .guards-header {
@@ -2981,3 +2981,193 @@ button[aria-label*="indicators" i],
 
 
 
+
+
+/* ==========================================================================
+   Comprehensive Mobile & Responsive System (All Viewports: 320px - 860px)
+   ========================================================================== */
+
+@media (max-width: 860px) {
+  .split, .three, .plans {
+    grid-template-columns: 1fr !important;
+  }
+  .pipe {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .kp, .stats {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .hero {
+    padding-top: 48px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Navigation Bar */
+  #nav {
+    padding: 12px 16px !important;
+  }
+  #nav .chip0 {
+    display: none !important;
+  }
+  #nav .r {
+    gap: 6px !important;
+  }
+  #nav .pill.sm {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* Dock Navigation - Responsive & Compact */
+  #dock {
+    bottom: 12px !important;
+    gap: 6px !important;
+    padding: 6px 8px !important;
+    max-width: calc(100vw - 20px) !important;
+    overflow-x: auto !important;
+    justify-content: flex-start !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 18px !important;
+  }
+  #dock::-webkit-scrollbar {
+    display: none !important;
+  }
+  #dock a.l {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+    flex-shrink: 0 !important;
+  }
+  #dock a.l svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+  #dock a.l::after {
+    display: none !important;
+  }
+
+  /* Chart Layout & Toolbar */
+  .chart-toolbar {
+    height: auto !important;
+    min-height: 48px !important;
+    padding: 6px 12px !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .chart-toolbar::-webkit-scrollbar {
+    display: none !important;
+  }
+  .chart-toolbar-left,
+  .chart-toolbar-center,
+  .chart-toolbar-right {
+    flex-shrink: 0 !important;
+    gap: 8px !important;
+  }
+  .chart-bars-badge {
+    display: none !important;
+  }
+
+  /* Chart Side Panel - Becomes a native bottom drawer */
+  .chart-side-panel {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-height: 75vh !important;
+    border-left: none !important;
+    border-top: 1px solid #27272a !important;
+    border-radius: 16px 16px 0 0 !important;
+    z-index: 200 !important;
+    background: #09090b !important;
+    box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.95) !important;
+  }
+
+  /* Marketplace Filters & Search */
+  .tools {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  .tools input {
+    grid-column: 1 / -1 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .tools select {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
+    padding: 8px 10px !important;
+  }
+  .chips {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding-bottom: 4px !important;
+  }
+  .chips::-webkit-scrollbar {
+    display: none !important;
+  }
+  .chip {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  /* Cards Grid */
+  .grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Containers & Padding */
+  .wrap {
+    padding: 0 16px !important;
+  }
+  .hc {
+    padding: 100px 16px 24px !important;
+  }
+  .hc h1 {
+    font-size: clamp(28px, 8vw, 42px) !important;
+  }
+  .hc p {
+    font-size: 15px !important;
+  }
+
+  /* Tables & Horizontal Containers */
+  table {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .pipe {
+    grid-template-columns: 1fr !important;
+  }
+  .kp, .stats {
+    grid-template-columns: 1fr !important;
+  }
+  .cta {
+    flex-direction: column !important;
+  }
+  .cta .pill {
+    width: 100% !important;
+    text-align: center !important;
+  }
+  #dock {
+    gap: 4px !important;
+    padding: 4px 6px !important;
+  }
+  #dock a.l {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
