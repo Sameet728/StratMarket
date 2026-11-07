@@ -10,13 +10,14 @@ export function PageTransitionWipe() {
   const [, startTransition] = useTransition();
 
   useEffect(() => {
-    // Intercept clicks on internal navigation links
+    let timer1: any = null;
+    let timer2: any = null;
+
     const handleLinkClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest("a");
       if (!target) return;
 
       const href = target.getAttribute("href");
-      // Check if it's an internal link (starts with / or relative, not an external or anchor #hash)
       if (
         href &&
         href.startsWith("/") &&
@@ -28,35 +29,42 @@ export function PageTransitionWipe() {
         !e.shiftKey &&
         !e.altKey
       ) {
-        // If clicking link to current exact path, do nothing
-        if (href === pathname) return;
+        // Don't re-wipe on current path or anchor links
+        if (href === pathname || href.startsWith("#")) return;
 
         e.preventDefault();
 
-        // 1. Trigger white curtain wipe animation
+        // 1. Immediately prefetch route so Next.js loads the code in parallel
+        try {
+          router.prefetch(href);
+        } catch (_) {}
+
+        // 2. Trigger high-performance GPU white wipe curtain
         const wp = document.getElementById("wp");
         if (wp) {
           wp.classList.remove("go");
-          // Force reflow
+          // Fast reflow trigger
           void wp.offsetWidth;
           wp.classList.add("go");
         }
         setIsWiping(true);
 
-        // 2. Midpoint of the curtain animation (420ms-430ms) is when screen is 100% white
-        setTimeout(() => {
+        // 3. Switch route at the exact apex (when white curtain covers screen 100%)
+        clearTimeout(timer1);
+        timer1 = setTimeout(() => {
           startTransition(() => {
             router.push(href);
           });
-        }, 430);
+        }, 300);
 
-        // 3. Clear class after animation completes (950ms)
-        setTimeout(() => {
+        // 4. Reset class cleanly once wipe reveals new screen
+        clearTimeout(timer2);
+        timer2 = setTimeout(() => {
           if (wp) {
             wp.classList.remove("go");
           }
           setIsWiping(false);
-        }, 980);
+        }, 780);
       }
     };
 
@@ -64,6 +72,8 @@ export function PageTransitionWipe() {
 
     return () => {
       document.removeEventListener("click", handleLinkClick, { capture: true });
+      clearTimeout(timer1);
+      clearTimeout(timer2);
     };
   }, [pathname, router]);
 

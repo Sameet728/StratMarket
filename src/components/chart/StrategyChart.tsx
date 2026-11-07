@@ -165,8 +165,8 @@ export function StrategyChart({
         setLoading(true);
         setError(null);
 
-        // Fetch maximum 5,000 bars and strategy execution contract
-        const res = await fetch(`/api/chart/${strategyId}/series?count=5000&timeframe=${timeframe}`);
+        // Fetch 1,500 high-fidelity bars and strategy execution contract for ultra-smooth rendering
+        const res = await fetch(`/api/chart/${strategyId}/series?count=1500&timeframe=${timeframe}`);
         
         // Handle 401 Unauthorized
         if (res.status === 401) {
@@ -246,15 +246,11 @@ export function StrategyChart({
           ws.chart?.renderer?.set("attribution", false);
         } catch (_) {}
 
-        const purgeAttribution = () => {
-          const marks = containerRef.current?.querySelectorAll(
-            'a.vela-attribution, .vela-attribution, [class*="vela-attr"], a[href*="velacharts"], .vela-watermark'
-          );
-          marks?.forEach((el) => el.remove());
-        };
-        purgeAttribution();
-        const obs = new MutationObserver(purgeAttribution);
-        obs.observe(containerRef.current, { childList: true, subtree: true });
+        // Single clean removal pass (CSS handles continuous hiding without DOM observation)
+        const marks = containerRef.current?.querySelectorAll(
+          'a.vela-attribution, .vela-attribution, [class*="vela-attr"], a[href*="velacharts"], .vela-watermark'
+        );
+        marks?.forEach((el) => el.remove());
 
         // Plot authentic Long/Short Position Tool boxes with exact Entry, SL, and TP prices
         if (data.contract?.tradeBoxes && ws.chart?.drawings) {

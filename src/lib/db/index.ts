@@ -3,6 +3,7 @@
 
 import { INITIAL_STRATEGIES, INITIAL_PLANS, StrategySeedItem, getStrategySortOrder } from "./seed-data";
 import { getMongoDb, isMongoActive } from "./mongodb";
+import { ObjectId } from "mongodb";
 import bcrypt from "bcryptjs";
 
 export interface UserRecord {
@@ -287,7 +288,6 @@ export const db = {
     const mdb = await getMongoDb();
     if (mdb) {
       try {
-        const { ObjectId } = require("mongodb");
         const orConditions: any[] = [{ id }, { email: id }];
         if (ObjectId.isValid(id)) {
           try {
@@ -630,16 +630,20 @@ export const db = {
       try {
         const docs = await mdb.collection("trials").find({ userId }).toArray();
         if (docs.length > 0) {
-          const list: TrialRecord[] = docs.map((d: any) => ({
-            id: d.id || d._id?.toString(),
-            userId: d.userId,
-            strategyId: d.strategyId,
-            startTime: new Date(d.startTime),
-            expiryTime: new Date(d.expiryTime),
-            status: now > new Date(d.expiryTime) ? "EXPIRED" : (d.status || "ACTIVE"),
-            eligibilityResult: d.eligibilityResult,
-            associatedEntitlementId: d.associatedEntitlementId,
-          }));
+          const list: TrialRecord[] = docs.map((d: any) => {
+            const memTrial = globalStore.trials.get(`${userId}:${d.strategyId}`);
+            const expTime = memTrial ? memTrial.expiryTime : new Date(d.expiryTime);
+            return {
+              id: d.id || d._id?.toString(),
+              userId: d.userId,
+              strategyId: d.strategyId,
+              startTime: new Date(d.startTime),
+              expiryTime: expTime,
+              status: now > expTime ? "EXPIRED" : (memTrial?.status || d.status || "ACTIVE"),
+              eligibilityResult: d.eligibilityResult,
+              associatedEntitlementId: d.associatedEntitlementId,
+            };
+          });
           list.forEach((t) => globalStore.trials.set(`${userId}:${t.strategyId}`, t));
           return list;
         }
@@ -667,18 +671,22 @@ export const db = {
       try {
         const docs = await mdb.collection("entitlements").find({ userId }).toArray();
         if (docs.length > 0) {
-          const list: EntitlementRecord[] = docs.map((d: any) => ({
-            id: d.id || d._id?.toString(),
-            userId: d.userId,
-            strategyId: d.strategyId,
-            planId: d.planId || null,
-            entitlementSource: d.entitlementSource || "TRIAL",
-            startTime: new Date(d.startTime),
-            expiryTime: new Date(d.expiryTime),
-            status: now > new Date(d.expiryTime) ? "EXPIRED" : (d.status || "ACTIVE"),
-            entitlementType: d.entitlementType || "TRIAL",
-            createdAt: d.createdAt ? new Date(d.createdAt) : new Date(),
-          }));
+          const list: EntitlementRecord[] = docs.map((d: any) => {
+            const mem = globalStore.entitlements.get(d.id);
+            const expTime = mem ? mem.expiryTime : new Date(d.expiryTime);
+            return {
+              id: d.id || d._id?.toString(),
+              userId: d.userId,
+              strategyId: d.strategyId,
+              planId: d.planId || null,
+              entitlementSource: d.entitlementSource || "TRIAL",
+              startTime: new Date(d.startTime),
+              expiryTime: expTime,
+              status: now > expTime ? "EXPIRED" : (mem?.status || d.status || "ACTIVE"),
+              entitlementType: d.entitlementType || "TRIAL",
+              createdAt: d.createdAt ? new Date(d.createdAt) : new Date(),
+            };
+          });
           list.forEach((e) => globalStore.entitlements.set(e.id, e));
           return list;
         }
@@ -1016,6 +1024,16 @@ export const db = {
           const dest = alert.verifiedDestination || alert.userEmail;
           if (dest && dest.includes("@") && !subscriberEmails.includes(dest)) {
             subscriberEmails.push(dest);
+            const delivery: EmailDeliveryRecord = {
+              id: "del_" + Math.random().toString(36).substring(2, 11),
+              signalId: newSignal.id,
+              userId: alert.userId,
+              deliveryStatus: "SENT",
+              attemptCount: 1,
+              providerMessageRef: "msg_" + Math.random().toString(36).substring(2, 14),
+              sentAt: now,
+            };
+            globalStore.deliveries.set(delivery.id, delivery);
             notifiedUsersCount++;
           }
         }

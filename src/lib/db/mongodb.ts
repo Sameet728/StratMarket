@@ -32,19 +32,12 @@ try {
   }
 } catch (_) {}
 
-const ATLAS_FALLBACK_URI = Buffer.from(
-  "bW9uZ29kYjovL3NhbWVldHBpc2FsX2RiX3VzZXI6MG9wNHVvZVpwY1ZUb29hUEBhYy1vemNraWE2LXNoYXJkLTAwLTAwLnN5aWtweDEubW9uZ29kYi5uZXQ6MjcwMTcsYWMtb3pja2lhNi1zaGFyZC0wMC0wMS5zeWlrcHgxLm1vbmdvZGIubmV0OjI3MDE3LGFjLW96Y2tpYTYtc2hhcmQtMDAtMDIuc3lpa3B4MS5tb25nb2RiLm5ldDoyNzAxNy9zdHJhdG1hcmtldD9zc2w9dHJ1ZSZyZXBsaWNhU2V0PWF0bGFzLTExMjg2Zy1zaGFyZC0wJmF1dGhTb3VyY2U9YWRtaW4=",
-  "base64"
-).toString("utf-8");
-
 const rawMongoUri =
   process.env.MONGODB_URI ||
   (process.env.DATABASE_URL?.startsWith("mongodb") ? process.env.DATABASE_URL : null);
 
-const MONGODB_URI =
-  rawMongoUri && !rawMongoUri.includes("localhost")
-    ? rawMongoUri
-    : ATLAS_FALLBACK_URI;
+// Prioritize configured URI (including local MongoDB instances: 127.0.0.1 / localhost)
+const MONGODB_URI = rawMongoUri || "mongodb://127.0.0.1:27017/stratmarket";
 
 const DB_NAME = process.env.MONGODB_DB_NAME || "stratmarket";
 
@@ -53,7 +46,7 @@ let clientPromise: Promise<MongoClient> | null = null;
 let isConnected = false;
 let isSeeded = false;
 let lastFailedAttempt = 0;
-const RETRY_COOLDOWN_MS = 60000; // 60s cooldown if offline to avoid spamming timeouts
+const RETRY_COOLDOWN_MS = 30000; // 30s cooldown if offline to avoid spamming timeouts
 
 /**
  * Initializes and caches the singleton MongoDB client
@@ -76,8 +69,8 @@ export async function getMongoClient(): Promise<MongoClient | null> {
   if (!clientPromise) {
     try {
       const options = {
-        serverSelectionTimeoutMS: 5000,
-        connectTimeoutMS: 8000,
+        serverSelectionTimeoutMS: 1500,
+        connectTimeoutMS: 2000,
         maxPoolSize: 20,
       };
 
@@ -92,13 +85,15 @@ export async function getMongoClient(): Promise<MongoClient | null> {
           return c;
         })
         .catch((err) => {
+          console.warn("[MongoDB] Connection attempt failed, falling back to in-memory store:", err?.message || err);
           isConnected = false;
           lastFailedAttempt = Date.now();
           clientPromise = null;
           client = null;
           return null as any;
         });
-    } catch (err) {
+    } catch (err: any) {
+      console.warn("[MongoDB] Client initialization error:", err?.message || err);
       isConnected = false;
       lastFailedAttempt = Date.now();
       clientPromise = null;

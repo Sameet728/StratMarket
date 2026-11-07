@@ -11,10 +11,14 @@ interface IndexPreviewProps {
 export function IndexPreview({ initialStrategies }: IndexPreviewProps) {
   const [selectedStrategy, setSelectedStrategy] = useState<StrategySeedItem | null>(null);
   const [hoveredStrategy, setHoveredStrategy] = useState<StrategySeedItem | null>(null);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
   const previewRef = useRef<HTMLDivElement>(null);
+  const hoveredRef = useRef<boolean>(false);
 
   const previewList = initialStrategies.slice(0, 6);
+
+  useEffect(() => {
+    hoveredRef.current = Boolean(hoveredStrategy);
+  }, [hoveredStrategy]);
 
   useEffect(() => {
     let animId: number;
@@ -26,14 +30,20 @@ export function IndexPreview({ initialStrategies }: IndexPreviewProps) {
     const handlePointerMove = (e: PointerEvent) => {
       targetX = e.clientX;
       targetY = e.clientY;
+      if (!hoveredRef.current) {
+        currentX = targetX;
+        currentY = targetY;
+      }
     };
 
-    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
 
     const loop = () => {
-      currentX += (targetX - currentX) * 0.16;
-      currentY += (targetY - currentY) * 0.16;
-      setPos({ x: currentX + 24, y: currentY - 80 });
+      if (hoveredRef.current && previewRef.current) {
+        currentX += (targetX - currentX) * 0.22;
+        currentY += (targetY - currentY) * 0.22;
+        previewRef.current.style.transform = `translate3d(${Math.round(currentX + 20)}px, ${Math.round(currentY - 70)}px, 0)`;
+      }
       animId = requestAnimationFrame(loop);
     };
 
@@ -92,9 +102,6 @@ export function IndexPreview({ initialStrategies }: IndexPreviewProps) {
         id="pv"
         ref={previewRef}
         className={hoveredStrategy ? "on" : ""}
-        style={{
-          transform: `translate(${pos.x}px, ${pos.y}px)`,
-        }}
         aria-hidden="true"
       >
         {hoveredStrategy && (

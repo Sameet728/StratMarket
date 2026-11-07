@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function SignInPage() {
+function SignInContent() {
+  const searchParams = useSearchParams();
+  const rawRedirect = searchParams.get("redirect") || "";
+  const safeRedirect = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "";
+
   const [isRegister, setIsRegister] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,20 +32,27 @@ export default function SignInPage() {
       setE1("Enter a valid email address.");
       valid = false;
     }
-    if (password.length < 8) {
-      setE2("Use at least 8 characters.");
-      valid = false;
-    }
-    if (isRegister && !name.trim()) {
-      setGlobalError("Please provide your full name.");
-      valid = false;
+    if (isRegister) {
+      if (password.length < 8) {
+        setE2("Use at least 8 characters.");
+        valid = false;
+      }
+      if (!name.trim()) {
+        setGlobalError("Please provide your full name.");
+        valid = false;
+      }
+    } else {
+      if (!password) {
+        setE2("Password is required.");
+        valid = false;
+      }
     }
 
     if (!valid) return;
 
     setLoading(true);
     const endpoint = isRegister ? "/api/auth/register" : "/api/auth/login";
-    const body = isRegister ? { name, email, password } : { email, password };
+    const body = isRegister ? { name: name.trim(), email: email.trim(), password } : { email: email.trim(), password };
 
     try {
       const res = await fetch(endpoint, {
@@ -63,14 +74,16 @@ export default function SignInPage() {
           : "Signed in! Redirecting..."
       );
 
+      const targetPath = safeRedirect
+        ? safeRedirect
+        : data.user?.role === "ADMIN"
+        ? "/admin"
+        : "/dashboard";
+
       setTimeout(() => {
-        if (data.user?.role === "ADMIN") {
-          router.push("/admin");
-        } else {
-          router.push("/dashboard");
-        }
+        router.push(targetPath);
         router.refresh();
-      }, 700);
+      }, 400);
     } catch {
       setGlobalError("Network error. Please try again.");
       setLoading(false);
@@ -212,5 +225,13 @@ export default function SignInPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="page" style={{ minHeight: "100vh" }} />}>
+      <SignInContent />
+    </Suspense>
   );
 }

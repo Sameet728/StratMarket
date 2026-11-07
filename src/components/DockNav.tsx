@@ -7,6 +7,7 @@ import { useRef } from "react";
 export function DockNav() {
   const pathname = usePathname();
   const dockRef = useRef<HTMLElement>(null);
+  const rafRef = useRef<number | null>(null);
 
   if (pathname?.startsWith("/chart")) {
     return null;
@@ -14,19 +15,27 @@ export function DockNav() {
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!dockRef.current) return;
-    const links = dockRef.current.querySelectorAll<HTMLAnchorElement>("a.l");
     const mouseX = e.clientX;
-
-    links.forEach((link) => {
-      const rect = link.getBoundingClientRect();
-      const center = rect.left + rect.width / 2;
-      const d = Math.abs(mouseX - center);
-      const scaleVal = Math.exp((-d * d) / (2 * 55 * 55)).toFixed(3);
-      link.style.setProperty("--g", scaleVal);
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      if (!dockRef.current) return;
+      const links = dockRef.current.querySelectorAll<HTMLAnchorElement>("a.l");
+      links.forEach((link) => {
+        const rect = link.getBoundingClientRect();
+        const center = rect.left + rect.width / 2;
+        const d = Math.abs(mouseX - center);
+        const scaleVal = Math.exp((-d * d) / 6050).toFixed(3);
+        link.style.setProperty("--g", scaleVal);
+      });
     });
   };
 
   const handlePointerLeave = () => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
     if (!dockRef.current) return;
     const links = dockRef.current.querySelectorAll<HTMLAnchorElement>("a.l");
     links.forEach((link) => {

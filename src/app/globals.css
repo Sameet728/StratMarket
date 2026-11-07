@@ -669,8 +669,15 @@ section h2 {
   padding: 12px;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.25s, transform 0.1s ease-out;
+  will-change: transform;
+  transition: opacity 0.2s ease;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+}
+
+.vela-attribution, .vela-watermark, [class*="vela-attr"], a[href*="velacharts"] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 #pv.on {
@@ -1406,7 +1413,7 @@ footer p {
   }
 }
 
-/* White Screen Page Transition Wipe */
+/* High-Performance GPU-Accelerated Page Transition Wipe */
 #wp {
   position: fixed;
   inset: 0;
@@ -1415,26 +1422,29 @@ footer p {
   color: #000000;
   display: grid;
   place-items: center;
+  font-family: "Outfit", "Plus Jakarta Sans", sans-serif;
   font-weight: 700;
   font-size: clamp(34px, 6vw, 76px);
   letter-spacing: -0.05em;
-  transform: translateY(100%);
+  transform: translate3d(0, 100%, 0);
+  will-change: transform;
+  backface-visibility: hidden;
   pointer-events: none;
 }
 
 #wp.go {
-  animation: wp 0.95s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  animation: wp 0.76s cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
 @keyframes wp {
   0% {
-    transform: translateY(100%);
+    transform: translate3d(0, 100%, 0);
   }
-  42%, 58% {
-    transform: translateY(0%);
+  38%, 56% {
+    transform: translate3d(0, 0%, 0);
   }
   100% {
-    transform: translateY(-100%);
+    transform: translate3d(0, -100%, 0);
   }
 }
 
