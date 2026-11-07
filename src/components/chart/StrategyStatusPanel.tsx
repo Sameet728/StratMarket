@@ -264,7 +264,7 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
                   : isSL
                   ? "rgba(239,68,68,0.07)"
                   : "rgba(255,255,255,0.03)";
-                const icon = isTP ? "🏆" : isSL ? "❌" : isLong ? "▲" : "▼";
+                const icon = isTP ? "▲" : isSL ? "▼" : isLong ? "▲" : "▼";
                 const label = isTP
                   ? "TP HIT"
                   : isSL

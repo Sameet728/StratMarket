@@ -654,7 +654,7 @@ export function StrategyChart({
 
           {error && !isLocked && (
             <div className="chart-error-banner">
-              <p>⚠️ {error}</p>
+              <p>{error}</p>
               <button className="chart-retry-btn" onClick={handleRetry}>
                 Retry Connection
               </button>

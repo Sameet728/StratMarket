@@ -278,7 +278,6 @@ export function PricingClient({
       {/* 1. Header & Hero Section */}
       <div style={{ textAlign: "center", marginBottom: 36 }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", borderRadius: 20, background: "rgba(255, 255, 255, 0.12)", border: "1px solid rgba(255, 255, 255, 0.12)", color: "#ffffff", fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
-          <span>⚡</span>
           <span>INSTITUTIONAL QUANTITATIVE SUITE · DIRECT STRATEGY CHECKOUT</span>
         </div>
 
@@ -310,7 +309,6 @@ export function PricingClient({
           >
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: 18 }}>💎</span>
                 <span style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>
                   {activeAllAccessEntitlement
                     ? "All-Access Portfolio Active"
@@ -459,7 +457,7 @@ export function PricingClient({
             {/* Strategy Selector Dropdown */}
             <div style={{ padding: "14px", borderRadius: 12, background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 22 }}>
               <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-                🎯 Choose Strategy to Unlock:
+                Choose Strategy to Unlock:
               </label>
 
               <select
@@ -478,7 +476,7 @@ export function PricingClient({
                   cursor: "pointer",
                 }}
               >
-                <optgroup label="🌲 Pine Script v5 Strategies">
+                <optgroup label="Pine Script v5 Strategies">
                   {strategies
                     .filter((s) => s.implementationType === "PINE_SCRIPT")
                     .map((s) => (
@@ -605,13 +603,13 @@ export function PricingClient({
           >
             {activeAllAccessEntitlement
               ? "✓ YOUR CURRENT ACTIVE PLAN (ALL STRATEGIES UNLOCKED)"
-              : "⭐ MOST POPULAR • ALL 4 CHAMPION STRATEGIES INCLUDED"}
+              : "MOST POPULAR • ALL 4 CHAMPION STRATEGIES INCLUDED"}
           </div>
 
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, marginTop: 4 }}>
               <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "rgba(255, 255, 255, 0.12)", color: "#ffffff", border: "1px solid rgba(255, 255, 255, 0.12)", letterSpacing: "0.05em" }}>
-                💎 COMPLETE QUANT SUITE
+                COMPLETE QUANT SUITE
               </span>
             </div>
 
@@ -633,7 +631,7 @@ export function PricingClient({
             {/* Strategy Inclusion Highlight Banner */}
             <div style={{ padding: "14px", borderRadius: 12, background: "rgba(255, 255, 255, 0.12)", border: "1px solid rgba(255, 255, 255, 0.12)", marginBottom: 22 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: "#ffffff", marginBottom: 4 }}>
-                ⚡ Unlocks All 4 Pine Script Strategies Directly:
+                Unlocks All 4 Pine Script Strategies Directly:
               </div>
               <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5 }}>
                 • 4 Champion TradingView systems (PS-01 Grandmaster, PS-02 Apex, PS-03 Trend, PS-04 Titan)<br />
@@ -750,7 +748,7 @@ export function PricingClient({
             {/* Institutional Tag */}
             <div style={{ padding: "14px", borderRadius: 12, background: "rgba(255, 255, 255, 0.12)", border: "1px solid rgba(255, 255, 255, 0.12)", marginBottom: 22 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: "#ffffff", marginBottom: 4 }}>
-                🛡️ Direct Execution Relays:
+                Direct Execution Relays:
               </div>
               <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5 }}>
                 Sub-50ms dedicated VPS webhooks for automated broker execution and institutional risk governance.
@@ -817,7 +815,7 @@ export function PricingClient({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
             <div>
               <h2 style={{ fontSize: 20, margin: 0, fontWeight: 700 }}>
-                📜 Your Subscription Purchases &amp; Transaction History
+                Your Subscription Purchases &amp; Transaction History
               </h2>
               <p className="note" style={{ margin: "4px 0 0", fontSize: 13 }}>
                 Authoritative record of direct plan activations and institutional entitlements.
@@ -960,13 +958,12 @@ export function PricingClient({
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 20 }}>💳</span>
                 <div>
                   <h3 style={{ fontSize: 17, margin: 0, fontWeight: 800, color: "#fff" }}>
                     StratMarket Direct Institutional Checkout
                   </h3>
                   <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>
-                    🔒 256-Bit SSL Encrypted Direct Transaction
+                    256-Bit SSL Encrypted Direct Transaction
                   </div>
                 </div>
               </div>
@@ -1074,7 +1071,7 @@ export function PricingClient({
                           fontWeight: 800,
                         }}
                       >
-                        📈 Open {checkoutStrategyId} Live Chart Terminal →
+                        Open {checkoutStrategyId} Live Chart Terminal →
                       </Link>
                     ) : (
                       <Link
@@ -1089,7 +1086,7 @@ export function PricingClient({
                           fontWeight: 800,
                         }}
                       >
-                        📊 Open Trader Dashboard →
+                        Open Trader Dashboard →
                       </Link>
                     )}
                     <button
@@ -1108,7 +1105,11 @@ export function PricingClient({
                 /* INLINE AUTHENTICATION REQUIRED */
                 <div>
                   <div style={{ textAlign: "center", marginBottom: 20 }}>
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>🛡️</div>
+                    <div style={{ margin: "0 auto 12px", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                    </div>
                     <h4 style={{ fontSize: 18, fontWeight: 800, color: "#fff", margin: "0 0 6px" }}>
                       Sign In to Complete Subscription
                     </h4>
@@ -1294,7 +1295,7 @@ export function PricingClient({
                             outline: "none",
                           }}
                         >
-                          <optgroup label="🌲 Pine Script v5">
+                          <optgroup label="Pine Script v5">
                             {strategies
                               .filter((s) => s.implementationType === "PINE_SCRIPT")
                               .map((s) => (
@@ -1335,7 +1336,7 @@ export function PricingClient({
                           cursor: "pointer",
                         }}
                       >
-                        ⚡ Quick Fill Demo Card
+                        Quick Fill Demo Card
                       </button>
                     </div>
 
@@ -1358,7 +1359,6 @@ export function PricingClient({
                           gap: 6,
                         }}
                       >
-                        <span>💳</span>
                         <span>Credit / Debit Card</span>
                       </button>
 
@@ -1380,7 +1380,6 @@ export function PricingClient({
                           gap: 6,
                         }}
                       >
-                        <span>🏦</span>
                         <span>Razorpay / UPI</span>
                       </button>
                     </div>
@@ -1428,8 +1427,8 @@ export function PricingClient({
                             outline: "none",
                           }}
                         />
-                        <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 16 }}>
-                          💳
+                        <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "var(--mut)", fontWeight: 700 }}>
+                          CARD
                         </span>
                       </div>
                     </div>
@@ -1522,7 +1521,6 @@ export function PricingClient({
                       </>
                     ) : (
                       <>
-                        <span>🔒</span>
                         <span>
                           Direct Pay ${activePlan.slug === "single-strategy" ? (billingCycle === "annual" ? "63" : "79") : activePlan.slug === "all-access" ? (billingCycle === "annual" ? "159" : "199") : (billingCycle === "annual" ? "399" : "499")}{" "}
                           &amp; Unlock {activePlan.slug === "single-strategy" ? checkoutStrategyId : "All Strategies"}

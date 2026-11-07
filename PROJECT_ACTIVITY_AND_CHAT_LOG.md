@@ -939,6 +939,42 @@ Error: Module not found: Can't resolve '@/lib/vps/security'
 - **Vitest Suite:** `npm test` -> **34/34 tests passed cleanly**.
 - **End-to-End Simulation:** Tested trader login, trial route (returned HTTP 200 `alreadyActive: true`), and series endpoint (returned 200 OK with all 1,500 candles and 32 markers).
 
+---
+
+### Session Update (19:25 - 19:48): Comprehensive Platform Emoji Removal & Global Button Diagnostics
+
+#### User Instructions (Uploaded Screenshots):
+- *"remove this type of emoji thinghs from the website , chart button and many more check all buttons from the over all website whicvh are not working propelry solve thier problems tkae a deeep check"*
+- Screenshot 1: Close-up of bar chart emoji `📊` in chart action buttons.
+- Screenshot 2: Profile page showing white-on-white invisible subscription button (`Subscribe ($49/mo) →`).
+- Screenshot 3: Profile page showing `📊 Chart` button with emojis and non-standard styling.
+
+#### Actions Taken & Code Modifications:
+
+1. **Complete Emoji Eradication Across Entire Web Platform:**
+   - Scanned all TypeScript and TSX files in `src/` using a comprehensive Unicode emoji range script.
+   - Removed and replaced all casual emojis (`📊`, `📈`, `⏱️`, `🌲`, `⚡`, `💎`, `🔒`, `⚠️`, `✉️`, `📬`, `🔔`, `🔕`, `🏆`, `❌`, `🛡️`, `📜`, `💳`, `🏦`) across:
+     - **Profile Page (`src/app/profile/page.tsx`):** Removed `⚡`, `📊`, `💎`, `📈`, `📜`, `⚠️`, `🌲`, `✉️`, `📧`.
+     - **Trader Dashboard (`src/app/dashboard/DashboardClient.tsx`):** Removed `⚙️`, `📬`, `✉️`, `🔔`, `🌲`, `💎`, `🔒`, `⚡`, `🔕`, `📈`, `📊`, `⏱️`.
+     - **Pricing & Checkout (`src/app/pricing/PricingClient.tsx`):** Removed `⚡`, `💎`, `🎯`, `🌲`, `⭐`, `🛡️`, `📜`, `💳`, `🔒`, `📈`, `📊`, `🏦`.
+     - **Chart Toolbar & Status Panel (`ChartToolbar.tsx`, `StrategyStatusPanel.tsx`):** Replaced `⏱️` clock with clean SVG vector; replaced `🏆` and `❌` with clean `TP HIT` and `SL HIT` text tags.
+     - **Strategy Report View (`StrategyReportView.tsx`):** Replaced in-page navigation emojis (`⚡`, `📊`, `⚖`, `⇄`, `🌐`, `📅`, `🗓`) with clean institutional typography.
+     - **On-Chart Trade Badges (`runner.ts`):** Removed `🏆` and `❌` from on-chart exit badges.
+     - **Email Templates (`resend.ts`):** Removed emojis from email subjects and headings.
+
+2. **Button Fixes & Broken Link Resolution:**
+   - **Profile Active Trials "Live Chart" Button:** Previously pointed to `/chart?strategy=${t.strategyId}`, which was redirecting to `/market`. Fixed to directly target `/chart/${t.strategyId}`.
+   - **Profile "Subscribe ($49/mo) →" Button:** Fixed invisible white text on white background (`color: "#fff"` on `background: "#ffffff"`). Changed text color to `#000000` with high-contrast institutional styling.
+   - **Profile "Chart" Button in Alert Feeds:** Removed `📈` emoji and bright cyan styling. Replaced with standard institutional `pill g sm` button linking to `/chart/${s.id}` labeled `Live Chart ↗`.
+   - **Chart Root Route Enhancement (`src/app/chart/page.tsx`):** Added query param extraction (`strategy`, `id`, `s`) so any navigation to `/chart?strategy=PS-01` automatically redirects to `/chart/PS-01` instead of kicking the user to `/market`.
+   - **Strategy Detail Modal Action Buttons (`StrategyDetailModal.tsx`):** Added direct `Open Live Chart ↗` link and updated `handleStartTrial` to accept existing trials without displaying error alerts.
+
+#### Verification & Quality Checks:
+- **Emoji Scanner:** Verified 0 casual emojis remaining across the frontend.
+- **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
+- **Vitest Suite:** `npm test` -> **34/34 tests passed cleanly**.
+
+
 
 ---
 
@@ -999,6 +1035,42 @@ Error: Module not found: Can't resolve '@/lib/vps/security'
 - **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
 - **Vitest Suite:** `npm test` -> **34/34 tests passed cleanly**.
 - **End-to-End Simulation:** Tested trader login, trial route (returned HTTP 200 `alreadyActive: true`), and series endpoint (returned 200 OK with all 1,500 candles and 32 markers).
+
+---
+
+### Session Update (19:25 - 19:48): Comprehensive Platform Emoji Removal & Global Button Diagnostics
+
+#### User Instructions (Uploaded Screenshots):
+- *"remove this type of emoji thinghs from the website , chart button and many more check all buttons from the over all website whicvh are not working propelry solve thier problems tkae a deeep check"*
+- Screenshot 1: Close-up of bar chart emoji `📊` in chart action buttons.
+- Screenshot 2: Profile page showing white-on-white invisible subscription button (`Subscribe ($49/mo) →`).
+- Screenshot 3: Profile page showing `📊 Chart` button with emojis and non-standard styling.
+
+#### Actions Taken & Code Modifications:
+
+1. **Complete Emoji Eradication Across Entire Web Platform:**
+   - Scanned all TypeScript and TSX files in `src/` using a comprehensive Unicode emoji range script.
+   - Removed and replaced all casual emojis (`📊`, `📈`, `⏱️`, `🌲`, `⚡`, `💎`, `🔒`, `⚠️`, `✉️`, `📬`, `🔔`, `🔕`, `🏆`, `❌`, `🛡️`, `📜`, `💳`, `🏦`) across:
+     - **Profile Page (`src/app/profile/page.tsx`):** Removed `⚡`, `📊`, `💎`, `📈`, `📜`, `⚠️`, `🌲`, `✉️`, `📧`.
+     - **Trader Dashboard (`src/app/dashboard/DashboardClient.tsx`):** Removed `⚙️`, `📬`, `✉️`, `🔔`, `🌲`, `💎`, `🔒`, `⚡`, `🔕`, `📈`, `📊`, `⏱️`.
+     - **Pricing & Checkout (`src/app/pricing/PricingClient.tsx`):** Removed `⚡`, `💎`, `🎯`, `🌲`, `⭐`, `🛡️`, `📜`, `💳`, `🔒`, `📈`, `📊`, `🏦`.
+     - **Chart Toolbar & Status Panel (`ChartToolbar.tsx`, `StrategyStatusPanel.tsx`):** Replaced `⏱️` clock with clean SVG vector; replaced `🏆` and `❌` with clean `TP HIT` and `SL HIT` text tags.
+     - **Strategy Report View (`StrategyReportView.tsx`):** Replaced in-page navigation emojis (`⚡`, `📊`, `⚖`, `⇄`, `🌐`, `📅`, `🗓`) with clean institutional typography.
+     - **On-Chart Trade Badges (`runner.ts`):** Removed `🏆` and `❌` from on-chart exit badges.
+     - **Email Templates (`resend.ts`):** Removed emojis from email subjects and headings.
+
+2. **Button Fixes & Broken Link Resolution:**
+   - **Profile Active Trials "Live Chart" Button:** Previously pointed to `/chart?strategy=${t.strategyId}`, which was redirecting to `/market`. Fixed to directly target `/chart/${t.strategyId}`.
+   - **Profile "Subscribe ($49/mo) →" Button:** Fixed invisible white text on white background (`color: "#fff"` on `background: "#ffffff"`). Changed text color to `#000000` with high-contrast institutional styling.
+   - **Profile "Chart" Button in Alert Feeds:** Removed `📈` emoji and bright cyan styling. Replaced with standard institutional `pill g sm` button linking to `/chart/${s.id}` labeled `Live Chart ↗`.
+   - **Chart Root Route Enhancement (`src/app/chart/page.tsx`):** Added query param extraction (`strategy`, `id`, `s`) so any navigation to `/chart?strategy=PS-01` automatically redirects to `/chart/PS-01` instead of kicking the user to `/market`.
+   - **Strategy Detail Modal Action Buttons (`StrategyDetailModal.tsx`):** Added direct `Open Live Chart ↗` link and updated `handleStartTrial` to accept existing trials without displaying error alerts.
+
+#### Verification & Quality Checks:
+- **Emoji Scanner:** Verified 0 casual emojis remaining across the frontend.
+- **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
+- **Vitest Suite:** `npm test` -> **34/34 tests passed cleanly**.
+
 
 
 

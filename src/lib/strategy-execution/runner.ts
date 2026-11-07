@@ -461,8 +461,8 @@ export class PrivateStrategyExecutionRunner {
             slPrice: currSL,
             profitUsd: config.tpDist,
             isWin: true,
-            entryBadge: `▶ LONG ${entryPrice.toFixed(2)}\nTP: ${currTP.toFixed(2)} | SL: ${currSL.toFixed(2)}`,
-            exitBadge: `🏆 TP HIT\n+$${config.tpDist.toFixed(2)}`,
+            entryBadge: `LONG ${entryPrice.toFixed(2)}\nTP: ${currTP.toFixed(2)} | SL: ${currSL.toFixed(2)}`,
+            exitBadge: `TP HIT\n+$${config.tpDist.toFixed(2)}`,
           });
           markers.push({
             time: c.time,
@@ -486,8 +486,8 @@ export class PrivateStrategyExecutionRunner {
             slPrice: currSL,
             profitUsd: -config.slDist,
             isWin: false,
-            entryBadge: `▶ LONG ${entryPrice.toFixed(2)}\nTP: ${currTP.toFixed(2)} | SL: ${currSL.toFixed(2)}`,
-            exitBadge: `❌ SL HIT\n-$${config.slDist.toFixed(2)}`,
+            entryBadge: `LONG ${entryPrice.toFixed(2)}\nTP: ${currTP.toFixed(2)} | SL: ${currSL.toFixed(2)}`,
+            exitBadge: `SL HIT\n-$${config.slDist.toFixed(2)}`,
           });
           markers.push({
             time: c.time,
@@ -514,8 +514,8 @@ export class PrivateStrategyExecutionRunner {
             slPrice: currSL,
             profitUsd: config.tpDist,
             isWin: true,
-            entryBadge: `▶ SHORT ${entryPrice.toFixed(2)}\nTP: ${currTP.toFixed(2)} | SL: ${currSL.toFixed(2)}`,
-            exitBadge: `🏆 TP HIT\n+$${config.tpDist.toFixed(2)}`,
+            entryBadge: `SHORT ${entryPrice.toFixed(2)}\nTP: ${currTP.toFixed(2)} | SL: ${currSL.toFixed(2)}`,
+            exitBadge: `TP HIT\n+$${config.tpDist.toFixed(2)}`,
           });
           markers.push({
             time: c.time,
@@ -539,8 +539,8 @@ export class PrivateStrategyExecutionRunner {
             slPrice: currSL,
             profitUsd: -config.slDist,
             isWin: false,
-            entryBadge: `▶ SHORT ${entryPrice.toFixed(2)}\nTP: ${currTP.toFixed(2)} | SL: ${currSL.toFixed(2)}`,
-            exitBadge: `❌ SL HIT\n-$${config.slDist.toFixed(2)}`,
+            entryBadge: `SHORT ${entryPrice.toFixed(2)}\nTP: ${currTP.toFixed(2)} | SL: ${currSL.toFixed(2)}`,
+            exitBadge: `SL HIT\n-$${config.slDist.toFixed(2)}`,
           });
           markers.push({
             time: c.time,

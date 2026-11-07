@@ -456,7 +456,7 @@ export function DashboardClient() {
 
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <Link href="/profile" className="pill g sm" style={{ fontSize: 13 }}>
-            ⚙️ Profile &amp; Settings
+            Profile &amp; Settings
           </Link>
           <Link href="/market" className="pill sm" style={{ fontSize: 13 }}>
             Explore All Strategies →
@@ -544,7 +544,6 @@ export function DashboardClient() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 16 }}>📬</span>
               <strong style={{ fontSize: 15, color: "#f8fafc" }}>Signal Notification Delivery Inbox</strong>
               <span
                 style={{
@@ -572,7 +571,7 @@ export function DashboardClient() {
               className="pill g sm"
               style={{ fontSize: 12, fontWeight: 600 }}
             >
-              {sendingTest ? "Sending..." : "✉️ Send Test Signal"}
+              {sendingTest ? "Sending..." : "Send Test Signal"}
             </button>
             <button
               onClick={() => setEditingEmail(!editingEmail)}
@@ -709,7 +708,7 @@ export function DashboardClient() {
               color: activeAlertsCount > 0 ? "#ffffff" : undefined,
             }}
           >
-            🔔 Active Signals ({activeAlertsCount})
+            Active Signals ({activeAlertsCount})
           </button>
         </div>
       </div>
@@ -839,7 +838,7 @@ function StrategyDashboardCard({
                 border: "1px solid rgba(255, 255, 255, 0.08)",
               }}
             >
-              {isPine ? "🌲 PINE SCRIPT v5" : "QUANT ALGO"}
+              {isPine ? "PINE SCRIPT v5" : "QUANT ALGO"}
             </span>
 
             <span
@@ -869,7 +868,7 @@ function StrategyDashboardCard({
                   border: "1px solid rgba(168, 85, 247, 0.3)",
                 }}
               >
-                💎 Pro Active
+                Pro Active
               </span>
             ) : strategy.trialStatus === "ACTIVE" ? (
               <span
@@ -883,7 +882,7 @@ function StrategyDashboardCard({
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
-                ⏱️ Trial: {countdown || `${strategy.daysLeft}d left`}
+                Trial: {countdown || `${strategy.daysLeft}d left`}
               </span>
             ) : strategy.trialStatus === "EXPIRED" ? (
               <span
@@ -897,7 +896,7 @@ function StrategyDashboardCard({
                   border: "1px solid rgba(239, 68, 68, 0.3)",
                 }}
               >
-                🔒 Trial Expired
+                Trial Expired
               </span>
             ) : (
               <span
@@ -911,7 +910,7 @@ function StrategyDashboardCard({
                   border: "1px solid rgba(56, 189, 248, 0.2)",
                 }}
               >
-                ⚡ 7-Day Trial Available
+                7-Day Trial Available
               </span>
             )}
           </div>
@@ -980,7 +979,7 @@ function StrategyDashboardCard({
                 textDecoration: "none",
               }}
             >
-              🔒 7-Day Trial Ended · Upgrade to Re-enable Alerts →
+              7-Day Trial Ended · Upgrade to Re-enable Alerts →
             </Link>
           ) : (
             <button
@@ -1007,7 +1006,7 @@ function StrategyDashboardCard({
               }}
             >
               <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span>{strategy.enabled ? "🔔" : "🔕"}</span>
+                <span style={{ color: strategy.enabled ? "#ffffff" : "var(--mut)" }}>●</span>
                 <span>
                   {updating
                     ? (strategy.enabled ? "Saving Active..." : "Saving...")
@@ -1035,13 +1034,11 @@ function StrategyDashboardCard({
         {/* Action Buttons: Live Chart & Performance Report */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <Link
-            href={strategy.chartUrl}
+            href={`/chart/${strategy.id}`}
+            className="pill g sm"
             style={{
               padding: "8px 10px",
               borderRadius: 8,
-              border: "1px solid rgba(56, 189, 248, 0.3)",
-              background: "rgba(56, 189, 248, 0.08)",
-              color: "#38bdf8",
               fontSize: 12,
               fontWeight: 600,
               textAlign: "center",
@@ -1052,18 +1049,15 @@ function StrategyDashboardCard({
               gap: 4,
             }}
           >
-            <span>📈</span>
-            <span>Open Chart</span>
+            Live Chart ↗
           </Link>
 
           <Link
-            href={strategy.reportUrl}
+            href={`/strategies/${strategy.slug}`}
+            className="pill g sm"
             style={{
               padding: "8px 10px",
               borderRadius: 8,
-              border: "1px solid var(--line)",
-              background: "rgba(255,255,255,0.03)",
-              color: "var(--tx)",
               fontSize: 12,
               fontWeight: 600,
               textAlign: "center",
@@ -1074,8 +1068,7 @@ function StrategyDashboardCard({
               gap: 4,
             }}
           >
-            <span>📊</span>
-            <span>Tear Sheet</span>
+            View Report ↗
           </Link>
         </div>
       </div>

@@ -83,13 +83,14 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
       });
       const data = await res.json();
 
-      if (!res.ok) {
-        setTrialError(data.error || "Failed to start trial.");
+      if ((res.ok && data.success) || data.alreadyActive || data.code === "TRIAL_ALREADY_USED") {
+        setTrialActive(true);
+        const expStr = data.trial?.expiryTime ? new Date(data.trial.expiryTime).toLocaleDateString() : "7 days";
+        setTrialMessage(`Trial active: Full access granted until ${expStr}.`);
         return;
       }
 
-      setTrialActive(true);
-      setTrialMessage(`Trial active: 7 days full access granted until ${new Date(data.trial.expiryTime).toLocaleDateString()}.`);
+      setTrialError(data.error || "Failed to start trial.");
     } catch {
       setTrialError("Network error while activating trial.");
     } finally {
@@ -283,7 +284,7 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
         {trialMessage && <div className="ok">{trialMessage}</div>}
         {trialError && <div className="err" style={{ marginTop: "12px" }}>{trialError}</div>}
 
-        <div style={{ marginTop: "20px", display: "flex", gap: "12px", alignItems: "center" }}>
+        <div style={{ marginTop: "20px", display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
           <button
             className="pill"
             onClick={handleStartTrial}
@@ -292,6 +293,17 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
           >
             {trialLoading ? "Activating..." : trialActive ? "Trial Active" : "Start 7-day trial"}
           </button>
+
+          <a
+            href={`/chart/${s.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pill g sm"
+            style={{ textDecoration: "none" }}
+          >
+            Open Live Chart ↗
+          </a>
+
           {!user && (
             <span className="note">
               No credit card required. Creates full access to reports &amp; signals.

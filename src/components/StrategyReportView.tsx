@@ -263,13 +263,13 @@ export function StrategyReportView({ strategy }: Props) {
 
       {/* In-Page Navigation Bar */}
       <nav className="report-nav-bar" aria-label="Report Sections">
-        <a href="#mech" className="report-nav-link">⚡ Multi-Engine Fleet</a>
-        <a href="#kpi" className="report-nav-link">📊 Core Metrics</a>
-        <a href="#pay" className="report-nav-link">⚖ Payoff Structure</a>
-        <a href="#dir" className="report-nav-link">⇄ Long vs Short</a>
-        <a href="#reg" className="report-nav-link">🌐 Market Regimes</a>
-        <a href="#year" className="report-nav-link">📅 Yearly PnL</a>
-        <a href="#month" className="report-nav-link">🗓 Monthly Heatmap</a>
+        <a href="#mech" className="report-nav-link">Architecture &amp; Subsystems</a>
+        <a href="#kpi" className="report-nav-link">Core Metrics</a>
+        <a href="#pay" className="report-nav-link">Payoff Structure</a>
+        <a href="#dir" className="report-nav-link">Long vs Short</a>
+        <a href="#reg" className="report-nav-link">Market Regimes</a>
+        <a href="#year" className="report-nav-link">Yearly PnL</a>
+        <a href="#month" className="report-nav-link">Monthly Heatmap</a>
       </nav>
 
       {/* SECTION 1: HOW THE STRATEGY WORKS (INDICATOR/MECHANISM COLUMN REMOVED) */}
@@ -986,7 +986,10 @@ export function StrategyReportView({ strategy }: Props) {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                <span style={{ fontSize: "18px" }}>🔒</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.85 }}>
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
                 <strong style={{ color: "#ffffff", fontSize: "14px" }}>
                   Proprietary Institutional Script Delivery
                 </strong>

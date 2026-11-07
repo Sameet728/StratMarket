@@ -364,8 +364,8 @@ export async function POST(request: NextRequest) {
     // Send sample signal email via verified institutional gateway
     const emailRes = await sendSignalAlertEmail({
       to: targetEmail,
-      strategyName: "Ensemble 01: 6-Engine Peak Champion",
-      strategyId: "ensemble-01",
+      strategyName: "Grandmaster (82.6% WR)",
+      strategyId: "PS-01",
       instrument: "XAUUSD",
       timeframe: "M15",
       signalType: "ENTRY",

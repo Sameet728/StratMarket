@@ -284,9 +284,6 @@ export async function sendWelcomeEmail(params: {
                     <div style="background-color: #111117; border: 1px solid #20202c; border-radius: 12px; padding: 16px 18px; margin-bottom: 12px;">
                       <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                         <tr>
-                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
-                            <span style="font-size: 18px;">🌲</span>
-                          </td>
                           <td style="vertical-align: top;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                               <strong style="color: #ffffff; font-size: 14px; font-weight: 700;">4 Pine Script M15 Champions</strong>
@@ -304,16 +301,13 @@ export async function sendWelcomeEmail(params: {
                     <div style="background-color: #111117; border: 1px solid #20202c; border-radius: 12px; padding: 16px 18px; margin-bottom: 12px;">
                       <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                         <tr>
-                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
-                            <span style="font-size: 18px;">⚡</span>
-                          </td>
                           <td style="vertical-align: top;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                              <strong style="color: #ffffff; font-size: 14px; font-weight: 700;">10 MT5 Single-Digit Ensembles</strong>
-                              <span style="font-size: 11px; color: #38bdf8; font-family: 'SF Mono', monospace; font-weight: 700;">Peak Champion</span>
+                              <strong style="color: #ffffff; font-size: 14px; font-weight: 700;">Quantitative Fleet</strong>
+                              <span style="font-size: 11px; color: #ffffff; font-family: 'SF Mono', monospace; font-weight: 700;">Peak Alpha</span>
                             </div>
                             <div style="font-size: 13px; color: #8e8e9c; line-height: 1.5;">
-                              Multi-engine quantitative models running on live broker data with Atlas Funded EA bridge.
+                              Multi-engine quantitative models running on live broker data with dedicated VPS engine.
                             </div>
                           </td>
                         </tr>
@@ -324,9 +318,6 @@ export async function sendWelcomeEmail(params: {
                     <div style="background-color: #111117; border: 1px solid #20202c; border-radius: 12px; padding: 16px 18px;">
                       <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                         <tr>
-                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
-                            <span style="font-size: 18px;">🛡️</span>
-                          </td>
                           <td style="vertical-align: top;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                               <strong style="color: #ffffff; font-size: 14px; font-weight: 700;">7-Day Risk-Free Trials</strong>
@@ -374,7 +365,7 @@ export async function sendWelcomeEmail(params: {
 
   return sendResendMail({
     to,
-    subject: "⚡ Welcome to StratMarket — Account Active & Ready",
+    subject: "Welcome to StratMarket — Account Active & Ready",
     html,
   });
 }
@@ -498,7 +489,7 @@ export async function sendLoginSecurityEmail(params: {
 
   return sendResendMail({
     to,
-    subject: "🛡️ Security Alert: New Sign-in to StratMarket Account",
+    subject: "Security Alert: New Sign-in to StratMarket Account",
     html,
   });
 }
@@ -571,7 +562,7 @@ export async function sendSignalAlertEmail(params: {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  ${getEmailHead(`⚡ [SIGNAL] ${signalType} ${direction} ${instrument} • ${strategyName}`)}
+  ${getEmailHead(`[SIGNAL] ${signalType} ${direction} ${instrument} • ${strategyName}`)}
 </head>
 <body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 36px 12px;">
@@ -614,7 +605,7 @@ export async function sendSignalAlertEmail(params: {
           <tr>
             <td class="content-cell" style="padding: 28px 32px 20px 32px;">
               <div style="font-size: 11.5px; font-weight: 700; color: #8a8a9a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; font-family: 'SF Mono', Menlo, monospace;">
-                ⚡ Trade Execution Bracket
+                Trade Execution Bracket
               </div>
 
               <!-- Price Cards Container -->
@@ -740,7 +731,7 @@ export async function sendSignalAlertEmail(params: {
 
   return sendResendMail({
     to,
-    subject: `⚡ [SIGNAL] ${signalType} ${direction} ${instrument} • ${strategyName}`,
+    subject: `[SIGNAL] ${signalType} ${direction} ${instrument} • ${strategyName}`,
     html,
   });
 }

@@ -287,7 +287,7 @@ export default function ProfilePage() {
     return (
       <div className="page" style={{ minHeight: "80vh", display: "grid", placeItems: "center" }}>
         <div style={{ textAlign: "center", color: "var(--mut)" }}>
-          <div style={{ fontSize: 28, marginBottom: 12 }}>⚡</div>
+          <div className="chart-spinner" style={{ margin: "0 auto 16px", width: 28, height: 28 }} />
           Loading account profile...
         </div>
       </div>
@@ -349,7 +349,7 @@ export default function ProfilePage() {
 
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <Link href="/dashboard" className="pill g sm" style={{ fontSize: 13 }}>
-                📊 Open Dashboard
+                Open Dashboard →
               </Link>
               <Link href="/pricing" className="pill sm" style={{ fontSize: 13, background: "#ffffff", color: "#000", fontWeight: 800 }}>
                 Subscription Plans →
@@ -391,7 +391,7 @@ export default function ProfilePage() {
               >
                 <div>
                   <h2 style={{ fontSize: 20, margin: 0, fontWeight: 700 }}>
-                    💎 Active Paid Pro Subscriptions
+                    Active Paid Pro Subscriptions
                   </h2>
                   <p className="note" style={{ margin: "4px 0 0", fontSize: 13 }}>
                     Unconstrained live execution terminals, candlestick charting feeds, and real-time VPS signal delivery.
@@ -510,7 +510,7 @@ export default function ProfilePage() {
                               border: "none",
                             }}
                           >
-                            📈 Open Live Chart Terminal →
+                            Open Live Chart Terminal →
                           </Link>
                           <Link
                             href="/dashboard"
@@ -567,7 +567,7 @@ export default function ProfilePage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
                   <div>
                     <h2 style={{ fontSize: 20, margin: 0, fontWeight: 700 }}>
-                      📜 Subscription Purchases &amp; Transaction History
+                      Subscription Purchases &amp; Transaction History
                     </h2>
                     <p className="note" style={{ margin: "4px 0 0", fontSize: 13 }}>
                       Complete transaction history of all direct strategy payments and plan subscriptions.
@@ -750,7 +750,7 @@ export default function ProfilePage() {
                                 border: isEndingSoon ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(255, 255, 255, 0.12)",
                               }}
                             >
-                              {isEndingSoon ? "⚠️ ENDING SOON" : "● TRIAL ACTIVE"}
+                              {isEndingSoon ? "ENDING SOON" : "TRIAL ACTIVE"}
                             </span>
                             <span style={{ fontSize: 12, color: "var(--mut)", fontFamily: "'JetBrains Mono', monospace" }}>
                               {t.instrument} · {t.timeframe}
@@ -798,11 +798,11 @@ export default function ProfilePage() {
                         {/* Buy / Upgrade Action */}
                         <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line)", display: "flex", gap: 8 }}>
                           <Link
-                            href={`/chart?strategy=${t.strategyId}`}
+                            href={`/chart/${encodeURIComponent(t.strategyId)}`}
                             className="pill g sm"
                             style={{ flex: 1, textAlign: "center", fontSize: 12 }}
                           >
-                            Live Chart
+                            Live Chart ↗
                           </Link>
                           <Link
                             href="/pricing"
@@ -811,12 +811,10 @@ export default function ProfilePage() {
                               flex: 1.4,
                               textAlign: "center",
                               fontSize: 12,
-                              background: isEndingSoon
-                                ? "#ffffff"
-                                : "#ffffff",
-                              color: "#fff",
+                              background: "#ffffff",
+                              color: "#000000",
                               border: "none",
-                              fontWeight: 600,
+                              fontWeight: 700,
                             }}
                           >
                             Subscribe ($49/mo) →
@@ -840,7 +838,7 @@ export default function ProfilePage() {
                     You don't have any active 7-day trials. Pick any strategy to start evaluating live signals.
                   </p>
                   <Link href="/market" className="pill sm">
-                    Browse All 6 Strategies →
+                    Browse All Strategies →
                   </Link>
                 </div>
               )}
@@ -977,7 +975,7 @@ export default function ProfilePage() {
                       fontWeight: 600,
                     }}
                   >
-                    {sendingTest ? "Sending..." : "✉️ Send Test Signal"}
+                    {sendingTest ? "Sending..." : "Send Test Signal"}
                   </button>
                 </div>
 
@@ -1077,7 +1075,7 @@ export default function ProfilePage() {
                                     color: "#ffffff",
                                   }}
                                 >
-                                  {isPine ? "🌲 PINE" : "QUANT ALGO"}
+                                  {isPine ? "PINE SCRIPT" : "QUANT ALGO"}
                                 </span>
                                 <strong style={{ fontSize: 15 }}>{s.name}</strong>
                                 <span style={{ fontSize: 12, color: "var(--mut)" }}>
@@ -1096,22 +1094,19 @@ export default function ProfilePage() {
 
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                               <Link
-                                href={s.chartUrl}
+                                href={`/chart/${s.id}`}
+                                className="pill g sm"
                                 style={{
                                   fontSize: 12,
                                   fontWeight: 600,
-                                  padding: "6px 12px",
-                                  borderRadius: 8,
-                                  border: "1px solid rgba(56,189,248,0.3)",
-                                  background: "rgba(56,189,248,0.08)",
-                                  color: "#ffffff",
+                                  padding: "6px 14px",
                                   textDecoration: "none",
                                   display: "inline-flex",
                                   alignItems: "center",
-                                  gap: 4,
+                                  gap: 6,
                                 }}
                               >
-                                <span>📈</span> Chart
+                                Live Chart ↗
                               </Link>
 
                               <button
@@ -1153,7 +1148,7 @@ export default function ProfilePage() {
               {deliveries.length > 0 && (
                 <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
                   <div style={{ fontSize: 13, color: "var(--mut)", display: "flex", alignItems: "center", gap: 8 }}>
-                    <span>📧 Recent signal delivery log:</span>
+                    <span>Recent signal delivery log:</span>
                     <strong style={{ color: "var(--tx)" }}>{deliveries.length} emails dispatched</strong>
                     <span style={{ color: "#ffffff" }}>
                       ({deliveries.filter((d) => d.deliveryStatus === "SENT").length} delivered successfully)
