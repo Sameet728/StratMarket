@@ -175,8 +175,18 @@ export function StrategyChart({
         setLoading(true);
         setError(null);
 
-        // Fetch 1,500 high-fidelity bars and strategy execution contract for ultra-smooth rendering
-        const res = await fetch(`/api/chart/${strategyId}/series?count=1500&timeframe=${timeframe}`);
+        // Fetch 1,500 high-fidelity bars and strategy execution contract with defensive 6s abort timeout
+        const abortCtrl = new AbortController();
+        const abortTimeout = setTimeout(() => abortCtrl.abort(), 6000);
+
+        let res: Response;
+        try {
+          res = await fetch(`/api/chart/${strategyId}/series?count=1500&timeframe=${timeframe}`, {
+            signal: abortCtrl.signal,
+          });
+        } finally {
+          clearTimeout(abortTimeout);
+        }
         
         // Handle 401 Unauthorized
         if (res.status === 401) {

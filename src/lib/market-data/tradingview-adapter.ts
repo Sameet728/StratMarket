@@ -83,35 +83,24 @@ export class TradingViewDataAdapter implements MarketDataProvider {
       });
 
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`TradingView request timed out after 5000ms`)), 5000)
+        setTimeout(() => reject(new Error(`TradingView request timed out after 2000ms`)), 2000)
       );
 
       const rawCandles = (await Promise.race([fetchPromise, timeoutPromise])) as any[];
 
       if (!rawCandles || rawCandles.length === 0) {
-        // Try fallback to OANDA if FOREXCOM returned empty
-        if (tvSymbol === "FOREXCOM:XAUUSD") {
-          const fallbackCandles = await getCandles({
-            symbol: "OANDA:XAUUSD",
-            timeframe: tvTimeframe,
-            count: effectiveCount,
-          });
-          if (fallbackCandles && fallbackCandles.length > 0) {
-            return this.transformAndCache(cacheKey, fallbackCandles);
-          }
-        }
-        return this.generateFallbackBars(tvSymbol, effectiveCount);
+        return this.generateFallbackBars(tvSymbol, effectiveCount, cacheKey);
       }
 
       return this.transformAndCache(cacheKey, rawCandles);
     } catch (err: any) {
       console.warn(`[TradingViewDataAdapter] Live fetch failed for ${tvSymbol} (${tvTimeframe}), using resilient fallback:`, err?.message || err);
       this.status = "HISTORICAL";
-      return this.generateFallbackBars(tvSymbol, effectiveCount);
+      return this.generateFallbackBars(tvSymbol, effectiveCount, cacheKey);
     }
   }
 
-  private generateFallbackBars(symbol: string, count: number): MarketCandle[] {
+  private generateFallbackBars(symbol: string, count: number, cacheKey?: string): MarketCandle[] {
     const basePrice = symbol.includes("BTC") ? 68000 : symbol.includes("EUR") ? 1.08 : 4150;
     const intervalMs = 15 * 60 * 1000;
     const now = Date.now();
@@ -139,6 +128,9 @@ export class TradingViewDataAdapter implements MarketDataProvider {
         close: Number(close.toFixed(2)),
         volume,
       });
+    }
+    if (cacheKey) {
+      this.cache.set(cacheKey, { timestamp: Date.now(), candles });
     }
     return candles;
   }
