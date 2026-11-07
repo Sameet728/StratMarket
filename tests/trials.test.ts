@@ -18,7 +18,7 @@ describe("7-Day Trial & Entitlement System", () => {
 
   it("atomically activates a 7-day trial with server-enforced duration", async () => {
     const beforeTime = Date.now();
-    const result = await db.startTrial(testUserId, "py-01");
+    const result = await db.startTrial(testUserId, "ps-01");
 
     expect(result.trial.id).toBeDefined();
     expect(result.entitlement.id).toBeDefined();
@@ -30,38 +30,38 @@ describe("7-Day Trial & Entitlement System", () => {
     expect(durationMs).toBe(7 * 24 * 60 * 60 * 1000);
 
     // Verify access check passes
-    const access = await db.checkUserStrategyAccess(testUserId, "PY-01");
+    const access = await db.checkUserStrategyAccess(testUserId, "PS-01");
     expect(access.hasAccess).toBe(true);
     expect(access.accessType).toBe("TRIAL");
     expect(access.daysRemaining).toBe(7);
   });
 
   it("strictly prevents duplicate trials for the same user and strategy", async () => {
-    await db.startTrial(testUserId, "py-02");
+    await db.startTrial(testUserId, "ps-02");
 
-    // Attempting second trial on PY-02 must be rejected
-    await expect(db.startTrial(testUserId, "py-02")).rejects.toThrow("TRIAL_ALREADY_USED");
+    // Attempting second trial on PS-02 must be rejected
+    await expect(db.startTrial(testUserId, "ps-02")).rejects.toThrow("TRIAL_ALREADY_USED");
   });
 
   it("denies access to non-entitled strategies", async () => {
-    // User trialed PY-03 only
-    await db.startTrial(testUserId, "py-03");
+    // User trialed PS-03 only
+    await db.startTrial(testUserId, "ps-03");
 
-    const accessPy03 = await db.checkUserStrategyAccess(testUserId, "PY-03");
-    expect(accessPy03.hasAccess).toBe(true);
+    const accessPs03 = await db.checkUserStrategyAccess(testUserId, "PS-03");
+    expect(accessPs03.hasAccess).toBe(true);
 
-    const accessPy04 = await db.checkUserStrategyAccess(testUserId, "PY-04");
-    expect(accessPy04.hasAccess).toBe(false);
-    expect(accessPy04.accessType).toBe("NONE");
+    const accessPs04 = await db.checkUserStrategyAccess(testUserId, "PS-04");
+    expect(accessPs04.hasAccess).toBe(false);
+    expect(accessPs04.accessType).toBe("NONE");
   });
 
   it("revokes access immediately when an entitlement expires", async () => {
-    const result = await db.startTrial(testUserId, "py-06");
+    const result = await db.startTrial(testUserId, "ps-04");
 
     // Manually simulate expired time
     result.entitlement.expiryTime = new Date(Date.now() - 1000); // 1 second in the past
 
-    const access = await db.checkUserStrategyAccess(testUserId, "PY-06");
+    const access = await db.checkUserStrategyAccess(testUserId, "PS-04");
     expect(access.hasAccess).toBe(false);
   });
 });

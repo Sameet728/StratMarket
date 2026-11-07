@@ -106,7 +106,7 @@ export function DashboardClient() {
   const [loading, setLoading] = useState(true);
 
   // Filter state
-  const [activeTab, setActiveTab] = useState<"ALL" | "PINE" | "PYTHON" | "ACTIVE">("ALL");
+  const [activeTab, setActiveTab] = useState<"ALL" | "PINE" | "ACTIVE">("ALL");
   const [searchTerm, setSearchTerm] = useState("");
 
   // Email update state
@@ -386,7 +386,6 @@ export function DashboardClient() {
     const matchesTab =
       activeTab === "ALL" ||
       (activeTab === "PINE" && s.type === "PINE_SCRIPT") ||
-      (activeTab === "PYTHON" && s.type === "PYTHON") ||
       (activeTab === "ACTIVE" && s.enabled);
 
     const matchesSearch =
@@ -400,7 +399,6 @@ export function DashboardClient() {
 
   const activeAlertsCount = strategies.filter((s) => s.enabled).length;
   const pineCount = strategies.filter((s) => s.type === "PINE_SCRIPT").length;
-  const pythonCount = strategies.filter((s) => s.type === "PYTHON").length;
   const activeTrialsCount = strategies.filter((s) => s.trialStatus === "ACTIVE").length;
 
   return (
@@ -563,7 +561,7 @@ export function DashboardClient() {
               </span>
             </div>
             <p className="note" style={{ margin: "4px 0 0", fontSize: 13 }}>
-              Live Entry, Stop Loss, and Take Profit signals from MT5 VPS and Pine Script engines dispatch straight to this inbox.
+              Live Entry, Stop Loss, and Take Profit signals from Pine Script engines dispatch straight to this inbox.
             </p>
           </div>
 
@@ -669,7 +667,7 @@ export function DashboardClient() {
               Live Strategy Signals &amp; Alert Feeds
             </h2>
             <p className="note" style={{ margin: "4px 0 0", fontSize: 13 }}>
-              Toggle real-time email trade alerts and open live candlestick charts for both Pine Script and Python strategies.
+              Toggle real-time email trade alerts and open live candlestick charts for Pine Script strategies.
             </p>
           </div>
 
@@ -701,41 +699,17 @@ export function DashboardClient() {
             className={`pill ${activeTab === "ALL" ? "" : "g"} sm`}
             style={{ fontSize: 12 }}
           >
-            All Strategies ({strategies.length})
-          </button>
-          <button
-            onClick={() => setActiveTab("PINE")}
-            className={`pill ${activeTab === "PINE" ? "" : "g"} sm`}
-            style={{
-              fontSize: 12,
-              background: activeTab === "PINE" ? "#ffffff" : undefined,
-              borderColor: activeTab === "PINE" ? "#ffffff" : undefined,
-              color: activeTab === "PINE" ? "#4ade80" : undefined,
-            }}
-          >
-            🌲 Pine Script Strategies ({pineCount})
-          </button>
-          <button
-            onClick={() => setActiveTab("PYTHON")}
-            className={`pill ${activeTab === "PYTHON" ? "" : "g"} sm`}
-            style={{
-              fontSize: 12,
-              background: activeTab === "PYTHON" ? "#ffffff" : undefined,
-              borderColor: activeTab === "PYTHON" ? "#eab308" : undefined,
-              color: activeTab === "PYTHON" ? "#fde047" : undefined,
-            }}
-          >
-            🐍 Python MT5 Ensembles ({pythonCount})
+            All Pine Script Strategies ({strategies.length})
           </button>
           <button
             onClick={() => setActiveTab("ACTIVE")}
             className={`pill ${activeTab === "ACTIVE" ? "" : "g"} sm`}
             style={{
               fontSize: 12,
-              color: activeAlertsCount > 0 ? "#38bdf8" : undefined,
+              color: activeAlertsCount > 0 ? "#ffffff" : undefined,
             }}
           >
-            🔔 Active Alerts ({activeAlertsCount})
+            🔔 Active Signals ({activeAlertsCount})
           </button>
         </div>
       </div>
@@ -812,7 +786,7 @@ export function DashboardClient() {
           </div>
         ) : (
           <div className="empty" style={{ margin: "16px 0", fontSize: 13 }}>
-            No broker connections active. Connect your MT5 or Paper Simulator to route signals automatically.
+            No broker connections active. Connect your broker or Paper Simulator to route signals automatically.
           </div>
         )}
       </div>
@@ -861,11 +835,11 @@ function StrategyDashboardCard({
                 padding: "2px 8px",
                 borderRadius: 6,
                 background: isPine ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.08)",
-                color: isPine ? "#4ade80" : "#fde047",
-                border: isPine ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(255, 255, 255, 0.08)",
+                color: "#ffffff",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
               }}
             >
-              {isPine ? "🌲 PINE SCRIPT v5" : "🐍 PYTHON MT5"}
+              {isPine ? "🌲 PINE SCRIPT v5" : "QUANT ALGO"}
             </span>
 
             <span

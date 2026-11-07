@@ -121,7 +121,7 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
           value={sort}
           onChange={(e) => setSort(e.target.value as any)}
         >
-          <option value="order">Strategy ID (Pine Script → Python)</option>
+          <option value="order">Strategy ID (PS-01 to PS-04)</option>
           <option value="name">Alphabetical</option>
           <option value="upd">Net return</option>
           <option value="pf">Profit factor</option>
@@ -130,15 +130,13 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
       </div>
 
       <div className="chips" id="chips">
-        {(["All", "Python", "Pine Script"] as const).map((t) => (
+        {(["All", "Pine Script"] as const).map((t) => (
           <button
             key={t}
-            className={`chip ${type === t ? "on" : ""} ${
-              t === "Python" ? "chip-py" : t === "Pine Script" ? "chip-pn" : ""
-            }`}
+            className={`chip ${type === t ? "on" : ""} chip-pn`}
             onClick={() => setType(t)}
           >
-            {t === "All" ? "All strategies (14)" : t === "Python" ? "Python MT5 (10)" : "Pine Script v5 (4)"}
+            {t === "All" ? `All strategies (${initialStrategies.length})` : `Pine Script v5 (${initialStrategies.length})`}
           </button>
         ))}
       </div>

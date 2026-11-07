@@ -52,7 +52,7 @@ export default function ProfilePage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<AlertPref[]>([]);
   const [deliveries, setDeliveries] = useState<EmailDelivery[]>([]);
-  const [profileTab, setProfileTab] = useState<"ALL" | "PINE" | "PYTHON">("ALL");
+  const [profileTab, setProfileTab] = useState<"ALL" | "PINE">("ALL");
   const [signalEmail, setSignalEmail] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
   const [emailStatusMsg, setEmailStatusMsg] = useState<{ text: string; ok: boolean } | null>(null);
@@ -924,7 +924,7 @@ export default function ProfilePage() {
                   </span>
                 </div>
                 <p className="note" style={{ margin: 0, fontSize: 13 }}>
-                  Configure the exact email inbox where live MT5 VPS signals (Entry, TP, SL) will be delivered.
+                  Configure the exact email inbox where live quantitative strategy signals (Entry, TP, SL) will be delivered.
                 </p>
               </div>
 
@@ -1031,29 +1031,7 @@ export default function ProfilePage() {
                       className={`pill ${profileTab === "ALL" ? "" : "g"} sm`}
                       style={{ fontSize: 12 }}
                     >
-                      All ({strategies.length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setProfileTab("PINE")}
-                      className={`pill ${profileTab === "PINE" ? "" : "g"} sm`}
-                      style={{
-                        fontSize: 12,
-                        color: profileTab === "PINE" ? "#4ade80" : undefined,
-                      }}
-                    >
-                      🌲 Pine ({strategies.filter((s) => s.type === "PINE_SCRIPT").length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setProfileTab("PYTHON")}
-                      className={`pill ${profileTab === "PYTHON" ? "" : "g"} sm`}
-                      style={{
-                        fontSize: 12,
-                        color: profileTab === "PYTHON" ? "#fde047" : undefined,
-                      }}
-                    >
-                      🐍 Python ({strategies.filter((s) => s.type === "PYTHON").length})
+                      All Pine Strategies ({strategies.length})
                     </button>
                   </div>
                 </div>
@@ -1064,9 +1042,7 @@ export default function ProfilePage() {
                       .filter((s) =>
                         profileTab === "ALL"
                           ? true
-                          : profileTab === "PINE"
-                          ? s.type === "PINE_SCRIPT"
-                          : s.type === "PYTHON"
+                          : s.type === "PINE_SCRIPT"
                       )
                       .map((s) => {
                         const isPine = s.type === "PINE_SCRIPT";
@@ -1097,11 +1073,11 @@ export default function ProfilePage() {
                                     fontWeight: 700,
                                     padding: "2px 7px",
                                     borderRadius: 4,
-                                    background: isPine ? "rgba(76,199,154,0.15)" : "rgba(234,179,8,0.15)",
-                                    color: isPine ? "#4ade80" : "#fde047",
+                                    background: "rgba(255, 255, 255, 0.08)",
+                                    color: "#ffffff",
                                   }}
                                 >
-                                  {isPine ? "🌲 PINE" : "🐍 PYTHON"}
+                                  {isPine ? "🌲 PINE" : "QUANT ALGO"}
                                 </span>
                                 <strong style={{ fontSize: 15 }}>{s.name}</strong>
                                 <span style={{ fontSize: 12, color: "var(--mut)" }}>

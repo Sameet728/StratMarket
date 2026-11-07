@@ -49,10 +49,10 @@ describe("Python VPS Signal Integration & Email Delivery", () => {
 
     const signalData = {
       sourceEventId: uniqueEventId,
-      strategyId: "PY-01",
-      strategyVersion: "1.2.0",
+      strategyId: "PS-01",
+      strategyVersion: "1.0.0",
       instrument: "XAUUSD",
-      timeframe: "H1",
+      timeframe: "M15",
       signalType: "ENTRY" as const,
       direction: "LONG" as const,
       entryPrice: 2650.0,
@@ -75,19 +75,19 @@ describe("Python VPS Signal Integration & Email Delivery", () => {
       passwordHash: hash,
     });
 
-    // Start trial on PY-08
-    await db.startTrial(user.id, "py-08");
+    // Start trial on PS-01
+    await db.startTrial(user.id, "ps-01");
 
-    // Ingest signal for PY-08
-    const eventId = "evt_py08_test_" + Date.now();
+    // Ingest signal for PS-01
+    const eventId = "evt_ps01_test_" + Date.now();
     const res = await db.ingestVpsSignal({
       sourceEventId: eventId,
-      strategyId: "PY-08",
-      instrument: "BTCUSD",
-      timeframe: "H1",
+      strategyId: "PS-01",
+      instrument: "XAUUSD",
+      timeframe: "M15",
       signalType: "ENTRY",
       direction: "LONG",
-      entryPrice: 94000.0,
+      entryPrice: 2650.0,
     });
 
     expect(res.notifiedUsersCount).toBeGreaterThan(0);

@@ -353,55 +353,7 @@ export const INITIAL_STRATEGIES: StrategySeedItem[] = [
     };
   }),
 
-  ...MT5_PYTHON_ENSEMBLES.map((ens) => {
-    const id = `PY-${String(ens.num).padStart(2, "0")}`;
-    const slug = id.toLowerCase();
-    const { eq, dd } = generateSeries(ens.num + 10, 120, 0.006);
-
-    return {
-      id,
-      slug,
-      name: ens.name,
-      description: ens.desc,
-      implementationType: "PYTHON" as const,
-      instrument: "XAUUSD",
-      timeframe: "M5",
-      category: ens.category,
-      currentVersion: "1.0.0",
-      visibilityStatus: "PUBLIC" as const,
-      trialEligibility: true,
-      supportedUsageModes: ["alert", "broker"], // Python strategies: Email alerts + Broker automation
-      vpsStrategyRef: `elvaris-vps-${slug}`,
-      ensembleFolder: ens.folder,
-      reportPath: `MT5_Single_Digit_Ensembles/${ens.folder}/Stratmarket_Performance_Report.html`,
-      netProfitUsd: ens.netProfitUsd,
-      metrics: {
-        netReturn: ens.ret,
-        maxDrawdown: ens.dd,
-        profitFactor: ens.pf,
-        winRate: ens.win,
-        totalTrades: ens.trades,
-        averageTrade: +(ens.ret / ens.trades * 2.5).toFixed(2),
-        sharpeRatio: ens.sharpe,
-        backtestPeriod: "2021-09-24 to 2026-09-30 (360k M5 bars)",
-        transactionCosts: "Flat base risk $250; real broker spread + commission",
-        slippageAssumptions: "Tested on 360,000 real MetaTrader 5 broker tick bars",
-        dataSource: "MetaTrader 5 Real Broker Feed (XAUUSD_M5_MT5.csv)",
-        validationType: "BACKTESTED" as const,
-        isDemo: false,
-      },
-      researchReport: {
-        hypothesis: ens.hypothesis,
-        methodology: "Multi-engine combinatorial optimization evaluated over 360,000 real MT5 broker bars (2021-2026). Conviction weights calibrated to keep maximum portfolio drawdown strictly in single digits (< 10%).",
-        riskRules: "Flat base risk $250 dynamically scaled by engine conviction weights ($100 to $312.50). Strict Friday 20:00 UTC weekend embargo to eliminate weekend gap risk.",
-        knownLimitations: "Backtest executed on MetaTrader 5 historical broker data. Live market execution subject to broker liquidity and slippage during central bank rate announcements.",
-        dataCleaning: "Sourced from real broker MetaTrader 5 export (360,000 bars, September 2021 to September 2026). Zero interpolation; realistic broker tick execution.",
-        executionProtocol: "Available via live_runner.py automated MT5 execution bot or automated VPS webhook relay.",
-      },
-      equitySeries: eq,
-      drawdownSeries: dd,
-    };
-  }),
+  // Python MT5 Ensembles temporarily removed to display only Pine Script strategies
 ];
 
 export const INITIAL_PLANS = [
@@ -427,12 +379,12 @@ export const INITIAL_PLANS = [
     id: "plan-all-access",
     slug: "all-access",
     name: "All-Access",
-    description: "Complete access to every listed Python and Pine Script trading strategy.",
+    description: "Complete access to every listed Pine Script trading strategy.",
     priceMonthly: 19900,
     currency: "USD",
     priceDisplay: "$199 / month",
     features: [
-      "Every listed strategy (10 Python + 4 Pine Script)",
+      "Every listed champion strategy (PS-01 to PS-04)",
       "All new strategy versions and releases",
       "Instant priority email signal alerts",
       "Interactive chart visualization with entry/exits",

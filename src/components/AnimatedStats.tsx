@@ -8,9 +8,9 @@ interface StatItem {
 }
 
 const STATS: StatItem[] = [
-  { target: 14, label: "strategies in the catalogue" },
-  { target: 10, label: "Python strategies" },
-  { target: 4, label: "Pine Script strategies" },
+  { target: 4, label: "strategies in the catalogue" },
+  { target: 4, label: "Pine Script v5 strategies" },
+  { target: 82, label: "% peak backtest win rate" },
   { target: 7, label: "day demo trial" },
 ];
 

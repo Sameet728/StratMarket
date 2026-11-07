@@ -395,6 +395,12 @@ export const db = {
     includeDrafts?: boolean;
   }): Promise<StrategySeedItem[]> {
     // Ensure memory store stays synchronized with latest seed data
+    const validIds = new Set(INITIAL_STRATEGIES.map((s) => s.id));
+    for (const key of Array.from(globalStore.strategies.keys()) as string[]) {
+      if (!validIds.has(key)) {
+        globalStore.strategies.delete(key);
+      }
+    }
     INITIAL_STRATEGIES.forEach((s) => {
       const existing = globalStore.strategies.get(s.id);
       if (!existing || existing.ensembleFolder !== s.ensembleFolder || existing.name !== s.name) {
@@ -477,6 +483,12 @@ export const db = {
   },
 
   async getStrategyBySlug(slugOrId: string): Promise<StrategySeedItem | null> {
+    const validIds = new Set(INITIAL_STRATEGIES.map((s) => s.id));
+    for (const key of Array.from(globalStore.strategies.keys()) as string[]) {
+      if (!validIds.has(key)) {
+        globalStore.strategies.delete(key);
+      }
+    }
     INITIAL_STRATEGIES.forEach((s) => {
       const existing = globalStore.strategies.get(s.id);
       if (!existing || existing.ensembleFolder !== s.ensembleFolder || existing.name !== s.name) {

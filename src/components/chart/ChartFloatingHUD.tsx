@@ -39,7 +39,7 @@ export function ChartFloatingHUD({ contract, visible, showBoxes }: Props) {
                 {hudMetrics.map((m, idx) => (
                   <div key={idx} className="tv-hud-row">
                     <span className="tv-hud-label">{m.label}</span>
-                    <span className="tv-hud-value" style={{ color: m.color || "#34d399" }}>
+                    <span className="tv-hud-value" style={{ color: "#ffffff" }}>
                       {m.value}
                     </span>
                   </div>
@@ -60,7 +60,7 @@ export function ChartFloatingHUD({ contract, visible, showBoxes }: Props) {
                   {sovereignGuards.map((g, idx) => (
                     <div key={idx} className="tv-hud-row">
                       <span className="tv-hud-label">{g.label}</span>
-                      <span className="tv-hud-value" style={{ color: g.color || "#34d399" }}>
+                      <span className="tv-hud-value" style={{ color: "#ffffff" }}>
                         {g.value}
                       </span>
                     </div>

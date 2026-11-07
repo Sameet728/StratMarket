@@ -2,15 +2,13 @@ import { describe, it, expect } from "vitest";
 import { db } from "@/lib/db";
 
 describe("Marketplace Catalogue & Filtering", () => {
-  it("loads exactly 14 strategies in catalogue (10 Python + 4 Pine Script)", async () => {
+  it("loads exactly 4 champion Pine Script strategies in catalogue", async () => {
     const all = await db.getStrategies();
-    expect(all.length).toBe(14);
+    expect(all.length).toBe(4);
 
-    const py = all.filter((s) => s.implementationType === "PYTHON");
     const ps = all.filter((s) => s.implementationType === "PINE_SCRIPT");
-
-    expect(py.length).toBe(10);
     expect(ps.length).toBe(4);
+    expect(all.every((s) => s.implementationType === "PINE_SCRIPT")).toBe(true);
   });
 
   it("filters strategies by instrument, timeframe, and category", async () => {
@@ -26,16 +24,16 @@ describe("Marketplace Catalogue & Filtering", () => {
   });
 
   it("searches strategies by name, ID, or asset", async () => {
-    const searchById = await db.getStrategies({ query: "PY-01" });
+    const searchById = await db.getStrategies({ query: "PS-01" });
     expect(searchById.length).toBeGreaterThan(0);
-    expect(searchById[0].id).toBe("PY-01");
+    expect(searchById[0].id).toBe("PS-01");
 
-    const searchByName = await db.getStrategies({ query: "Peak" });
+    const searchByName = await db.getStrategies({ query: "Apex" });
     expect(searchByName.length).toBe(1);
-    expect(searchByName[0].name).toBe("Peak Champion");
+    expect(searchByName[0].name).toBe("Apex");
 
-    const pythonByType = await db.getStrategies({ type: "Python" });
-    expect(pythonByType.length).toBe(10);
+    const pineByType = await db.getStrategies({ type: "Pine Script" });
+    expect(pineByType.length).toBe(4);
   });
 
   it("sorts strategies by profit factor and max drawdown", async () => {
@@ -54,7 +52,7 @@ describe("Marketplace Catalogue & Filtering", () => {
     }
   });
 
-  it("sorts strategies by default: Pine Script number-wise (PS-01 to PS-04) then Python number-wise (PY-01 to PY-10)", async () => {
+  it("sorts strategies by default: Pine Script number-wise (PS-01 to PS-04)", async () => {
     const list = await db.getStrategies();
     const ids = list.map((s) => s.id);
     expect(ids).toEqual([
@@ -62,42 +60,31 @@ describe("Marketplace Catalogue & Filtering", () => {
       "PS-02",
       "PS-03",
       "PS-04",
-      "PY-01",
-      "PY-02",
-      "PY-03",
-      "PY-04",
-      "PY-05",
-      "PY-06",
-      "PY-07",
-      "PY-08",
-      "PY-09",
-      "PY-10",
     ]);
   });
 
   it("keeps private and draft strategies hidden from public listings", async () => {
-    // Hide PY-05
-    await db.updateStrategyStatus("PY-05", "PRIVATE");
+    // Hide PS-03
+    await db.updateStrategyStatus("PS-03", "PRIVATE");
 
     const publicList = await db.getStrategies({ includeDrafts: false });
-    expect(publicList.find((s) => s.id === "PY-05")).toBeUndefined();
+    expect(publicList.find((s) => s.id === "PS-03")).toBeUndefined();
 
     // Restore status
-    await db.updateStrategyStatus("PY-05", "PUBLIC");
+    await db.updateStrategyStatus("PS-03", "PUBLIC");
     const restored = await db.getStrategies({ includeDrafts: false });
-    expect(restored.find((s) => s.id === "PY-05")).toBeDefined();
+    expect(restored.find((s) => s.id === "PS-03")).toBeDefined();
   });
 
-  it("resolves all 10 MT5 single-digit drawdown ensemble strategies with report paths", async () => {
-    for (let i = 1; i <= 10; i++) {
-      const slug = `py-${String(i).padStart(2, "0")}`;
+  it("resolves all 4 champion Pine Script strategies with tear sheets", async () => {
+    for (let i = 1; i <= 4; i++) {
+      const slug = `ps-${String(i).padStart(2, "0")}`;
       const strat = await db.getStrategyBySlug(slug);
       expect(strat).toBeDefined();
-      expect(strat?.implementationType).toBe("PYTHON");
-      expect(strat?.ensembleFolder).toMatch(/^Ensemble_/);
-      expect(strat?.reportPath).toContain("Stratmarket_Performance_Report.html");
-      expect(strat?.metrics.maxDrawdown).toBeLessThan(10.0); // Strict single-digit DD
-      expect(strat?.supportedUsageModes).toEqual(["alert", "broker"]);
+      expect(strat?.implementationType).toBe("PINE_SCRIPT");
+      expect(strat?.timeframe).toBe("M15");
+      expect(strat?.instrument).toBe("XAUUSD");
+      expect(strat?.supportedUsageModes).toEqual(["chart", "alert", "broker"]);
     }
   });
 });

@@ -91,7 +91,7 @@ export default async function HomePage() {
           <IndexPreview initialStrategies={strategies} />
           <p style={{ marginTop: "32px" }}>
             <Link className="pill" href="/market">
-              View all 14 strategies
+              View all strategies
             </Link>
           </p>
         </div>

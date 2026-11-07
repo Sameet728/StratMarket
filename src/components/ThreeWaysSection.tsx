@@ -4,17 +4,17 @@ import { useState, useEffect } from "react";
 import { DemoPreviewModal } from "./DemoPreviewModal";
 
 const ALERTS_FEED = [
-  "Entry signal · PY-03 · XAUUSD (Long)",
-  "Exit signal · PS-02 · NAS100 (Take profit)",
-  "Entry signal · PY-07 · EURUSD (Short)",
-  "Stop-loss adjusted · PY-01 · BTCUSD",
+  "Entry signal · PS-01 · XAUUSD (Long)",
+  "Exit signal · PS-02 · XAUUSD (Take profit)",
+  "Trend continuation · PS-03 · XAUUSD (Long)",
+  "Stop-loss adjusted · PS-04 · XAUUSD",
 ];
 
 export function ThreeWaysSection() {
   const [demoMessage, setDemoMessage] = useState<string | null>(null);
   const [currentAlerts, setCurrentAlerts] = useState<string[]>([
-    "Entry signal · PY-03 · XAUUSD (Long)",
-    "Exit signal · PS-02 · NAS100 (Take profit)",
+    "Entry signal · PS-01 · XAUUSD (Long)",
+    "Exit signal · PS-02 · XAUUSD (Take profit)",
   ]);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export function ThreeWaysSection() {
               <path
                 d="M0,50 C30,40 40,20 70,30 S120,50 150,20 S190,10 200,8"
                 fill="none"
-                stroke="var(--gold)"
+                stroke="#fff"
                 strokeWidth="2"
                 pathLength="1"
                 strokeDasharray="1"

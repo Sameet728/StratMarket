@@ -487,15 +487,6 @@ export function PricingClient({
                       </option>
                     ))}
                 </optgroup>
-                <optgroup label="🐍 Python MT5 Ensembles">
-                  {strategies
-                    .filter((s) => s.implementationType === "PYTHON")
-                    .map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} ({s.id}) · {s.instrument} {s.timeframe} (PF {s.profitFactor})
-                      </option>
-                    ))}
-                </optgroup>
               </select>
 
               {/* Live Metric Pills */}
@@ -613,8 +604,8 @@ export function PricingClient({
             }}
           >
             {activeAllAccessEntitlement
-              ? "✓ YOUR CURRENT ACTIVE PLAN (ALL 14 UNLOCKED)"
-              : "⭐ MOST POPULAR • ALL 14 STRATEGIES INCLUDED"}
+              ? "✓ YOUR CURRENT ACTIVE PLAN (ALL STRATEGIES UNLOCKED)"
+              : "⭐ MOST POPULAR • ALL 4 CHAMPION STRATEGIES INCLUDED"}
           </div>
 
           <div>
@@ -626,7 +617,7 @@ export function PricingClient({
 
             <h3 style={{ fontSize: 24, fontWeight: 800, color: "#fff", margin: "0 0 6px" }}>All-Access Portfolio</h3>
             <p style={{ color: "var(--mut)", fontSize: 13, margin: "0 0 18px", minHeight: 38 }}>
-              Unconstrained access to every listed Pine Script and Python MT5 quantitative trading strategy.
+              Unconstrained access to every listed Pine Script quantitative trading strategy (PS-01 to PS-04).
             </p>
 
             {/* Price Display */}
@@ -642,12 +633,12 @@ export function PricingClient({
             {/* Strategy Inclusion Highlight Banner */}
             <div style={{ padding: "14px", borderRadius: 12, background: "rgba(255, 255, 255, 0.12)", border: "1px solid rgba(255, 255, 255, 0.12)", marginBottom: 22 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: "#ffffff", marginBottom: 4 }}>
-                ⚡ Unlocks All 14 Strategies Directly:
+                ⚡ Unlocks All 4 Pine Script Strategies Directly:
               </div>
               <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5 }}>
-                • 4 Pine Script TradingView systems (PS-01 to PS-04)<br />
-                • 10 MetaTrader 5 Ensembles (PY-01 to PY-10)<br />
-                • Zero strategy lock-in — switch or combine at will
+                • 4 Champion TradingView systems (PS-01 Grandmaster, PS-02 Apex, PS-03 Trend, PS-04 Titan)<br />
+                • Interactive LuxAlgo live charting terminal and execution overlays<br />
+                • Real-time signal webhooks and broker connection preview
               </div>
             </div>
 
@@ -655,11 +646,11 @@ export function PricingClient({
             <ul style={{ margin: "0 0 24px", padding: 0, listStyle: "none", display: "grid", gap: 10, fontSize: 13, color: "#cbd5e1" }}>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                 <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
-                <span><b>Every listed strategy</b> unlocked simultaneously</span>
+                <span><b>Every listed Pine Script strategy</b> unlocked simultaneously</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                 <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
-                <span>Real-time priority 24/7 email signal alerts across all 14 feeds</span>
+                <span>Real-time priority 24/7 email signal alerts across all feeds</span>
               </li>
               <li style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                 <span style={{ color: "#ffffff", fontWeight: 800 }}>✓</span>
@@ -716,7 +707,7 @@ export function PricingClient({
                 border: "none",
               }}
             >
-              Direct Pay ${billingCycle === "annual" ? "159" : "199"} · Unlock All 14 Strategies →
+              Direct Pay ${billingCycle === "annual" ? "159" : "199"} · Unlock All Strategies →
             </button>
           )}
         </div>
@@ -886,7 +877,7 @@ export function PricingClient({
                       {ord.planSlug === "single-strategy"
                         ? `Single Strategy Access: ${ord.strategyId || "Custom"}`
                         : ord.planSlug === "all-access"
-                        ? "All-Access Quantitative Portfolio (All 14 Strategies)"
+                        ? "All-Access Quantitative Portfolio (All Champion Strategies)"
                         : "Professional Institutional Desk"}
                     </div>
 
@@ -1312,15 +1303,6 @@ export function PricingClient({
                                 </option>
                               ))}
                           </optgroup>
-                          <optgroup label="🐍 Python MT5 Ensembles">
-                            {strategies
-                              .filter((s) => s.implementationType === "PYTHON")
-                              .map((s) => (
-                                <option key={s.id} value={s.id}>
-                                  {s.name} ({s.id}) · {s.instrument} (PF: {s.profitFactor})
-                                </option>
-                              ))}
-                          </optgroup>
                         </select>
                       </div>
                     )}
@@ -1328,7 +1310,7 @@ export function PricingClient({
                     {activePlan.slug !== "single-strategy" && (
                       <div style={{ paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 12, color: "#ffffff", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
                         <span>✓</span>
-                        <span>Directly unlocks all 14 quantitative strategies across Pine Script and MT5</span>
+                        <span>Directly unlocks all champion quantitative Pine Script strategies</span>
                       </div>
                     )}
                   </div>

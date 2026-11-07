@@ -770,3 +770,36 @@ Error: Module not found: Can't resolve '@/lib/vps/security'
 - **New User Trial Test:** Created a brand-new user and triggered `POST /api/strategies/ps-01/trial` -> Status `200 OK`, returned `7-day trial activated for Grandmaster` with exact 7-day server duration.
 - **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
 - **Vitest Suite:** `npm run test` -> **34/34 tests passed in 1.87s**.
+
+---
+
+### Session Update (16:30 - 16:45): Temporarily Remove Python MT5 Ensembles — Exclusively Feature Pine Script Strategies
+
+#### User Instruction:
+- *"remove all python staegirer sfrom the overall all website for noww just keep the pine"*
+
+#### Changes Applied:
+1. **Database & Seed Data (`src/lib/db/seed-data.ts` & `src/lib/db/index.ts`):**
+   - In `INITIAL_STRATEGIES`, removed `...MT5_PYTHON_ENSEMBLES` so only the 4 champion Pine Script strategies (`PS-01`, `PS-02`, `PS-03`, `PS-04`) are seeded into the database and catalogue.
+   - Updated `INITIAL_PLANS` copy to reflect champion Pine Script strategies (`PS-01 to PS-04`) instead of 14 strategies.
+   - In `src/lib/db/index.ts`, ensured `getStrategies` and `getStrategyBySlug` prune any strategies not present in `INITIAL_STRATEGIES` so cached memory store items are flushed.
+2. **Homepage & Index (`src/app/page.tsx`, `AnimatedStats.tsx`, `ThreeWaysSection.tsx`):**
+   - Updated stats in `AnimatedStats.tsx` to display Pine Script algorithms and peak win rate.
+   - Updated link from "View all 14 strategies" to "View all strategies".
+   - In `ThreeWaysSection.tsx`, updated live ticker signals to feature only Pine Script strategies (`PS-01` through `PS-04`).
+3. **Marketplace Catalogue (`src/app/market/page.tsx`, `MarketplaceCatalogue.tsx`):**
+   - Cleaned metadata and lede copy to focus on Pine Script strategies.
+   - Removed Python platform filter chip and dropdown text referencing Python MT5.
+4. **Pricing & Checkout (`src/app/pricing/PricingClient.tsx`):**
+   - Removed the Python optgroup from single-strategy checkout and direct-pay dropdowns.
+   - Updated All-Access plan headers, bullet points, and modal copy to reflect all champion Pine Script strategies.
+5. **Dashboard & User Profile (`DashboardClient.tsx`, `profile/page.tsx`):**
+   - Removed the Python filter tab and Python strategy counters from active signals and notifications.
+   - Updated broker connection copy and alert descriptions.
+6. **Automated Vitest Test Suite Updates:**
+   - Updated `tests/marketplace.test.ts` to assert 4 champion Pine Script strategies (`PS-01` to `PS-04`).
+   - Updated `tests/trials.test.ts` and `tests/signals-vps.test.ts` to execute trials and signal ingestions on Pine Script IDs (`PS-01`, `PS-02`, `PS-03`, `PS-04`).
+
+#### Verification & Test Results:
+- **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
+- **Vitest Suite:** `npm test` -> **34/34 tests passed cleanly**.
