@@ -239,7 +239,7 @@ export function StrategyChart({
 
         if (disposed || !containerRef.current) return;
 
-        // Initialize pure candlestick chart: clean, uncluttered, fixed 15m
+        // Initialize pure candlestick chart: clean, uncluttered, fixed 15m with drawing toolbar
         const ws = new VelaWorkspace(containerRef.current, {
           layout: false,
           theme: "dark",
@@ -247,7 +247,7 @@ export function StrategyChart({
           timeframe: "15",
           live: false,
           volume: false,
-          drawingToolbar: false,
+          drawingToolbar: true,
           indicatorPicker: false,
           cells: {
             c1: {

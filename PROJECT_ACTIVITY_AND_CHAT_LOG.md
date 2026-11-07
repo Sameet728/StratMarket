@@ -902,5 +902,29 @@ Error: Module not found: Can't resolve '@/lib/vps/security'
 - **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
 - **Vitest Suite:** `npm test` -> **34/34 tests passed cleanly**.
 
+---
+
+### Session Update (18:58 - 19:02): Restoring Drawing Toolbar & Streamlining Top Header
+
+#### User Instructions (Uploaded Screenshot):
+- *"keep the drawing tool bar which u removed and make this upper section clean"* (Screenshot highlighting the top header containing 9 crowded, redundant boxes and badges).
+
+#### Changes Implemented:
+
+1. **Restored Drawing Toolbar:**
+   - In [`StrategyChart.tsx`](file:///c:/Users/vedan/Downloads/StratMarket-main%20(1)/StratMarket-main/src/components/chart/StrategyChart.tsx), re-enabled `drawingToolbar: true` in `VelaWorkspace` so traders can use the full suite of charting tools (trendlines, fibonacci retracements, measuring rulers, brush, text).
+
+2. **Streamlined & Unified Upper Header Toolbar (`ChartToolbar.tsx` & `globals.css`):**
+   - **Removed Giant Redundant Center Badge:** Eliminated the duplicate `INSTITUTIONAL M15 EXECUTION TIMEFRAME` box which caused visual clutter and overcrowding.
+   - **Unified Strategy Dropdown:** Replaced separate strategy ID and name blocks with one sleek, unified dropdown selector: `PS-01 · Grandmaster (82.6% WR)`.
+   - **Minimal Symbol & Timeframe:** Refined to a clean `XAUUSD · 15m` badge.
+   - **Consistent Button Hierarchy:** Standardized `Position Boxes`, `Alerts`, and `Strategy` buttons with matching padding, subtle borders, and smooth hover states.
+   - **Minimal Status Dot:** Clean minimal live feed indicator (`● Live Feed`).
+
+#### Verification & Quality Checks:
+- **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
+- **Vitest Suite:** `npm test` -> **34/34 tests passed cleanly**.
+
+
 
 

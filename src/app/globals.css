@@ -2174,6 +2174,123 @@ body:has(.chart-page-fullscreen) main {
   color: #ffffff;
 }
 
+/* Clean Unified Strategy Selector */
+.chart-strategy-unified {
+  display: flex;
+  align-items: center;
+}
+
+.chart-strategy-select-clean {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.chart-strategy-select-clean:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.chart-strategy-select-clean option {
+  background: #121214;
+  color: #ffffff;
+}
+
+/* Minimal Asset / Timeframe */
+.chart-symbol-clean {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.chart-symbol-clean .sym {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.chart-symbol-clean .dot {
+  color: #71717a;
+}
+
+.chart-symbol-clean .tf {
+  color: #a1a1aa;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+}
+
+/* Trial Pill */
+.chart-trial-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+/* Unified Clean Buttons */
+.chart-btn-clean {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #a1a1aa;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chart-btn-clean:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.chart-btn-clean.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Clean Feed Status */
+.chart-feed-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #d4d4d8;
+}
+
+.chart-feed-status .feed-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: chartPulse 2s infinite;
+}
+
 .chart-symbol-badge {
   display: flex;
   align-items: center;
