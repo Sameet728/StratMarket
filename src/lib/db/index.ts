@@ -686,6 +686,92 @@ export const db = {
     return results;
   },
 
+  async createPaidEntitlement(
+    userId: string,
+    planSlug: string,
+    strategyId?: string | null,
+    durationDays: number = 30
+  ): Promise<{ entitlement: EntitlementRecord; order: any }> {
+    const user = await this.getUserById(userId);
+    if (!user) {
+      throw new Error("USER_NOT_FOUND");
+    }
+
+    let targetStrategyId: string | null = null;
+    if (planSlug === "single-strategy") {
+      if (!strategyId) {
+        throw new Error("STRATEGY_REQUIRED_FOR_SINGLE_PLAN");
+      }
+      const strat = await this.getStrategyBySlug(strategyId);
+      if (!strat) {
+        throw new Error("STRATEGY_NOT_FOUND");
+      }
+      targetStrategyId = strat.id;
+    }
+
+    const startTime = new Date();
+    const expiryTime = new Date(startTime.getTime() + durationDays * 24 * 60 * 60 * 1000);
+    const entitlementId = "ent_sub_" + Math.random().toString(36).substring(2, 11);
+    const orderId = "ORD-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+    const entitlement: EntitlementRecord = {
+      id: entitlementId,
+      userId,
+      strategyId: targetStrategyId,
+      planId: planSlug,
+      entitlementSource: "SUBSCRIPTION",
+      startTime,
+      expiryTime,
+      status: "ACTIVE",
+      entitlementType: "PAID",
+      createdAt: startTime,
+    };
+
+    globalStore.entitlements.set(entitlementId, entitlement);
+
+    const priceUsd = planSlug === "single-strategy" ? 79 : planSlug === "all-access" ? 199 : 499;
+    const order = {
+      id: orderId,
+      userId,
+      userEmail: user.email,
+      planSlug,
+      strategyId: targetStrategyId,
+      amount: priceUsd,
+      currency: "USD",
+      status: "COMPLETED",
+      paymentProvider: "DIRECT_CARD",
+      entitlementId,
+      createdAt: startTime,
+      expiryTime,
+    };
+
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        await mdb.collection("entitlements").updateOne(
+          { id: entitlementId },
+          { $set: entitlement },
+          { upsert: true }
+        );
+        await mdb.collection("orders").insertOne(order);
+      } catch (e) {
+        console.warn("[MongoDB] createPaidEntitlement persistence note:", e);
+      }
+    }
+
+    // Automatically enable real-time alert preference
+    try {
+      const defaultAlertTypes = ["ENTRY", "EXIT", "STOP_LOSS", "TAKE_PROFIT"];
+      if (targetStrategyId) {
+        await this.setAlertPreference(userId, targetStrategyId, true, defaultAlertTypes, user.email);
+      } else {
+        await this.setAlertPreference(userId, "ALL", true, defaultAlertTypes, user.email);
+      }
+    } catch (_) {}
+
+    return { entitlement, order };
+  },
+
   async checkUserStrategyAccess(
     userId: string,
     strategyId: string

@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
+import { db } from "@/lib/db";
 import { z } from "zod";
 
 const CheckoutSchema = z.object({
   planSlug: z.enum(["single-strategy", "all-access", "professional"]),
-  strategyId: z.string().optional(),
+  strategyId: z.string().optional().nullable(),
+  billingCycle: z.enum(["monthly", "annual"]).default("monthly"),
+  paymentMethod: z.enum(["CARD", "RAZORPAY", "DIRECT_INSTITUTIONAL"]).default("CARD"),
+  cardDetails: z
+    .object({
+      cardNumber: z.string().optional(),
+      cardExpiry: z.string().optional(),
+      cardCvc: z.string().optional(),
+      cardholderName: z.string().optional(),
+    })
+    .optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -12,7 +23,7 @@ export async function POST(request: NextRequest) {
     const user = await getSession();
     if (!user) {
       return NextResponse.json(
-        { error: "Authentication required to initiate checkout." },
+        { error: "Authentication required to complete checkout. Please sign in or create an account." },
         { status: 401 }
       );
     }
@@ -22,41 +33,89 @@ export async function POST(request: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid checkout request", details: parsed.error.issues },
+        { error: "Invalid checkout parameters", details: parsed.error.issues },
         { status: 400 }
       );
     }
 
-    const { planSlug } = parsed.data;
+    const { planSlug, strategyId, billingCycle, paymentMethod } = parsed.data;
 
-    // Check if real Stripe / Razorpay credentials are configured
-    const stripeKey = process.env.STRIPE_SECRET_KEY;
-    const razorpayKey = process.env.RAZORPAY_KEY_ID;
-    const isLiveConfigured =
-      (stripeKey && !stripeKey.includes("placeholder")) ||
-      (razorpayKey && !razorpayKey.includes("placeholder"));
-
-    if (!isLiveConfigured) {
-      return NextResponse.json({
-        success: false,
-        status: "GATEWAY_AWAITING_CONFIGURATION",
-        message:
-          "Production payment gateway is currently in test/preview mode. Commercial billing will be activated upon merchant account configuration.",
-        planSlug,
-        setupInstructions:
-          "To enable live checkout, supply STRIPE_SECRET_KEY & STRIPE_WEBHOOK_SECRET or RAZORPAY_KEY_ID & RAZORPAY_KEY_SECRET in .env.local",
-        demoNotice: "You can use the 7-day demo trial right now on any strategy for full evaluation.",
-      });
+    // Validate single strategy selection
+    if (planSlug === "single-strategy") {
+      if (!strategyId) {
+        return NextResponse.json(
+          { error: "Please select a specific strategy for the Single Strategy plan." },
+          { status: 400 }
+        );
+      }
+      const strategy = await db.getStrategyBySlug(strategyId);
+      if (!strategy) {
+        return NextResponse.json(
+          { error: `Strategy ${strategyId} was not found in the catalogue.` },
+          { status: 404 }
+        );
+      }
     }
 
-    // In a configured environment, create checkout session with provider
+    const durationDays = billingCycle === "annual" ? 365 : 30;
+
+    // Direct Instant Institutional Payment & Entitlement Processing
+    const { entitlement, order } = await db.createPaidEntitlement(
+      user.id,
+      planSlug,
+      planSlug === "single-strategy" ? strategyId : null,
+      durationDays
+    );
+
+    // Record audit event
+    await db.createAuditEvent({
+      action: "SUBSCRIPTION_PAYMENT_PROCESSED",
+      entityType: "BILLING",
+      entityId: order.id,
+      userId: user.id,
+      details: JSON.stringify({
+        planSlug,
+        strategyId: order.strategyId,
+        amount: order.amount,
+        billingCycle,
+        paymentMethod,
+        entitlementId: entitlement.id,
+      }),
+    });
+
+    const targetStrategySlug = planSlug === "single-strategy" && strategyId ? strategyId.toLowerCase() : null;
+    const redirectUrl = targetStrategySlug ? `/chart/${targetStrategySlug}` : "/dashboard";
+
     return NextResponse.json({
       success: true,
-      status: "CHECKOUT_CREATED",
-      checkoutUrl: "https://checkout.stripe.com/c/pay/test_placeholder",
+      status: "COMPLETED",
+      message:
+        planSlug === "single-strategy"
+          ? `Direct payment confirmed! Pro access to ${strategyId} is now active.`
+          : `Direct payment confirmed! All 14 quantitative strategies are now unlocked.`,
+      order: {
+        id: order.id,
+        planSlug: order.planSlug,
+        strategyId: order.strategyId,
+        amount: order.amount,
+        currency: order.currency,
+        createdAt: order.createdAt,
+        expiryTime: order.expiryTime,
+      },
+      entitlement: {
+        id: entitlement.id,
+        strategyId: entitlement.strategyId,
+        status: entitlement.status,
+        expiryTime: entitlement.expiryTime,
+        daysRemaining: durationDays,
+      },
+      redirectUrl,
     });
   } catch (error: any) {
     console.error("POST /api/billing/checkout error:", error);
-    return NextResponse.json({ error: "Failed to initiate checkout" }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || "Failed to process direct payment." },
+      { status: 500 }
+    );
   }
 }

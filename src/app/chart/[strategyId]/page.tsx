@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { StrategyChart } from "@/components/chart/StrategyChart";
@@ -29,6 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ChartPage({ params }: Props) {
+  await connection();
   const { strategyId } = await params;
   const strategy = await db.getStrategyBySlug(strategyId);
 
