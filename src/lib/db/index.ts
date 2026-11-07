@@ -312,7 +312,13 @@ export const db = {
       } catch (_) {}
     }
     const u = globalStore.users.get(id);
-    return u ? { ...u } : null;
+    if (u) return { ...u };
+    for (const user of globalStore.users.values()) {
+      if (user.id === id || user.email.toLowerCase() === id.toLowerCase()) {
+        return { ...user };
+      }
+    }
+    return null;
   },
 
   async createUser(data: {
@@ -500,11 +506,37 @@ export const db = {
   // 7-DAY TRIAL SYSTEM (SERVER-ENFORCED, ATOMIC ACTIVATION)
   async startTrial(
     userId: string,
-    strategySlug: string
+    strategySlug: string,
+    userSession?: { name?: string; email?: string; role?: string }
   ): Promise<{ trial: TrialRecord; entitlement: EntitlementRecord }> {
-    const user = await this.getUserById(userId);
+    let user = await this.getUserById(userId);
     if (!user) {
-      throw new Error("USER_NOT_FOUND");
+      // Defensive auto-provisioning for serverless / stateless environments
+      const email = userSession?.email || (userId.includes("@") ? userId : `${userId}@trader.stratmarket`);
+      user = {
+        id: userId,
+        name: userSession?.name || "Quantitative Trader",
+        email,
+        passwordHash: "",
+        role: (userSession?.role as any) || "CUSTOMER",
+        accountStatus: "ACTIVE",
+        emailVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      globalStore.users.set(userId, user);
+      if (email) globalStore.users.set(email.toLowerCase(), user);
+
+      const mdb = await getMongoDb();
+      if (mdb) {
+        try {
+          await mdb.collection("users").updateOne(
+            { $or: [{ id: userId }, { email: email.toLowerCase() }] },
+            { $setOnInsert: user },
+            { upsert: true }
+          );
+        } catch (_) {}
+      }
     }
 
     const strategy = await this.getStrategyBySlug(strategySlug);
@@ -711,11 +743,37 @@ export const db = {
     userId: string,
     planSlug: string,
     strategyId?: string | null,
-    durationDays: number = 30
+    durationDays: number = 30,
+    userSession?: { name?: string; email?: string; role?: string }
   ): Promise<{ entitlement: EntitlementRecord; order: any }> {
-    const user = await this.getUserById(userId);
+    let user = await this.getUserById(userId);
     if (!user) {
-      throw new Error("USER_NOT_FOUND");
+      // Defensive auto-provisioning for serverless / stateless environments
+      const email = userSession?.email || (userId.includes("@") ? userId : `${userId}@trader.stratmarket`);
+      user = {
+        id: userId,
+        name: userSession?.name || "Quantitative Trader",
+        email,
+        passwordHash: "",
+        role: (userSession?.role as any) || "CUSTOMER",
+        accountStatus: "ACTIVE",
+        emailVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      globalStore.users.set(userId, user);
+      if (email) globalStore.users.set(email.toLowerCase(), user);
+
+      const mdb = await getMongoDb();
+      if (mdb) {
+        try {
+          await mdb.collection("users").updateOne(
+            { $or: [{ id: userId }, { email: email.toLowerCase() }] },
+            { $setOnInsert: user },
+            { upsert: true }
+          );
+        } catch (_) {}
+      }
     }
 
     let targetStrategyId: string | null = null;

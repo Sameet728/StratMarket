@@ -112,6 +112,16 @@ export function StrategyChart({
         mountedKeyRef.current = "";
         setTimeframe((tf) => tf);
       } else {
+        if (
+          res.status === 401 ||
+          data.code === "USER_NOT_FOUND" ||
+          data.error?.includes("USER_NOT_FOUND") ||
+          data.error?.toLowerCase().includes("authentication required") ||
+          data.error?.toLowerCase().includes("user not found")
+        ) {
+          window.location.href = `/signin?redirect=/chart/${encodeURIComponent(strategyId)}`;
+          return;
+        }
         alert(data.error || "Failed to start 7-day trial.");
       }
     } catch {

@@ -742,3 +742,31 @@ Error: Module not found: Can't resolve '@/lib/vps/security'
 - **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
 - **Vitest Suite:** `npm run test` -> **34/34 tests passed in 1.85s**.
 - **Live Endpoint Probes:** All 9 top-level routes (`/`, `/market`, `/chart/PS-01`, `/pricing`, `/profile`, `/research`, `/how`, `/dashboard`, `/admin`) return HTTP 200 OK under 325ms.
+
+---
+
+### Session Update (16:01 - 16:05): Fixing "USER NOT FOUND" on 7-Day Trial & Checkout Activation in Serverless/Vercel
+
+#### User Issue (Uploaded Screenshot):
+- Screenshot of `https://strat-market-chi.vercel.app/chart/PS-01` showing browser alert: `USER NOT FOUND` when clicking "Start 7-Day Free Trial (Instant Access)".
+
+#### Root Cause:
+1. In serverless deployment environments (such as Vercel), each API route runs in an isolated Lambda container.
+2. If MongoDB Atlas is running with local fallback or in-memory repository store, user registration occurs in Lambda container A (`/api/auth/register`), saving to Lambda A's in-memory store.
+3. When the user visits `/chart/PS-01` and clicks "Start 7-Day Free Trial", the request hits Lambda container B (`/api/strategies/[slug]/trial`).
+4. While `getSession()` successfully decrypts and validates the cryptographically signed JWT cookie (`user.id`, `user.email`), `db.startTrial` previously called `await this.getUserById(userId)`. In Lambda container B, `globalStore.users` only held default seed accounts, causing `getUserById` to return `null` and throw `USER_NOT_FOUND`.
+5. The frontend alerted `USER NOT FOUND` directly in the browser.
+
+#### Solutions Implemented:
+1. **Defensive User Auto-Provisioning in `startTrial` & `createPaidEntitlement`:**
+   - In [`src/lib/db/index.ts`](file:///c:/Users/vedan/Downloads/StratMarket-main%20(1)/StratMarket-main/src/lib/db/index.ts), if `getUserById(userId)` returns `null` in a stateless serverless container, `startTrial` and `createPaidEntitlement` now automatically provision the verified user into the store using the cryptographically authenticated session claims (`userSession`), upserting into MongoDB when connected.
+2. **Passed Authenticated User from Session into DB Operations:**
+   - Updated [`src/app/api/strategies/[slug]/trial/route.ts`](file:///c:/Users/vedan/Downloads/StratMarket-main%20(1)/StratMarket-main/src/app/api/strategies/[slug]/trial/route.ts) to pass `user` into `db.startTrial(user.id, strategy.slug, user)`.
+   - Updated [`src/app/api/billing/checkout/route.ts`](file:///c:/Users/vedan/Downloads/StratMarket-main%20(1)/StratMarket-main/src/app/api/billing/checkout/route.ts) to pass `user` into `db.createPaidEntitlement(..., user)`.
+3. **Graceful Auth Redirection in UI:**
+   - In [`src/components/chart/StrategyChart.tsx`](file:///c:/Users/vedan/Downloads/StratMarket-main%20(1)/StratMarket-main/src/components/chart/StrategyChart.tsx), if trial activation encounters an unauthenticated state (`401` or session mismatch), it now redirects seamlessly to `/signin?redirect=/chart/${strategyId}` rather than presenting an abrupt browser alert box.
+
+#### Verification & Test Results:
+- **New User Trial Test:** Created a brand-new user and triggered `POST /api/strategies/ps-01/trial` -> Status `200 OK`, returned `7-day trial activated for Grandmaster` with exact 7-day server duration.
+- **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
+- **Vitest Suite:** `npm run test` -> **34/34 tests passed in 1.87s**.

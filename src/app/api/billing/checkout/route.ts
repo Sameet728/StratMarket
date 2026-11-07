@@ -64,7 +64,8 @@ export async function POST(request: NextRequest) {
       user.id,
       planSlug,
       planSlug === "single-strategy" ? strategyId : null,
-      durationDays
+      durationDays,
+      user
     );
 
     // Record audit event

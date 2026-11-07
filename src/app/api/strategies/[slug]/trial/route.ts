@@ -31,7 +31,7 @@ export async function POST(
 
     // Attempt atomic trial creation with duplicate prevention
     try {
-      const result = await db.startTrial(user.id, strategy.slug);
+      const result = await db.startTrial(user.id, strategy.slug, user);
 
       return NextResponse.json({
         success: true,
