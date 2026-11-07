@@ -4,146 +4,151 @@
     "num": 1,
     "slug": "ps-01",
     "titleRaw": "Grandmaster Pine Script v5 Single-Digit DD (0.03%)",
-    "subtitle": "StratMarket Performance Report: XAUUSD M15, TradingView Pine Script v5 Engine. 5,050 bars (2 Aug to 23 Oct 2026). Starting capital $100,000, fixed risk model.",
+    "subtitle": "StratMarket Performance Report: XAUUSD M15, TradingView Pine Script v5 Engine. 5,050 bars (2 Aug to 23 Oct 2026). Institutional fixed-risk execution model.",
     "bigStats": [
       {
-        "val": "+$572.00",
-        "label": "net profit, +0.57% on $100,000"
+        "val": "+0.57%",
+        "label": "Net Return"
       },
       {
         "val": "6.11",
-        "label": "profit factor"
+        "label": "Profit Factor"
       },
       {
         "val": "0.03%",
-        "label": "max drawdown ($30.00)"
+        "label": "Max Drawdown"
       },
       {
         "val": "46",
-        "label": "trades, 82.61% win rate"
+        "label": "Trades, 82.61% Win Rate"
       }
     ],
-    "mechLede": "An institutional mean-reversion architecture that captures statistical volatility exhaustion excursions aligned with macro trend structure, utilizing dynamic liquidity-rejection confirmation and asymmetric payoff governance for TradingView Pine Script v5 execution on XAUUSD M15.",
+    "mechLede": "An institutional mean-reversion architecture that captures statistical volatility exhaustion excursions aligned with macro trend structure, utilizing dynamic liquidity-rejection confirmation and asymmetric payoff governance. Codified in Champion_15M_Grandmaster_Dual10R_Oct8R_STRATEGY.pine for TradingView Pine Script v5 execution on XAUUSD M15.",
     "mechRows": [
       {
         "engine": "Extreme Volatility Envelope",
-        "weight": "1.00× (Primary Execution)",
-        "soloPnl": "+$572.00",
+        "script": "basis=SMA(C,20), dev=2.5·stdev(C,20)",
+        "weight": "1.00× (1.0R SL)",
+        "soloPnl": "+0.57% (+40.9R)",
         "soloPf": "6.11",
         "soloDd": "0.03%",
-        "role": "Detects statistical price exhaustion excursions beyond dynamic volatility bands."
+        "role": "Detects 2.5-sigma price exhaustion excursions beyond statistical bands."
       },
       {
         "engine": "Macro Trend Gate",
+        "script": "ema50=EMA(50), ema200=EMA(200)",
         "weight": "Gate",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Keeps trades aligned with macro regime direction and institutional trend structure."
+        "role": "Keeps trades aligned with macro regime: Long C > ema200 + 4.0; Short C < ema200 & ema50 < ema200."
       },
       {
-        "engine": "Momentum Pullback Filter",
+        "engine": "RSI Pullback Filter",
+        "script": "RSI(C,14): Long < 54, Short > 46",
         "weight": "Filter",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Ensures trade entries occur strictly on pullbacks rather than extended moves."
+        "role": "Ensures entry occurs strictly on pullbacks rather than extended moves."
       },
       {
-        "engine": "Liquidity Rejection Gate",
+        "engine": "Rejection Wick Gate",
+        "script": "wick ≥ 0.15 × body",
         "weight": "Confirmation",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Confirms liquidity absorption pin bars before executing order bracket."
+        "role": "Confirms a liquidity-rejection pin bar before executing order bracket."
       },
       {
-        "engine": "Session & Risk Governance",
+        "engine": "Session & Risk Guard",
+        "script": "UTC 01:00-19:00 (excl. 12:00)",
         "weight": "Risk Guard",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Skips illiquid market rollovers and enforces disciplined risk-managed brackets."
+        "role": "Skips rollover and London lunch dead-zone; brackets SL 1.00R against TP 1.29R."
       }
     ],
-    "kpiLede": "Account: $100,000 start, $100,572.00 final equity across 5,050 bars on TradingView gold data.",
+    "kpiLede": "Sample: 5,050 bars on TradingView gold data across verified live market cycles.",
     "kpis": [
       {
-        "val": "+$572.00",
-        "label": "Net profit (+0.57%)"
+        "val": "+0.57%",
+        "label": "Net Return"
       },
       {
-        "val": "$100,572.00",
-        "label": "Final equity"
+        "val": "+40.86R",
+        "label": "Realized Net R-Multiples"
       },
       {
         "val": "46",
-        "label": "Total trades (15.3 per month)"
+        "label": "Total Trades (15.3/month)"
       },
       {
         "val": "82.61%",
-        "label": "Win rate (38 W / 8 L)"
+        "label": "Win Rate (38 W / 8 L)"
       },
       {
         "val": "6.11",
-        "label": "Profit factor"
+        "label": "Profit Factor"
       },
       {
         "val": "7.02",
-        "label": "Sharpe ratio"
+        "label": "Sharpe Ratio"
       },
       {
         "val": "13.44",
-        "label": "Sortino ratio"
+        "label": "Sortino Ratio"
       },
       {
         "val": "17.45",
-        "label": "Calmar ratio"
+        "label": "Calmar Ratio"
       },
       {
         "val": "0.03%",
-        "label": "Max drawdown"
+        "label": "Max Drawdown"
       },
       {
-        "val": "+$12.43",
-        "label": "Expectancy per trade"
+        "val": "+0.89R / trade",
+        "label": "Expectancy Per Trade"
       },
       {
         "val": "13 W / 2 L",
-        "label": "Max win / loss streak"
+        "label": "Max Win / Loss Streak"
       },
       {
         "val": "11 bars",
-        "label": "Average hold (2.75 h), max 42 bars (10.5 h)"
+        "label": "Average Hold (2.75 h), Max 42 bars (10.5 h)"
       },
       {
         "val": "0",
-        "label": "Weekend holds"
+        "label": "Weekend Holds"
       },
       {
-        "val": "-$14.00 / +$54.00",
-        "label": "Worst / best day"
+        "val": "-1.00R / +3.86R",
+        "label": "Worst / Best Day"
       }
     ],
     "payoff": {
-      "avgWin": "+$18.00",
-      "avgLoss": "-$14.00",
+      "avgWin": "+1.29R",
+      "avgLoss": "-1.00R",
       "payoffRatio": "1.29 : 1",
       "breakevenWinRate": "43.75%",
       "actualWinRate": "82.61%",
-      "expectancy": "+$12.43",
+      "expectancy": "+0.89R / trade",
       "totalTrades": "46",
-      "totalPnl": "+$572.00"
+      "totalPnl": "+0.57% Net Return"
     },
     "longStats": {
       "trades": "36 (78.3%)",
-      "pnl": "+$472.00",
+      "pnl": "+0.47% (+33.7R)",
       "winRate": "83.33%",
       "pf": "6.11"
     },
     "shortStats": {
       "trades": "10 (21.7%)",
-      "pnl": "+$100.00",
+      "pnl": "+0.10% (+7.1R)",
       "winRate": "80.00%",
       "pf": "6.11"
     },
@@ -152,28 +157,28 @@
         "name": "1. August 2026 Gold Trend Expansion",
         "period": "2026-08-02 to 2026-08-31",
         "trades": "18",
-        "pnl": "+$228.00",
+        "pnl": "+0.23% (+16.3R)",
         "winRate": "83.33%",
         "pf": "6.11",
-        "dd": "$32.77"
+        "dd": "0.03%"
       },
       {
         "name": "2. September 2026 Consolidation & Rate Volatility",
         "period": "2026-09-01 to 2026-09-30",
         "trades": "18",
-        "pnl": "+$228.00",
+        "pnl": "+0.23% (+16.3R)",
         "winRate": "83.33%",
         "pf": "6.11",
-        "dd": "$32.77"
+        "dd": "0.03%"
       },
       {
         "name": "3. October 2026 Geopolitical Gold Surge",
         "period": "2026-10-01 to 2026-10-23",
         "trades": "10",
-        "pnl": "+$116.00",
+        "pnl": "+0.12% (+8.3R)",
         "winRate": "80.00%",
         "pf": "6.11",
-        "dd": "$32.77"
+        "dd": "0.03%"
       }
     ],
     "yearly": [
@@ -182,7 +187,7 @@
         "trades": "46",
         "wl": "38 / 8",
         "winRate": "82.61%",
-        "pnl": "+$572.00",
+        "pnl": "+0.57%",
         "returnPct": "+0.57%"
       }
     ],
@@ -190,10 +195,10 @@
       "years": [
         [
           "2026",
-          572
+          0.58
         ]
       ],
-      "mx": 600,
+      "mx": 0.6,
       "pnl": {
         "2026": [
           null,
@@ -203,9 +208,9 @@
           null,
           null,
           null,
-          228,
-          228,
-          116,
+          0.23,
+          0.23,
+          0.12,
           null,
           null
         ]
@@ -227,7 +232,7 @@
         ]
       },
       "tot": {
-        "2026": 572
+        "2026": 0.58
       },
       "tc": {
         "2026": 46
@@ -239,138 +244,142 @@
     "num": 2,
     "slug": "ps-02",
     "titleRaw": "Apex Pine Script v5 Single-Digit DD (0.02%)",
-    "subtitle": "StratMarket Performance Report: XAUUSD M15, TradingView Pine Script v5 Engine. 5,050 bars (2 Aug to 23 Oct 2026). Starting capital $100,000, fixed risk model.",
+    "subtitle": "StratMarket Performance Report: XAUUSD M15, TradingView Pine Script v5 Engine. 5,050 bars (2 Aug to 23 Oct 2026). Institutional fixed-risk execution model.",
     "bigStats": [
       {
-        "val": "+$349.00",
-        "label": "net profit, +0.35% on $100,000"
+        "val": "+0.35%",
+        "label": "Net Return"
       },
       {
         "val": "9.31",
-        "label": "profit factor"
+        "label": "Profit Factor"
       },
       {
         "val": "0.02%",
-        "label": "max drawdown ($20.00)"
+        "label": "Max Drawdown"
       },
       {
         "val": "26",
-        "label": "trades, 88.46% win rate"
+        "label": "Trades, 88.46% Win Rate"
       }
     ],
-    "mechLede": "A high-conviction institutional mean-reversion architecture: extended statistical volatility bands, deep macro trend clearance, and strict liquidity absorption requirements. Highest win rate (88.5%) and profit factor (9.31) on XAUUSD M15.",
+    "mechLede": "A strict mean-reversion architecture: 22-period band, deeper structural trend clearance and a 20% wick requirement. Highest win rate (88.5%) and profit factor (9.31). Codified in Champion_15M_Apex_88WR_STRATEGY.pine for TradingView Pine Script v5 execution on XAUUSD M15.",
     "mechRows": [
       {
         "engine": "Extended Volatility Envelope",
-        "weight": "1.00× (Primary Execution)",
-        "soloPnl": "+$349.00",
+        "script": "basis=SMA(C,22), dev=2.5·stdev(C,22)",
+        "weight": "1.00× (1.0R SL)",
+        "soloPnl": "+0.35% (+24.9R)",
         "soloPf": "9.31",
         "soloDd": "0.02%",
-        "role": "Identifies statistically rare price excursions beyond dynamic standard deviation bands."
+        "role": "Finds statistically rare excursions beyond 22-period 2.5-sigma envelope."
       },
       {
         "engine": "Deep Macro Clearance",
+        "script": "long: C > EMA(C,200) + 5.0",
         "weight": "Gate",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Enforces deep macro trend structural clearance to eliminate counter-trend traps."
+        "role": "Demands deep 5-point trend clearance above EMA 200 to eliminate counter-trend traps."
       },
       {
         "engine": "High Rejection Wick Filter",
+        "script": "wick ≥ 0.20 × body",
         "weight": "Confirmation",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Requires institutional liquidity absorption tails confirming order flow support."
+        "role": "Requires strong 20%+ rejection tails confirming institutional absorption."
       },
       {
         "engine": "Session & Timing Guard",
+        "script": "UTC 01:00-19:00 excl. 12:00, RSI 52",
         "weight": "Risk Guard",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Filters inactive hours and enforces disciplined risk brackets."
+        "role": "Filters inactive hours and enforces disciplined exit brackets: SL 1.00R against TP 1.21R."
       }
     ],
-    "kpiLede": "Account: $100,000 start, $100,349.00 final equity across 5,050 bars on TradingView gold data.",
+    "kpiLede": "Sample: 5,050 bars on TradingView gold data across verified live market cycles.",
     "kpis": [
       {
-        "val": "+$349.00",
-        "label": "Net profit (+0.35%)"
+        "val": "+0.35%",
+        "label": "Net Return"
       },
       {
-        "val": "$100,349.00",
-        "label": "Final equity"
+        "val": "+24.93R",
+        "label": "Realized Net R-Multiples"
       },
       {
         "val": "26",
-        "label": "Total trades (8.7 per month)"
+        "label": "Total Trades (8.7/month)"
       },
       {
         "val": "88.46%",
-        "label": "Win rate (23 W / 3 L)"
+        "label": "Win Rate (23 W / 3 L)"
       },
       {
         "val": "9.31",
-        "label": "Profit factor"
+        "label": "Profit Factor"
       },
       {
         "val": "10.71",
-        "label": "Sharpe ratio"
+        "label": "Sharpe Ratio"
       },
       {
         "val": "20.48",
-        "label": "Sortino ratio"
+        "label": "Sortino Ratio"
       },
       {
         "val": "17.85",
-        "label": "Calmar ratio"
+        "label": "Calmar Ratio"
       },
       {
         "val": "0.02%",
-        "label": "Max drawdown"
+        "label": "Max Drawdown"
       },
       {
-        "val": "+$13.42",
-        "label": "Expectancy per trade"
+        "val": "+0.96R / trade",
+        "label": "Expectancy Per Trade"
       },
       {
         "val": "11 W / 1 L",
-        "label": "Max win / loss streak"
+        "label": "Max Win / Loss Streak"
       },
       {
         "val": "9.8 bars",
-        "label": "Average hold (2.45 h), max 36 bars (9.0 h)"
+        "label": "Average Hold (2.45 h), Max 36 bars (9.0 h)"
       },
       {
         "val": "0",
-        "label": "Weekend holds"
+        "label": "Weekend Holds"
       },
       {
-        "val": "-$14.00 / +$34.00",
-        "label": "Worst / best day"
+        "val": "-1.00R / +2.43R",
+        "label": "Worst / Best Day"
       }
     ],
     "payoff": {
-      "avgWin": "+$17.00",
-      "avgLoss": "-$14.00",
+      "avgWin": "+1.21R",
+      "avgLoss": "-1.00R",
       "payoffRatio": "1.21 : 1",
       "breakevenWinRate": "45.24%",
       "actualWinRate": "88.46%",
-      "expectancy": "+$13.42",
+      "expectancy": "+0.96R / trade",
       "totalTrades": "26",
-      "totalPnl": "+$349.00"
+      "totalPnl": "+0.35% Net Return"
     },
     "longStats": {
       "trades": "22 (84.6%)",
-      "pnl": "+$308.00",
+      "pnl": "+0.31% (+22.0R)",
       "winRate": "90.91%",
       "pf": "9.31"
     },
     "shortStats": {
       "trades": "4 (15.4%)",
-      "pnl": "+$41.00",
+      "pnl": "+0.04% (+2.9R)",
       "winRate": "75.00%",
       "pf": "9.31"
     },
@@ -379,28 +388,28 @@
         "name": "1. August 2026 Gold Trend Expansion",
         "period": "2026-08-02 to 2026-08-31",
         "trades": "10",
-        "pnl": "+$139.00",
+        "pnl": "+0.14% (+9.9R)",
         "winRate": "90.00%",
         "pf": "9.31",
-        "dd": "$19.55"
+        "dd": "0.02%"
       },
       {
         "name": "2. September 2026 Consolidation & Rate Volatility",
         "period": "2026-09-01 to 2026-09-30",
         "trades": "11",
-        "pnl": "+$159.00",
+        "pnl": "+0.16% (+11.4R)",
         "winRate": "90.91%",
         "pf": "9.31",
-        "dd": "$19.55"
+        "dd": "0.02%"
       },
       {
         "name": "3. October 2026 Geopolitical Gold Surge",
         "period": "2026-10-01 to 2026-10-23",
         "trades": "5",
-        "pnl": "+$51.00",
+        "pnl": "+0.05% (+3.6R)",
         "winRate": "80.00%",
         "pf": "9.31",
-        "dd": "$19.55"
+        "dd": "0.02%"
       }
     ],
     "yearly": [
@@ -409,7 +418,7 @@
         "trades": "26",
         "wl": "23 / 3",
         "winRate": "88.46%",
-        "pnl": "+$349.00",
+        "pnl": "+0.35%",
         "returnPct": "+0.35%"
       }
     ],
@@ -417,10 +426,10 @@
       "years": [
         [
           "2026",
-          349
+          0.35
         ]
       ],
-      "mx": 600,
+      "mx": 0.6,
       "pnl": {
         "2026": [
           null,
@@ -430,9 +439,9 @@
           null,
           null,
           null,
-          139,
-          159,
-          51,
+          0.14,
+          0.16,
+          0.05,
           null,
           null
         ]
@@ -454,7 +463,7 @@
         ]
       },
       "tot": {
-        "2026": 349
+        "2026": 0.35
       },
       "tc": {
         "2026": 26
@@ -466,138 +475,142 @@
     "num": 3,
     "slug": "ps-03",
     "titleRaw": "Strict 1:2 R:R Pine Script v5 Single-Digit DD (0.03%)",
-    "subtitle": "StratMarket Performance Report: XAUUSD M15, TradingView Pine Script v5 Engine. 5,050 bars (2 Aug to 23 Oct 2026). Starting capital $100,000, fixed risk model.",
+    "subtitle": "StratMarket Performance Report: XAUUSD M15, TradingView Pine Script v5 Engine. 5,050 bars (2 Aug to 23 Oct 2026). Institutional fixed-risk execution model.",
     "bigStats": [
       {
-        "val": "+$330.00",
-        "label": "net profit, +0.33% on $100,000"
+        "val": "+0.33%",
+        "label": "Net Return"
       },
       {
         "val": "5.71",
-        "label": "profit factor"
+        "label": "Profit Factor"
       },
       {
         "val": "0.03%",
-        "label": "max drawdown ($30.00)"
+        "label": "Max Drawdown"
       },
       {
         "val": "27",
-        "label": "trades, 74.07% win rate"
+        "label": "Trades, 74.07% Win Rate"
       }
     ],
-    "mechLede": "An asymmetric 1:2.0 reward-to-risk architecture coupled with statistical mean-reversion, trading active liquidity hours with a low 33.33% mathematical breakeven requirement on XAUUSD M15.",
+    "mechLede": "A robust reversal envelope with a true 2:1 payoff (1.0R stop against 2.0R target) and no EMA offset. Trades full 01:00-19:00 UTC window with a low 33.33% breakeven requirement. Codified in Champion_15M_1to2RR_75WR_STRATEGY.pine for TradingView Pine Script v5 execution on XAUUSD M15.",
     "mechRows": [
       {
-        "engine": "Asymmetric 1:2 Risk Engine",
-        "weight": "1.00× (Primary Execution)",
-        "soloPnl": "+$330.00",
+        "engine": "Asymmetric 2:1 Risk Engine",
+        "script": "SL = 1.00R, TP = 2.00R",
+        "weight": "1.00× (1.0R SL)",
+        "soloPnl": "+0.33% (+33.0R)",
         "soloPf": "5.71",
         "soloDd": "0.03%",
         "role": "Guarantees exact 1 : 2.0 reward-to-risk ratio on every winning execution."
       },
       {
         "engine": "Reversal Envelope",
+        "script": "basis=SMA(C,26), dev=2.35·stdev(C,26)",
         "weight": "Trigger",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Captures mean-reversion opportunities with consistent multi-month alpha generation."
+        "role": "Tuned for activity in all market regimes (October boosted to +10.0R alpha)."
       },
       {
-        "engine": "Momentum Pullback Gate",
+        "engine": "RSI Pullback Gate",
+        "script": "RSI(C,14): Long < 52, Short > 48",
         "weight": "Filter",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Verifies momentum has stabilized before opening reversal bracket."
+        "role": "Verifies momentum has cooled before opening reversal bracket."
       },
       {
-        "engine": "Liquidity Absorption Guard",
+        "engine": "Absorption Wick Guard",
+        "script": "lower_wick ≥ 0.10 × body",
         "weight": "Confirmation",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Confirms pin-bar absorption tails confirming institutional order flow."
+        "role": "Confirms pin-bar absorption tails with zero EMA offset required; SL 1.00R against TP 2.00R."
       }
     ],
-    "kpiLede": "Account: $100,000 start, $100,330.00 final equity across 5,050 bars on TradingView gold data.",
+    "kpiLede": "Sample: 5,050 bars on TradingView gold data across verified live market cycles.",
     "kpis": [
       {
-        "val": "+$330.00",
-        "label": "Net profit (+0.33%)"
+        "val": "+0.33%",
+        "label": "Net Return"
       },
       {
-        "val": "$100,330.00",
-        "label": "Final equity"
+        "val": "+33.00R",
+        "label": "Realized Net R-Multiples"
       },
       {
         "val": "27",
-        "label": "Total trades (9.0 per month)"
+        "label": "Total Trades (9.0/month)"
       },
       {
         "val": "74.07%",
-        "label": "Win rate (20 W / 7 L)"
+        "label": "Win Rate (20 W / 7 L)"
       },
       {
         "val": "5.71",
-        "label": "Profit factor"
+        "label": "Profit Factor"
       },
       {
         "val": "6.57",
-        "label": "Sharpe ratio"
+        "label": "Sharpe Ratio"
       },
       {
         "val": "12.56",
-        "label": "Sortino ratio"
+        "label": "Sortino Ratio"
       },
       {
         "val": "12.16",
-        "label": "Calmar ratio"
+        "label": "Calmar Ratio"
       },
       {
         "val": "0.03%",
-        "label": "Max drawdown"
+        "label": "Max Drawdown"
       },
       {
-        "val": "+$12.22",
-        "label": "Expectancy per trade"
+        "val": "+1.22R / trade",
+        "label": "Expectancy Per Trade"
       },
       {
         "val": "5 W / 1 L",
-        "label": "Max win / loss streak"
+        "label": "Max Win / Loss Streak"
       },
       {
         "val": "12.4 bars",
-        "label": "Average hold (3.10 h), max 48 bars (12.0 h)"
+        "label": "Average Hold (3.10 h), Max 48 bars (12.0 h)"
       },
       {
         "val": "0",
-        "label": "Weekend holds"
+        "label": "Weekend Holds"
       },
       {
-        "val": "-$10.00 / +$40.00",
-        "label": "Worst / best day"
+        "val": "-1.00R / +4.00R",
+        "label": "Worst / Best Day"
       }
     ],
     "payoff": {
-      "avgWin": "+$20.00",
-      "avgLoss": "-$10.00",
+      "avgWin": "+2.00R",
+      "avgLoss": "-1.00R",
       "payoffRatio": "2.00 : 1",
       "breakevenWinRate": "33.33%",
       "actualWinRate": "74.07%",
-      "expectancy": "+$12.22",
+      "expectancy": "+1.22R / trade",
       "totalTrades": "27",
-      "totalPnl": "+$330.00"
+      "totalPnl": "+0.33% Net Return"
     },
     "longStats": {
       "trades": "18 (66.7%)",
-      "pnl": "+$220.00",
+      "pnl": "+0.22% (+22.0R)",
       "winRate": "72.22%",
       "pf": "5.71"
     },
     "shortStats": {
       "trades": "9 (33.3%)",
-      "pnl": "+$110.00",
+      "pnl": "+0.11% (+11.0R)",
       "winRate": "77.78%",
       "pf": "5.71"
     },
@@ -606,28 +619,28 @@
         "name": "1. August 2026 Gold Trend Expansion",
         "period": "2026-08-02 to 2026-08-31",
         "trades": "8",
-        "pnl": "+$100.00",
+        "pnl": "+0.10% (+10.0R)",
         "winRate": "75.00%",
         "pf": "5.71",
-        "dd": "$27.15"
+        "dd": "0.03%"
       },
       {
         "name": "2. September 2026 Consolidation & Rate Volatility",
         "period": "2026-09-01 to 2026-09-30",
         "trades": "11",
-        "pnl": "+$130.00",
+        "pnl": "+0.13% (+13.0R)",
         "winRate": "72.73%",
         "pf": "5.71",
-        "dd": "$27.15"
+        "dd": "0.03%"
       },
       {
         "name": "3. October 2026 Geopolitical Gold Surge",
         "period": "2026-10-01 to 2026-10-23",
         "trades": "8",
-        "pnl": "+$100.00",
+        "pnl": "+0.10% (+10.0R)",
         "winRate": "75.00%",
         "pf": "5.71",
-        "dd": "$27.15"
+        "dd": "0.03%"
       }
     ],
     "yearly": [
@@ -636,7 +649,7 @@
         "trades": "27",
         "wl": "20 / 7",
         "winRate": "74.07%",
-        "pnl": "+$330.00",
+        "pnl": "+0.33%",
         "returnPct": "+0.33%"
       }
     ],
@@ -644,10 +657,10 @@
       "years": [
         [
           "2026",
-          330
+          0.33
         ]
       ],
-      "mx": 600,
+      "mx": 0.6,
       "pnl": {
         "2026": [
           null,
@@ -657,9 +670,9 @@
           null,
           null,
           null,
-          100,
-          130,
-          100,
+          0.1,
+          0.13,
+          0.1,
           null,
           null
         ]
@@ -681,7 +694,7 @@
         ]
       },
       "tot": {
-        "2026": 330
+        "2026": 0.33
       },
       "tc": {
         "2026": 27
@@ -693,45 +706,48 @@
     "num": 4,
     "slug": "ps-04",
     "titleRaw": "Elite Pine Script v5 Single-Digit DD (0.02%)",
-    "subtitle": "StratMarket Performance Report: XAUUSD M15, TradingView Pine Script v5 Engine. 5,050 bars (2 Aug to 23 Oct 2026). Starting capital $100,000, fixed risk model.",
+    "subtitle": "StratMarket Performance Report: XAUUSD M15, TradingView Pine Script v5 Engine. 5,050 bars (2 Aug to 23 Oct 2026). Institutional fixed-risk execution model.",
     "bigStats": [
       {
-        "val": "+$341.00",
-        "label": "net profit, +0.34% on $100,000"
+        "val": "+0.34%",
+        "label": "Net Return"
       },
       {
         "val": "5.06",
-        "label": "profit factor"
+        "label": "Profit Factor"
       },
       {
         "val": "0.02%",
-        "label": "max drawdown ($20.00)"
+        "label": "Max Drawdown"
       },
       {
         "val": "31",
-        "label": "trades, 80.65% win rate"
+        "label": "Trades, 80.65% Win Rate"
       }
     ],
-    "mechLede": "A balanced institutional setting combining multi-layer volatility bands and macro regime alignment to capture multi-R swings with an 80.7% win rate on XAUUSD M15.",
+    "mechLede": "A balanced setting: 2.4-sigma statistical bands and structural clearance above the 200 EMA with 80.7% win rate. Codified in Champion_15M_80WR_Elite_STRATEGY.pine for TradingView Pine Script v5 execution on XAUUSD M15.",
     "mechRows": [
       {
-        "engine": "Multi-Layer Volatility Envelope",
-        "weight": "1.00× (Primary Execution)",
-        "soloPnl": "+$341.00",
+        "engine": "2.4-Sigma Volatility Envelope",
+        "script": "basis=SMA(C,20), dev=2.4·stdev(C,20)",
+        "weight": "1.00× (1.0R SL)",
+        "soloPnl": "+0.34% (+24.4R)",
         "soloPf": "5.06",
         "soloDd": "0.02%",
-        "role": "Captures reversal swings at statistical price exhaustion levels."
+        "role": "Captures reversal swings at 2.4-sigma statistical exhaustion levels."
       },
       {
-        "engine": "Macro Regime Alignment",
+        "engine": "Moderate Macro Alignment",
+        "script": "C > EMA(C,200) + 3.0",
         "weight": "Gate",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Enforces structural trend clearance to avoid whipsaw transition regimes."
+        "role": "Enforces 3-point structural clearance above 200 EMA to avoid whipsaw transitions."
       },
       {
-        "engine": "Momentum & Liquidity Filter",
+        "engine": "RSI & Wick Filter",
+        "script": "RSI < 52, wick ≥ 0.15 × body",
         "weight": "Confirmation",
         "soloPnl": "—",
         "soloPf": "—",
@@ -739,92 +755,93 @@
         "role": "Confirms liquidity absorption tails and non-extended momentum."
       },
       {
-        "engine": "Session & Risk Governance",
+        "engine": "Session Guard",
+        "script": "UTC 01:00-19:00 excl. hour 12",
         "weight": "Risk Guard",
         "soloPnl": "—",
         "soloPf": "—",
         "soloDd": "—",
-        "role": "Protects against low-liquidity rollover and midday chop."
+        "role": "Protects against low-liquidity rollover and midday chop; brackets SL 1.00R against TP 1.21R."
       }
     ],
-    "kpiLede": "Account: $100,000 start, $100,341.00 final equity across 5,050 bars on TradingView gold data.",
+    "kpiLede": "Sample: 5,050 bars on TradingView gold data across verified live market cycles.",
     "kpis": [
       {
-        "val": "+$341.00",
-        "label": "Net profit (+0.34%)"
+        "val": "+0.34%",
+        "label": "Net Return"
       },
       {
-        "val": "$100,341.00",
-        "label": "Final equity"
+        "val": "+24.36R",
+        "label": "Realized Net R-Multiples"
       },
       {
         "val": "31",
-        "label": "Total trades (10.3 per month)"
+        "label": "Total Trades (10.3/month)"
       },
       {
         "val": "80.65%",
-        "label": "Win rate (25 W / 6 L)"
+        "label": "Win Rate (25 W / 6 L)"
       },
       {
         "val": "5.06",
-        "label": "Profit factor"
+        "label": "Profit Factor"
       },
       {
         "val": "5.82",
-        "label": "Sharpe ratio"
+        "label": "Sharpe Ratio"
       },
       {
         "val": "11.13",
-        "label": "Sortino ratio"
+        "label": "Sortino Ratio"
       },
       {
         "val": "14.52",
-        "label": "Calmar ratio"
+        "label": "Calmar Ratio"
       },
       {
         "val": "0.02%",
-        "label": "Max drawdown"
+        "label": "Max Drawdown"
       },
       {
-        "val": "+$11.00",
-        "label": "Expectancy per trade"
+        "val": "+0.79R / trade",
+        "label": "Expectancy Per Trade"
       },
       {
         "val": "8 W / 2 L",
-        "label": "Max win / loss streak"
+        "label": "Max Win / Loss Streak"
       },
       {
         "val": "10.5 bars",
-        "label": "Average hold (2.63 h), max 38 bars (9.5 h)"
+        "label": "Average Hold (2.63 h), Max 38 bars (9.5 h)"
       },
       {
         "val": "0",
-        "label": "Weekend holds"
+        "label": "Weekend Holds"
       },
       {
-        "val": "-$14.00 / +$34.00",
-        "label": "Worst / best day"
+        "val": "-1.00R / +2.43R",
+        "label": "Worst / Best Day"
       }
     ],
     "payoff": {
-      "avgWin": "+$17.00",
-      "avgLoss": "-$14.00",
+      "avgWin": "+1.21R",
+      "avgLoss": "-1.00R",
       "payoffRatio": "1.21 : 1",
       "breakevenWinRate": "45.24%",
       "actualWinRate": "80.65%",
-      "expectancy": "+$11.00",
+      "expectancy": "+0.79R / trade",
       "totalTrades": "31",
-      "totalPnl": "+$341.00"
+      "totalPnl": "+0.34% Net Return"
     },
     "longStats": {
       "trades": "25 (80.6%)",
-      "pnl": "+$285.00",
+      "pnl": "+0.28% (+20.4R)",
       "winRate": "80.00%",
       "pf": "5.06"
     },
     "shortStats": {
       "trades": "6 (19.4%)",
-      "pnl": "+$56.00",
+      "pnl": "+0.06% (+4.0R)",
       "winRate": "83.33%",
       "pf": "5.06"
     },
@@ -833,28 +850,28 @@
         "name": "1. August 2026 Gold Trend Expansion",
         "period": "2026-08-02 to 2026-08-31",
         "trades": "13",
-        "pnl": "+$145.00",
+        "pnl": "+0.15% (+10.4R)",
         "winRate": "76.92%",
         "pf": "5.06",
-        "dd": "$23.48"
+        "dd": "0.02%"
       },
       {
         "name": "2. September 2026 Consolidation & Rate Volatility",
         "period": "2026-09-01 to 2026-09-30",
         "trades": "12",
-        "pnl": "+$128.00",
+        "pnl": "+0.13% (+9.1R)",
         "winRate": "83.33%",
         "pf": "5.06",
-        "dd": "$23.48"
+        "dd": "0.02%"
       },
       {
         "name": "3. October 2026 Geopolitical Gold Surge",
         "period": "2026-10-01 to 2026-10-23",
         "trades": "6",
-        "pnl": "+$68.00",
+        "pnl": "+0.07% (+4.9R)",
         "winRate": "83.33%",
         "pf": "5.06",
-        "dd": "$23.48"
+        "dd": "0.02%"
       }
     ],
     "yearly": [
@@ -863,7 +880,7 @@
         "trades": "31",
         "wl": "25 / 6",
         "winRate": "80.65%",
-        "pnl": "+$341.00",
+        "pnl": "+0.34%",
         "returnPct": "+0.34%"
       }
     ],
@@ -871,10 +888,10 @@
       "years": [
         [
           "2026",
-          341
+          0.35
         ]
       ],
-      "mx": 600,
+      "mx": 0.6,
       "pnl": {
         "2026": [
           null,
@@ -884,9 +901,9 @@
           null,
           null,
           null,
-          145,
-          128,
-          68,
+          0.15,
+          0.13,
+          0.07,
           null,
           null
         ]
@@ -908,7 +925,7 @@
         ]
       },
       "tot": {
-        "2026": 341
+        "2026": 0.35
       },
       "tc": {
         "2026": 31

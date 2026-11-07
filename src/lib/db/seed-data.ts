@@ -235,18 +235,17 @@ const PINE_SCRIPT_STRATEGIES = [
     instrument: "XAUUSD",
     timeframe: "M15",
     category: "Mean reversion",
-    ret: 0.57, // +0.57% on $100,000 (+40.9R)
-    dd: 0.03, // $32.77 max drawdown
+    ret: 0.57, // +0.57% net return (+40.9R)
+    dd: 0.03, // 0.03% max drawdown
     pf: 6.11,
     win: 82.6,
     calmar: 19.0,
     trades: 46,
     sharpe: 7.02,
-    netProfitUsd: "+$572.00",
     desc: "Proprietary volatility exhaustion envelope with dynamic macro regime gating, liquidity-rejection confirmation, and asymmetric profit payoff.",
     hypothesis: "Statistical price exhaustion fades on XAUUSD M15 aligned with macro trend structure deliver institutional asymmetric alpha.",
     riskRules: "Proprietary bracket risk management with automated session liquidity filtering and strict regime controls.",
-    knownLimitations: "Test covers Aug to Oct 2026 (5,050 bars). Fixed bracket executed on next bar open.",
+    knownLimitations: "Sample covers Aug to Oct 2026 (5,050 bars). Fixed bracket executed on next bar open.",
   },
   {
     num: 2,
@@ -255,14 +254,13 @@ const PINE_SCRIPT_STRATEGIES = [
     instrument: "XAUUSD",
     timeframe: "M15",
     category: "Mean reversion",
-    ret: 0.35, // +0.35% on $100,000 (+25.0R)
-    dd: 0.02, // $19.55 max drawdown
+    ret: 0.35, // +0.35% net return (+25.0R)
+    dd: 0.02, // 0.02% max drawdown
     pf: 9.31,
     win: 88.5,
     calmar: 17.5,
     trades: 26,
     sharpe: 10.71,
-    netProfitUsd: "+$349.00",
     desc: "High-conviction mean-reversion with strict volatility clearance and institutional liquidity tail requirements. Highest win rate (88.5%) and PF (9.31).",
     hypothesis: "Demanding structural trend clearance and strong rejection tails isolates highest-conviction reversal regimes.",
     riskRules: "Calibrated bracket stops with macro trend alignment and selective entry gating.",
@@ -275,14 +273,13 @@ const PINE_SCRIPT_STRATEGIES = [
     instrument: "XAUUSD",
     timeframe: "M15",
     category: "Mean reversion",
-    ret: 0.33, // +0.33% on $100,000 (+33.0R)
-    dd: 0.03, // $27.15 max drawdown
+    ret: 0.33, // +0.33% net return (+33.0R)
+    dd: 0.03, // 0.03% max drawdown
     pf: 5.71,
     win: 74.1,
     calmar: 11.0,
     trades: 27,
     sharpe: 6.57,
-    netProfitUsd: "+$330.00",
     desc: "Asymmetric reward-to-risk bracket strategy providing substantial mathematical edge over breakeven with a 74.1% win rate.",
     hypothesis: "Fixed 1:2.0 reward-to-risk structure coupled with statistical mean-reversion generates high expectancy across all market phases.",
     riskRules: "Strict 1:2.0 risk bracket with automated time-in-market controls.",
@@ -295,14 +292,13 @@ const PINE_SCRIPT_STRATEGIES = [
     instrument: "XAUUSD",
     timeframe: "M15",
     category: "Mean reversion",
-    ret: 0.34, // +0.34% on $100,000 (+24.4R)
-    dd: 0.02, // $23.48 max drawdown
+    ret: 0.34, // +0.34% net return (+24.4R)
+    dd: 0.02, // 0.02% max drawdown
     pf: 5.06,
     win: 80.7,
     calmar: 17.0,
     trades: 31,
     sharpe: 5.82,
-    netProfitUsd: "+$341.00",
     desc: "Balanced institutional mean-reversion with statistical regime filters capturing multi-R swings at an 80.7% win rate.",
     hypothesis: "Multi-layer statistical bands combined with regime trend alignment filters chop while preserving capital.",
     riskRules: "Systematic volatility bracket governance tuned for high win-rate preservation.",
@@ -329,7 +325,6 @@ export const INITIAL_STRATEGIES: StrategySeedItem[] = [
       visibilityStatus: "PUBLIC" as const,
       trialEligibility: true,
       supportedUsageModes: ["chart", "alert", "broker"],
-      netProfitUsd: ps.netProfitUsd,
       metrics: {
         netReturn: ps.ret,
         maxDrawdown: ps.dd,

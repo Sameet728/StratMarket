@@ -176,11 +176,11 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
           <div className="risk-grid">
             <div className="risk-box">
               <span className="risk-label">Target Payoff (TP)</span>
-              <span className="risk-val-tp">{contract.summary.riskParameters.takeProfit || "+$18.00"}</span>
+              <span className="risk-val-tp">{contract.summary.riskParameters.takeProfit || "+1.29R (+18.0 pts)"}</span>
             </div>
             <div className="risk-box">
               <span className="risk-label">Max Risk Stop (SL)</span>
-              <span className="risk-val-sl">{contract.summary.riskParameters.stopLoss || "-$14.00"}</span>
+              <span className="risk-val-sl">{contract.summary.riskParameters.stopLoss || "-1.00R (-14.0 pts)"}</span>
             </div>
           </div>
           <p className="risk-rules-text">{contract.summary.riskParameters.rules}</p>

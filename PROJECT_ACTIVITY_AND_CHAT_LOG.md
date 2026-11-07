@@ -48,6 +48,31 @@ This document serves as the continuous record of our conversation, project analy
 
 ## 2. Activity & Conversation Log
 
+### Session 14 — Quantitative Tear Sheet Metrics Purity & Complete Dollar Removal
+- **User Prompt:** `+$572.00 remove all written thinghs calculation written in dollar format from the reportt of each stratergy from the website show only the metrics`
+- **Actions Taken:**
+  1. **Purged All Dollar Calculations & Cash Figures Platform-Wide:**
+     - Extracted and eliminated every occurrence of `+$572.00`, `-$14.00`, `+$18.00`, `$100,572.00`, `$100,000`, `+$12.43`, `+$472.00`, `+$100.00`, `+$228.00`, `$32.77`, etc. across all 4 Pine Script strategy performance tear sheets (`PS-01`, `PS-02`, `PS-03`, `PS-04`).
+     - Replaced all raw dollar figures with institutional percentage returns, R-multiples, and payoff ratios:
+       - Header badge: `+0.57% Net Return` (replaces `+$572.00 Net PnL`)
+       - Hero stat cards: `+0.57% Net Return` (replaces `+$572.00 net profit, +0.57% on $100,000`)
+       - Architecture table: Column header `Solo Return`, displaying `+0.57% (+40.9R)` with weight `1.00× (1.0R SL)` and role `brackets SL 1.00R against TP 1.29R` (replaces `+$572.00`, `($14 SL)`, and `$14.00 against TP $18.00`)
+       - Core KPIs (14 metrics): Realized Net R-Multiples (`+40.86R`), Expectancy per trade (`+0.89R / trade`), Worst / best day (`-1.00R / +3.86R`)
+       - Payoff structure cards: Average Win (`+1.29R`), Average Loss (`-1.00R`), Expectancy (`+0.89R / trade`), Cumulative (`+0.57% Net Return`)
+       - Payoff comparison scale: Explanatory text rewritten in pure R-multiples and percentages
+       - Long vs Short: `Net Return` displaying `+0.47% (+33.7R)` / `+0.10% (+7.1R)` (replaces `+$472.00` / `+$100.00`)
+       - Market Regimes: `Net Return` displaying `+0.23% (+16.3R)` and Max DD `0.03%` (replaces `+$228.00` and `$32.77`)
+       - Annual & Monthly heatmap: Cells render pure monthly percentage returns (`+0.23%`, `+0.12%`, total `+0.57%`)
+  2. **Chart HUD & Status Panel Risk Parameters:**
+     - Updated `runner.ts` and `StrategyStatusPanel.tsx` risk parameters: Target Payoff (TP) `+1.29R (+18.0 pts)`, Max Risk Stop (SL) `-1.00R (-14.0 pts)`.
+     - Updated trade box exit badges to `TP HIT +1.29R` and `SL HIT -1.00R`.
+  3. **Data Regeneration & Test Suite Verification:**
+     - Updated `scripts/generate_pine_reports.js` and regenerated `src/lib/data/pineReports.json` with 0 dollar signs.
+     - Updated `tests/chart-and-market-data.test.ts` to assert on institutional R-multiple and point strings.
+     - Vitest: All 34 tests passing 100% (`vitest run`).
+     - TypeScript: `npx tsc --noEmit` exited 0.
+     - Next.js 16 Production Build: `npm run build` succeeded with code 0 (`36/36` routes generated).
+
 ### Session Entry: 2026-10-30
 
 #### User Request:

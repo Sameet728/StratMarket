@@ -150,8 +150,8 @@ describe("Private Live Charting Platform & Market Data", () => {
     expect(seriesNames).toContain("Lower Band (2.1σ)");
     expect(seriesNames).toContain("Band Basis SMA (28)");
 
-    expect(contract.summary.riskParameters.takeProfit).toBe("+$18.00");
-    expect(contract.summary.riskParameters.stopLoss).toBe("-$14.00");
+    expect(contract.summary.riskParameters.takeProfit).toBe("+1.29R (+18.0 pts)");
+    expect(contract.summary.riskParameters.stopLoss).toBe("-1.00R (-14.0 pts)");
 
     const wrMetric = contract.summary.hudMetrics?.find((m) => m.label === "Win Rate");
     expect(wrMetric).toBeDefined();
@@ -189,8 +189,8 @@ describe("Private Live Charting Platform & Market Data", () => {
     expect(seriesNames).toContain("Lower Band (2.2σ)");
     expect(seriesNames).toContain("Band Basis SMA (30)");
 
-    expect(contract.summary.riskParameters.takeProfit).toBe("+$17.00");
-    expect(contract.summary.riskParameters.stopLoss).toBe("-$14.00");
+    expect(contract.summary.riskParameters.takeProfit).toBe("+1.21R (+17.0 pts)");
+    expect(contract.summary.riskParameters.stopLoss).toBe("-1.00R (-14.0 pts)");
 
     const wrMetric = contract.summary.hudMetrics?.find((m) => m.label === "Win Rate");
     expect(wrMetric).toBeDefined();
@@ -285,8 +285,8 @@ describe("Private Live Charting Platform & Market Data", () => {
     const contract = strategyExecutionRunner.execute(strat!, candles);
     expect(contract.strategyId).toBe("PS-03");
     expect(contract.executionStatus).toBe("ACTIVE");
-    expect(contract.summary.riskParameters.takeProfit).toBe("+$20.00");
-    expect(contract.summary.riskParameters.stopLoss).toBe("-$10.00");
+    expect(contract.summary.riskParameters.takeProfit).toBe("+2.00R (+20.0 pts)");
+    expect(contract.summary.riskParameters.stopLoss).toBe("-1.00R (-10.0 pts)");
 
     const wrMetric = contract.summary.hudMetrics?.find((m) => m.label === "Win Rate");
     expect(wrMetric?.value).toContain("74.07%");

@@ -131,13 +131,13 @@ export function StrategyReportView({ strategy }: Props) {
 
   const payoff = reportData.payoff || {
     payoffRatio: "1.29:1",
-    avgWin: "+$18.00",
-    avgLoss: "−$14.00",
+    avgWin: "+1.29R",
+    avgLoss: "−1.00R",
     maxConsecWins: 12,
     maxConsecLosses: 2,
     winRate: "82.6%",
     profitFactor: "6.11",
-    expectancy: "+$12.43",
+    expectancy: "+0.89R / trade",
     lossRate: "17.4%",
     totalTrades: 46,
     avgR: "1.29R",
@@ -157,13 +157,13 @@ export function StrategyReportView({ strategy }: Props) {
 
   const formatPnl = (v: number | null) => {
     if (v === null || v === undefined) return "—";
-    const sign = v < 0 ? "−$" : "+$";
-    return `${sign}${Math.abs(Math.round(v)).toLocaleString("en-US")}`;
+    const sign = v >= 0 ? "+" : "−";
+    return `${sign}${Math.abs(v).toFixed(2)}%`;
   };
 
   const getHeatmapBg = (v: number | null) => {
     if (v === null || v === undefined) return "rgba(255,255,255,0.015)";
-    const intensity = Math.min(1, Math.abs(v) / 5500);
+    const intensity = Math.min(1, Math.abs(v) / 0.4);
     if (v >= 0) {
       return `rgba(255, 255, 255, ${0.1 + intensity * 0.75})`;
     } else {
@@ -196,11 +196,9 @@ export function StrategyReportView({ strategy }: Props) {
               Single-Digit DD ({strategy.metrics.maxDrawdown}%)
             </span>
           )}
-          {strategy.netProfitUsd && (
-            <span className="badge" style={{ background: "rgba(255, 255, 255, 0.08)", color: "#ffffff", padding: "4px 10px", fontSize: "12px", borderRadius: "6px", fontWeight: 700 }}>
-              {strategy.netProfitUsd} Net PnL
-            </span>
-          )}
+          <span className="badge" style={{ background: "rgba(255, 255, 255, 0.08)", color: "#ffffff", padding: "4px 10px", fontSize: "12px", borderRadius: "6px", fontWeight: 700 }}>
+            +{strategy.metrics.netReturn}% Net Return
+          </span>
         </div>
       </div>
 
@@ -234,9 +232,9 @@ export function StrategyReportView({ strategy }: Props) {
             <>
               <div className="hero-stat-card">
                 <b style={{ color: "#ffffff" }}>
-                  {strategy.netProfitUsd || `+${strategy.metrics.netReturn}%`}
+                  +{strategy.metrics.netReturn}%
                 </b>
-                <span>Net return on $25,000 capital</span>
+                <span>Net Return</span>
               </div>
               <div className="hero-stat-card">
                 <b style={{ color: "#ffffff" }}>
@@ -268,7 +266,7 @@ export function StrategyReportView({ strategy }: Props) {
         <a href="#pay" className="report-nav-link">Payoff Structure</a>
         <a href="#dir" className="report-nav-link">Long vs Short</a>
         <a href="#reg" className="report-nav-link">Market Regimes</a>
-        <a href="#year" className="report-nav-link">Yearly PnL</a>
+        <a href="#year" className="report-nav-link">Yearly Return</a>
         <a href="#month" className="report-nav-link">Monthly Heatmap</a>
       </nav>
 
@@ -284,7 +282,7 @@ export function StrategyReportView({ strategy }: Props) {
               <tr>
                 <th style={{ minWidth: "260px" }}>Quantitative Subsystem</th>
                 <th style={{ minWidth: "160px" }}>Conviction Weight</th>
-                <th className="n" style={{ minWidth: "130px" }}>Solo PnL</th>
+                <th className="n" style={{ minWidth: "130px" }}>Solo Return</th>
                 <th className="n" style={{ minWidth: "100px" }}>Solo PF</th>
                 <th className="n" style={{ minWidth: "110px" }}>Solo DD</th>
                 <th style={{ minWidth: "320px" }}>Portfolio Function &amp; Role</th>
@@ -389,7 +387,7 @@ export function StrategyReportView({ strategy }: Props) {
               {payoff.expectancy}
             </b>
             <span style={{ fontSize: "12px", color: "#ffffff", display: "block", marginTop: "4px" }}>
-              Cumulative: {strategy.netProfitUsd || payoff.totalPnl}
+              Cumulative: {payoff.totalPnl || `+${strategy.metrics.netReturn}% Net Return`}
             </span>
           </div>
         </div>
@@ -412,17 +410,17 @@ export function StrategyReportView({ strategy }: Props) {
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", marginBottom: "6px" }}>
                 <span style={{ color: "#a1a1aa", fontWeight: 600 }}>Average Losing Trade ({payoff.avgLoss})</span>
-                <span style={{ color: "var(--mut)" }}>Only 14% of Win Amount</span>
+                <span style={{ color: "var(--mut)" }}>Controlled Risk Unit (1.0R)</span>
               </div>
               <div style={{ height: "20px", background: "rgba(255,255,255,0.04)", borderRadius: "6px", overflow: "hidden" }}>
-                <div style={{ width: "14%", height: "100%", background: "#52525b", borderRadius: "6px" }}></div>
+                <div style={{ width: "20%", height: "100%", background: "#52525b", borderRadius: "6px" }}></div>
               </div>
             </div>
           </div>
 
           <div style={{ marginTop: "20px", padding: "16px 20px", background: "rgba(255,255,255,0.02)", borderRadius: "10px", border: "1px solid var(--line)" }}>
             <p style={{ margin: 0, fontSize: "14px", color: "var(--mut)", lineHeight: 1.6 }}>
-              <b style={{ color: "#ffffff" }}>How it works:</b> Because winning trades average <b style={{ color: "#ffffff" }}>{payoff.avgWin}</b> while losses are tightly capped at <b style={{ color: "#a1a1aa" }}>{payoff.avgLoss}</b>, the strategy only requires a <b>{payoff.breakevenWinRate}</b> win rate to break even. The actual win rate of <b>{payoff.actualWinRate}</b> generates an expected net profit of <b style={{ color: "#ffffff" }}>{payoff.expectancy}</b> on every single trade placed.
+              <b style={{ color: "#ffffff" }}>How it works:</b> Because winning trades average <b style={{ color: "#ffffff" }}>{payoff.avgWin}</b> while losses are tightly capped at <b style={{ color: "#a1a1aa" }}>{payoff.avgLoss}</b>, the strategy only requires a <b>{payoff.breakevenWinRate}</b> win rate to break even. The actual win rate of <b>{payoff.actualWinRate}</b> generates an expected net edge of <b style={{ color: "#ffffff" }}>{payoff.expectancy}</b> on every single trade placed.
             </p>
           </div>
         </div>
@@ -450,7 +448,7 @@ export function StrategyReportView({ strategy }: Props) {
               
               <div style={{ display: "grid", gap: "16px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ color: "var(--mut)", fontSize: "14px" }}>Net Profit (PnL)</span>
+                  <span style={{ color: "var(--mut)", fontSize: "14px" }}>Net Return</span>
                   <b className="pos-text" style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "18px" }}>
                     {reportData.longStats.pnl}
                   </b>
@@ -485,7 +483,7 @@ export function StrategyReportView({ strategy }: Props) {
               
               <div style={{ display: "grid", gap: "16px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ color: "var(--mut)", fontSize: "14px" }}>Net Profit (PnL)</span>
+                  <span style={{ color: "var(--mut)", fontSize: "14px" }}>Net Return</span>
                   <b className="pos-text" style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "18px" }}>
                     {reportData.shortStats.pnl}
                   </b>
@@ -522,7 +520,7 @@ export function StrategyReportView({ strategy }: Props) {
                 <th style={{ minWidth: "260px" }}>Historical Macro Regime</th>
                 <th style={{ minWidth: "190px" }}>Date Period</th>
                 <th className="n" style={{ minWidth: "90px" }}>Trades</th>
-                <th className="n" style={{ minWidth: "130px" }}>Net PnL</th>
+                <th className="n" style={{ minWidth: "130px" }}>Net Return</th>
                 <th className="n" style={{ minWidth: "90px" }}>Win Rate</th>
                 <th className="n" style={{ minWidth: "90px" }}>PF</th>
                 <th className="n" style={{ minWidth: "110px" }}>Max DD</th>
@@ -549,11 +547,11 @@ export function StrategyReportView({ strategy }: Props) {
       <section id="year" className="report-section" style={{ marginTop: "56px", scrollMarginTop: "130px" }}>
         <h2 style={{ fontSize: "28px", marginBottom: "8px" }}>Year by year</h2>
         <p className="lede" style={{ color: "var(--mut)", fontSize: "15px", marginBottom: "20px" }}>
-          Annual net profit distribution across historical market cycles.
+          Annual net return distribution across historical market cycles.
         </p>
         
         <div className="report-card" style={{ padding: "28px", marginBottom: "20px" }}>
-          {/* Annual Net PnL Bars */}
+          {/* Annual Net Return Bars */}
           <div style={{ marginBottom: "32px" }}>
             {scriptData.years && scriptData.years.map(([year, val]: [string, number], i: number) => {
               const widthPct = Math.max(2, (val / maxYearVal) * 100);
@@ -580,8 +578,7 @@ export function StrategyReportView({ strategy }: Props) {
                   <th className="n" style={{ minWidth: "90px" }}>Trades</th>
                   <th className="n" style={{ minWidth: "110px" }}>W / L</th>
                   <th className="n" style={{ minWidth: "100px" }}>Win Rate</th>
-                  <th className="n" style={{ minWidth: "130px" }}>Net PnL</th>
-                  <th className="n" style={{ minWidth: "110px" }}>Return %</th>
+                  <th className="n" style={{ minWidth: "130px" }}>Net Return</th>
                 </tr>
               </thead>
               <tbody>
@@ -591,8 +588,7 @@ export function StrategyReportView({ strategy }: Props) {
                     <td className="n">{y.trades}</td>
                     <td className="n">{y.wl}</td>
                     <td className="n">{y.winRate}</td>
-                    <td className="n pos-text" style={{ fontWeight: 700 }}>{y.pnl}</td>
-                    <td className="n pos-text" style={{ fontWeight: 600 }}>{y.returnPct}</td>
+                    <td className="n pos-text" style={{ fontWeight: 700 }}>{y.returnPct || y.pnl}</td>
                   </tr>
                 ))}
               </tbody>
@@ -601,11 +597,11 @@ export function StrategyReportView({ strategy }: Props) {
         </div>
       </section>
 
-      {/* SECTION 7: MONTHLY PNL & TRADE COUNT HEATMAP */}
+      {/* SECTION 7: MONTHLY RETURN & TRADE COUNT HEATMAP */}
       <section id="month" className="report-section" style={{ marginTop: "56px", scrollMarginTop: "130px" }}>
-        <h2 style={{ fontSize: "28px", marginBottom: "8px" }}>Monthly PnL and trade count</h2>
+        <h2 style={{ fontSize: "28px", marginBottom: "8px" }}>Monthly return and trade count</h2>
         <p className="lede" style={{ color: "var(--mut)", fontSize: "15px", marginBottom: "20px" }}>
-          Cell shows monthly net PnL in USD with executed trade count beneath. Darker emerald reflects larger magnitude returns.
+          Cell shows monthly net return percentage with executed trade count beneath.
         </p>
         
         <div className="report-table-scroll">
@@ -663,7 +659,7 @@ export function StrategyReportView({ strategy }: Props) {
 
       {/* FOOTER PROVENANCE */}
       <footer style={{ marginTop: "48px", padding: "24px 0", borderTop: "1px solid var(--line)", color: "var(--mut)", fontSize: "13px" }}>
-        Source: MetaTrader 5 broker feed (360,000 M5 bars, 2021–2026), <code>XAUUSD_M5_MT5.csv</code>. Initial capital $25,000, flat base risk $250. StratMarket Institutional Single-Digit Drawdown Quantitative Architecture.
+        StratMarket Institutional Single-Digit Drawdown Quantitative Architecture. Fixed 1.0R risk governance with dynamic order brackets.
       </footer>
 
       {/* DEDICATED ACTION ZONE DIRECTLY BELOW THE REPORT */}

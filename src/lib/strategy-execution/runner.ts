@@ -208,10 +208,10 @@ export class PrivateStrategyExecutionRunner {
         excludeH12: true,
         hudMetrics: [
           { label: "Win Rate", value: "82.61% (38W / 8L)", color: "#4ade80" },
-          { label: "Realized R:R Ratio", value: "1 : 1.29 (+$18 / -$14)", color: "#38bdf8" },
-          { label: "Total Net Profit", value: "+$572.00 (+40.86R)", color: "#4ade80" },
+          { label: "Realized R:R Ratio", value: "1 : 1.29 (1.29R realized)", color: "#38bdf8" },
+          { label: "Total Net Return", value: "+0.57% (+40.86R)", color: "#4ade80" },
           { label: "Monthly Consistency", value: "Aug: 16.3R | Sep: 16.3R | Oct: 8.3R", color: "#4ade80" },
-          { label: "Max Closed Drawdown", value: "$32.77 (2.34R | 0.033%)", color: "#f87171" },
+          { label: "Max Closed Drawdown", value: "0.033% (2.34R)", color: "#f87171" },
           { label: "Calmar Ratio", value: "17.45 (Institutional Ultra-Grade)", color: "#38bdf8" },
           { label: "Walk-Forward OOS/IS", value: "0.88 Efficiency Ratio", color: "#fbbf24" },
         ],
@@ -236,9 +236,9 @@ export class PrivateStrategyExecutionRunner {
         hudMetrics: [
           { label: "Win Rate", value: "88.46% (23W / 3L)", color: "#4ade80" },
           { label: "Profit Factor", value: "9.31", color: "#4ade80" },
-          { label: "Realized R:R Ratio", value: "1 : 1.21 (+$17 / -$14)", color: "#38bdf8" },
-          { label: "Total Net Profit", value: "+$349.00 (+24.93R)", color: "#4ade80" },
-          { label: "Max Closed Drawdown", value: "$19.55 (0.019%)", color: "#f87171" },
+          { label: "Realized R:R Ratio", value: "1 : 1.21 (1.21R realized)", color: "#38bdf8" },
+          { label: "Total Net Return", value: "+0.35% (+24.93R)", color: "#4ade80" },
+          { label: "Max Closed Drawdown", value: "0.019% (1.40R)", color: "#f87171" },
           { label: "Calmar Ratio", value: "17.85 (Institutional Ultra)", color: "#38bdf8" },
           { label: "Rejection Wick Gate", value: "25% Minimum Rejection Tail", color: "#fbbf24" },
         ],
@@ -262,11 +262,11 @@ export class PrivateStrategyExecutionRunner {
         excludeH12: false,
         hudMetrics: [
           { label: "Win Rate", value: "74.07% (20W / 7L)", color: "#4ade80" },
-          { label: "Payoff Ratio", value: "1 : 2.00 ($20 TP / $10 SL)", color: "#38bdf8" },
+          { label: "Payoff Ratio", value: "1 : 2.00 (2.00R TP / 1.00R SL)", color: "#38bdf8" },
           { label: "Profit Factor", value: "5.71", color: "#4ade80" },
-          { label: "Total Net Profit", value: "+$330.00 (+33.0R)", color: "#4ade80" },
+          { label: "Total Net Return", value: "+0.33% (+33.0R)", color: "#4ade80" },
           { label: "Breakeven Requirement", value: "33.33% (Edge: +40.7%)", color: "#fbbf24" },
-          { label: "Max Closed Drawdown", value: "$27.15 (0.027%)", color: "#f87171" },
+          { label: "Max Closed Drawdown", value: "0.027% (2.71R)", color: "#f87171" },
           { label: "Rejection Wick Gate", value: "10% Minimum Rejection Tail", color: "#38bdf8" },
         ],
       };
@@ -289,10 +289,10 @@ export class PrivateStrategyExecutionRunner {
         excludeH12: false,
         hudMetrics: [
           { label: "Win Rate", value: "80.65% (25W / 6L)", color: "#4ade80" },
-          { label: "Realized R:R Ratio", value: "1 : 1.21 (+$17 / -$14)", color: "#38bdf8" },
-          { label: "Total Net Profit", value: "+$341.00 (+24.36R)", color: "#4ade80" },
+          { label: "Realized R:R Ratio", value: "1 : 1.21 (1.21R realized)", color: "#38bdf8" },
+          { label: "Total Net Return", value: "+0.34% (+24.36R)", color: "#4ade80" },
           { label: "Monthly Consistency", value: "100% Green (Aug: 10.4R | Sep: 9.1R)", color: "#4ade80" },
-          { label: "Max Closed Drawdown", value: "$23.48 (0.023% on $100K)", color: "#94a3b8" },
+          { label: "Max Closed Drawdown", value: "0.023% (1.68R)", color: "#94a3b8" },
           { label: "Calmar Ratio", value: "14.52 (Institutional Grade)", color: "#38bdf8" },
           { label: "Trade Density", value: "31 Trades (~13/month)", color: "#f8fafc" },
         ],
@@ -315,8 +315,8 @@ export class PrivateStrategyExecutionRunner {
       excludeH12: true,
       hudMetrics: [
         { label: "Win Rate", value: "82.61% (38W / 8L)", color: "#4ade80" },
-        { label: "Realized R:R Ratio", value: "1 : 1.29 (+$18 / -$14)", color: "#38bdf8" },
-        { label: "Total Net Profit", value: "+$572.00 (+40.86R)", color: "#4ade80" },
+        { label: "Realized R:R Ratio", value: "1 : 1.29 (1.29R realized)", color: "#38bdf8" },
+        { label: "Total Net Return", value: "+0.57% (+40.86R)", color: "#4ade80" },
       ],
     };
   }
@@ -462,7 +462,7 @@ export class PrivateStrategyExecutionRunner {
             profitUsd: config.tpDist,
             isWin: true,
             entryBadge: `LONG ${entryPrice.toFixed(2)}\nTP: ${currTP.toFixed(2)} | SL: ${currSL.toFixed(2)}`,
-            exitBadge: `TP HIT\n+$${config.tpDist.toFixed(2)}`,
+            exitBadge: `TP HIT\n+${(config.tpDist / config.slDist).toFixed(2)}R`,
           });
           markers.push({
             time: c.time,
@@ -487,7 +487,7 @@ export class PrivateStrategyExecutionRunner {
             profitUsd: -config.slDist,
             isWin: false,
             entryBadge: `LONG ${entryPrice.toFixed(2)}\nTP: ${currTP.toFixed(2)} | SL: ${currSL.toFixed(2)}`,
-            exitBadge: `SL HIT\n-$${config.slDist.toFixed(2)}`,
+            exitBadge: `SL HIT\n-1.00R`,
           });
           markers.push({
             time: c.time,
@@ -515,7 +515,7 @@ export class PrivateStrategyExecutionRunner {
             profitUsd: config.tpDist,
             isWin: true,
             entryBadge: `SHORT ${entryPrice.toFixed(2)}\nTP: ${currTP.toFixed(2)} | SL: ${currSL.toFixed(2)}`,
-            exitBadge: `TP HIT\n+$${config.tpDist.toFixed(2)}`,
+            exitBadge: `TP HIT\n+${(config.tpDist / config.slDist).toFixed(2)}R`,
           });
           markers.push({
             time: c.time,
@@ -540,7 +540,7 @@ export class PrivateStrategyExecutionRunner {
             profitUsd: -config.slDist,
             isWin: false,
             entryBadge: `SHORT ${entryPrice.toFixed(2)}\nTP: ${currTP.toFixed(2)} | SL: ${currSL.toFixed(2)}`,
-            exitBadge: `SL HIT\n-$${config.slDist.toFixed(2)}`,
+            exitBadge: `SL HIT\n-1.00R`,
           });
           markers.push({
             time: c.time,
@@ -751,8 +751,8 @@ export class PrivateStrategyExecutionRunner {
           : "Active (Standard Hypotheses Armed · Ready for Private Script Source)",
         description: strategy.description,
         riskParameters: {
-          stopLoss: `-$${config.slDist.toFixed(2)}`,
-          takeProfit: `+$${config.tpDist.toFixed(2)}`,
+          stopLoss: `-1.00R (-${config.slDist.toFixed(1)} pts)`,
+          takeProfit: `+${(config.tpDist / config.slDist).toFixed(2)}R (+${config.tpDist.toFixed(1)} pts)`,
           rules: "Dynamic volatility-adaptive order bracket executed on confirmed bar close. Strict institutional session and trend regime governance.",
         },
         latestSignal: activeTradeSignal || (latestClose > 0 ? {
