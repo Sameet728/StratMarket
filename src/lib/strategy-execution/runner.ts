@@ -468,7 +468,7 @@ export class PrivateStrategyExecutionRunner {
             time: c.time,
             position: "aboveBar",
             shape: "circle",
-            color: "#ffffff",
+            color: "#10b981",
             text: "TP",
           });
           position = 0;
@@ -493,7 +493,7 @@ export class PrivateStrategyExecutionRunner {
             time: c.time,
             position: "belowBar",
             shape: "circle",
-            color: "#71717a",
+            color: "#ef4444",
             text: "SL",
           });
           position = 0;
@@ -521,7 +521,7 @@ export class PrivateStrategyExecutionRunner {
             time: c.time,
             position: "belowBar",
             shape: "circle",
-            color: "#ffffff",
+            color: "#10b981",
             text: "TP",
           });
           position = 0;
@@ -546,7 +546,7 @@ export class PrivateStrategyExecutionRunner {
             time: c.time,
             position: "aboveBar",
             shape: "circle",
-            color: "#71717a",
+            color: "#ef4444",
             text: "SL",
           });
           position = 0;
@@ -604,8 +604,8 @@ export class PrivateStrategyExecutionRunner {
             time: c.time,
             position: "belowBar",
             shape: "arrowUp",
-            color: "#ffffff",
-            text: "BUY",
+            color: "#10b981",
+            text: "LONG",
           });
         } else if (shortSig) {
           position = -1;
@@ -623,8 +623,8 @@ export class PrivateStrategyExecutionRunner {
             time: c.time,
             position: "aboveBar",
             shape: "arrowDown",
-            color: "#a1a1aa",
-            text: "SELL",
+            color: "#ef4444",
+            text: "SHORT",
           });
         }
       }
@@ -740,7 +740,7 @@ export class PrivateStrategyExecutionRunner {
       computedAt: Date.now(),
       candleCount: candles.length,
       series,
-      markers: markers.slice(-8),
+      markers: markers.slice(-60),
       priceLevels,
       nativeIndicators,
       tradeBoxes,

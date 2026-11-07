@@ -11,7 +11,7 @@ import { SpotlightCursor } from "@/components/SpotlightCursor";
 export const metadata: Metadata = {
   title: "StratMarket by Elvaris Capital — The Marketplace for AI-Researched Trading Strategies",
   description:
-    "Discover, backtest, and trial quantitative trading strategies for Python and Pine Script engineered by Elvaris Capital. Real-time signals, rigorous risk controls, and automated broker routing.",
+    "Discover, backtest, and trial quantitative Pine Script trading strategies engineered by Elvaris Capital. Real-time signals, rigorous risk controls, and automated broker routing.",
   icons: {
     icon: "/favicon.ico",
   },

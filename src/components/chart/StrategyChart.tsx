@@ -48,7 +48,7 @@ export function StrategyChart({
   const [timeframe, setTimeframe] = useState<string>("15");
   const [status, setStatus] = useState<"LIVE" | "HISTORICAL" | "CONNECTING" | "ERROR">("CONNECTING");
   const [error, setError] = useState<string | null>(null);
-  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [showBoxes, setShowBoxes] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -239,20 +239,20 @@ export function StrategyChart({
 
         if (disposed || !containerRef.current) return;
 
-        // Initialize pure candlestick chart: left charting tools enabled, indicators disabled
+        // Initialize pure candlestick chart: clean, uncluttered, fixed 15m
         const ws = new VelaWorkspace(containerRef.current, {
           layout: false,
           theme: "dark",
           symbol: data.contract?.symbol || "XAUUSD",
-          timeframe: timeframe,
+          timeframe: "15",
           live: false,
           volume: false,
-          drawingToolbar: true,
+          drawingToolbar: false,
           indicatorPicker: false,
           cells: {
             c1: {
               symbol: data.contract?.symbol || "XAUUSD",
-              timeframe: timeframe,
+              timeframe: "15",
               data: data.candles || [],
             },
           },
@@ -272,7 +272,7 @@ export function StrategyChart({
         );
         marks?.forEach((el) => el.remove());
 
-        // Plot ONLY the latest active/most recent trade setup position box (clean, institutional, un-overwritten)
+        // Plot authentic Long/Short Position Tool boxes with clear TP and SL zones across visible trades
         if (showBoxes && data.contract?.tradeBoxes && ws.chart?.drawings) {
           const lockDrawing = (d: any) => {
             if (!d) return;
@@ -284,48 +284,48 @@ export function StrategyChart({
             } catch (_) {}
           };
 
-          const boxesToPlot = (data.contract.tradeBoxes || []).slice(-1);
+          const boxesToPlot = (data.contract.tradeBoxes || []).slice(-25);
 
           for (const tb of boxesToPlot) {
             try {
-              // 1. Reward Zone Box (Take Profit - Subtle Frosted White)
+              // 1. Reward Zone Box (Take Profit - Vibrant Emerald Green)
               const d1 = ws.chart.drawings.add("box", {
                 anchors: [
                   { time: tb.entryTime, price: tb.entryPrice },
                   { time: tb.exitTime, price: tb.tpPrice },
                 ],
                 style: {
-                  fillColor: "rgba(255, 255, 255, 0.08)",
-                  lineColor: "#ffffff",
+                  fillColor: "rgba(16, 185, 129, 0.22)",
+                  lineColor: "#10b981",
                   lineWidth: 1.5,
                   lineStyle: "solid",
                 },
               });
               lockDrawing(d1);
 
-              // 2. Risk Zone Box (Stop Loss - Dark Zinc)
+              // 2. Risk Zone Box (Stop Loss - Vibrant Crimson Red)
               const d2 = ws.chart.drawings.add("box", {
                 anchors: [
                   { time: tb.entryTime, price: tb.entryPrice },
                   { time: tb.exitTime, price: tb.slPrice },
                 ],
                 style: {
-                  fillColor: "rgba(255, 255, 255, 0.03)",
-                  lineColor: "#71717a",
+                  fillColor: "rgba(239, 68, 68, 0.22)",
+                  lineColor: "#ef4444",
                   lineWidth: 1.5,
                   lineStyle: "solid",
                 },
               });
               lockDrawing(d2);
 
-              // 3. Center Entry Price Line (Dashed)
+              // 3. Center Entry Price Line (Crisp White Dashed)
               const d3 = ws.chart.drawings.add("trendline", {
                 anchors: [
                   { time: tb.entryTime, price: tb.entryPrice },
                   { time: tb.exitTime, price: tb.entryPrice },
                 ],
                 style: {
-                  lineColor: "#e4e4e7",
+                  lineColor: "rgba(255, 255, 255, 0.6)",
                   lineStyle: "dashed",
                   lineWidth: 1.5,
                 },
@@ -394,10 +394,9 @@ export function StrategyChart({
         strategyId={contract?.strategyId || strategyId}
         strategyName={contract?.name || "Pine Script Strategy"}
         symbol={contract?.symbol || "XAUUSD"}
-        timeframe={timeframe === "15" ? "M15" : timeframe === "5" ? "M5" : timeframe}
-        candleCount={candles.length || 5000}
+        timeframe="15m"
+        candleCount={candles.length || 1500}
         status={status}
-        onTimeframeChange={handleTimeframeChange}
         onTogglePanel={() => setPanelOpen((prev) => !prev)}
         panelOpen={panelOpen}
         showBoxes={showBoxes}

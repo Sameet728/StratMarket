@@ -3171,3 +3171,21 @@ button[aria-label*="indicators" i],
     height: 36px !important;
   }
 }
+
+/* Institutional Clean Live Chart & Locked 15M Timeframe */
+.vela-range-switcher,
+[class*="range-switcher"],
+[class*="rangeswitcher"],
+[class*="bottom-range"],
+[class*="time-frames"],
+.vela-timeframes,
+[class*="timeframe-picker"] {
+  display: none !important;
+}
+
+/* Ensure chart stage has clean full dimensions */
+.vela-container {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}

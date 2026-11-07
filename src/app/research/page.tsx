@@ -63,9 +63,9 @@ export default function ResearchPage() {
             </details>
 
             <details>
-              <summary>Where do the Python strategies run?</summary>
+              <summary>Where do the algorithmic strategies run?</summary>
               <p>
-                The Python algorithms run in an isolated execution container on an Elvaris Capital VPS with sub-millisecond connectivity to major liquidity providers (LD4/NY4). Next.js communicates with this runner over an authenticated HMAC SHA-256 server-to-server gateway.
+                The algorithmic strategy signals run in an isolated execution container on an Elvaris Capital 24/7 VPS with sub-millisecond connectivity to institutional liquidity feeds. Real-time TradingView execution bridges communicate with this runner over authenticated, low-latency secure channels.
               </p>
             </details>
 

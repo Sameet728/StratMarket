@@ -864,4 +864,43 @@ Error: Module not found: Can't resolve '@/lib/vps/security'
 2. **Defensive Client-Side Fetch (`StrategyChart.tsx`):**
    - Added an `AbortController` with a 6000ms timeout on `/api/chart/[strategyId]/series` to guarantee the browser never gets stuck in an infinite loading state.
 
+---
+
+### Session Update (18:50 - 18:56): Decluttering Live Terminal Chart, Fixing Missing Trades, and Locking 15M Timeframe
+
+#### User Instructions (Uploaded Screenshot):
+- *"remove all unwanted thinghs from here keep the page of chart clean and the major problem is trades taken are not visible and keep the timeframe fixed to 15 min as the staergy is on 15 min time framer"* (Screenshot showing only 1 faint trade box, `1m 5m 15m 1h 4h 1D` buttons in toolbar, left drawing tools taking up space, and bottom range buttons).
+
+#### Changes Implemented:
+
+1. **Making Trades Taken Clearly Visible on Chart:**
+   - In `StrategyChart.tsx`, plotted the full range of recent executed trades (`slice(-25)`) instead of slicing to only 1 box.
+   - Replaced faint grey styling with authentic TradingView Long/Short Position Tool styling:
+     - **Take Profit (TP) Zone:** Vibrant translucent emerald green (`rgba(16, 185, 129, 0.22)`) with crisp `#10b981` border.
+     - **Stop Loss (SL) Zone:** Vibrant translucent crimson red (`rgba(239, 68, 68, 0.22)`) with crisp `#ef4444` border.
+     - **Entry Line:** Crisp dashed line at entry price.
+     - **Entry Pin:** Clean single tag (`▲ LONG $4112.45` / `▼ SHORT $4112.45`).
+   - In `runner.ts`, updated candle markers:
+     - Green `#10b981` for `LONG` and `TP`.
+     - Red `#ef4444` for `SHORT` and `SL`.
+     - Increased marker count to 60 so all visible trades have markers on the candles without label piling.
+
+2. **Strict 15-Minute (M15) Timeframe Lock:**
+   - In `ChartToolbar.tsx`:
+     - Removed the `1m 5m 15m 1h 4h 1D` buttons from the toolbar.
+     - Replaced with locked badges: `15m (Locked)` and `Institutional M15 Execution Timeframe`.
+   - In `StrategyChart.tsx`: Hardcoded timeframe strictly to `"15"`.
+   - In `globals.css`: Hid the bottom range bar (`1D 7D 1M 3M YTD 1Y 5Y ALL`) and timeframe selectors inside Vela so users cannot switch away from the M15 strategy timeframe.
+
+3. **Chart Decluttering & Screen Space Optimization:**
+   - In `StrategyChart.tsx`: Set `drawingToolbar: false` in `VelaWorkspace`, eliminating the 12 unwanted drawing tool icons on the left side of the chart.
+   - Defaulted `panelOpen: false` so the chart opens full-width, clean, and distraction-free on load (toggleable via the top "Strategy" button).
+   - Removed `1,500 Bars (Max)` and fullscreen buttons from the top bar to keep it minimal and institutional.
+   - Cleaned residual references to Python in `research/page.tsx` and `layout.tsx`.
+
+#### Verification & Quality Checks:
+- **TypeScript Check:** `npx tsc --noEmit` -> **0 errors**.
+- **Vitest Suite:** `npm test` -> **34/34 tests passed cleanly**.
+
+
 
