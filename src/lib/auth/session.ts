@@ -2,6 +2,7 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 
 const JWT_SECRET = process.env.JWT_SECRET || "stratmarket-dev-jwt-secret-key-32-bytes-minimum-length-needed-here";
 const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "stratmarket_session";
@@ -55,6 +56,9 @@ export function verifyToken(token: string): JWTPayload | null {
 
 export async function getSession(): Promise<SessionUser | null> {
   try {
+    try {
+      await connection();
+    } catch (_) {}
     const cookieStore = await cookies();
     const token = cookieStore.get(COOKIE_NAME)?.value;
     if (!token) return null;

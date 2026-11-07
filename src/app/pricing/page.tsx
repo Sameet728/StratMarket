@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
+import { connection } from "next/server";
 import { PricingClient } from "./PricingClient";
 import type { Metadata } from "next";
 
@@ -16,6 +17,7 @@ export default async function PricingPage({
 }: {
   searchParams?: Promise<{ plan?: string; strategy?: string }>;
 }) {
+  await connection();
   const [plans, strategies, user] = await Promise.all([
     db.getPlans(),
     db.getStrategies({ includeDrafts: false }),
