@@ -240,6 +240,18 @@ class RepositoryStore {
 
 // Global singleton to prevent hot-reload wipes
 const globalStore = (global as any).__stratMarketStore || new RepositoryStore();
+if (!globalStore.orders) globalStore.orders = new Map();
+if (!globalStore.subscriptions) globalStore.subscriptions = new Map();
+if (!globalStore.entitlements) globalStore.entitlements = new Map();
+if (!globalStore.trials) globalStore.trials = new Map();
+if (!globalStore.users) globalStore.users = new Map();
+if (!globalStore.strategies) globalStore.strategies = new Map();
+if (!globalStore.alerts) globalStore.alerts = new Map();
+if (!globalStore.deliveries) globalStore.deliveries = new Map();
+if (!globalStore.connections) globalStore.connections = new Map();
+if (!globalStore.signals) globalStore.signals = new Map();
+if (!globalStore.auditEvents) globalStore.auditEvents = [];
+
 if (process.env.NODE_ENV !== "production") {
   (global as any).__stratMarketStore = globalStore;
 }
@@ -746,6 +758,7 @@ export const db = {
       expiryTime,
     };
 
+    if (!globalStore.orders) globalStore.orders = new Map();
     globalStore.orders.set(orderId, order);
 
     const mdb = await getMongoDb();
@@ -802,7 +815,8 @@ export const db = {
     }
 
     const results: any[] = [];
-    for (const o of globalStore.orders.values()) {
+    const ordersMap = globalStore.orders || new Map();
+    for (const o of ordersMap.values()) {
       if (o.userId === userId) {
         results.push({ ...o });
       }
