@@ -250,7 +250,7 @@ a {
   font-family: var(--font-mono, monospace);
   color: #e4e4e7;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(163, 230, 53, 0.25);
+  border: 1px solid rgba(163, 230, 53, 0.28);
   padding: 3px 9px;
   border-radius: 999px;
   letter-spacing: 0.02em;
@@ -259,12 +259,19 @@ a {
   align-items: center;
   gap: 5px;
   flex-shrink: 0;
+  white-space: nowrap !important;
+  line-height: 1;
   transition: border-color 0.2s, background 0.2s;
 }
 
 .nav-parent-badge:hover {
   background: rgba(163, 230, 53, 0.12);
   border-color: rgba(163, 230, 53, 0.45);
+}
+
+.nav-parent-label {
+  white-space: nowrap !important;
+  display: inline-block;
 }
 
 .nav-parent-dot {
@@ -3630,7 +3637,7 @@ button, a, input, select, textarea, .chip, .card {
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 600px) {
   .nav-parent-badge {
     display: none !important;
   }

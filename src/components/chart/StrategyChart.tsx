@@ -276,7 +276,7 @@ export function StrategyChart({
               const rMultiple = ((Math.abs(tb.tpPrice - tb.entryPrice)) / (Math.abs(tb.slPrice - tb.entryPrice))).toFixed(2);
               const tpPts = Math.abs(tb.tpPrice - tb.entryPrice).toFixed(1);
               const slPts = Math.abs(tb.slPrice - tb.entryPrice).toFixed(1);
-              const shouldAddText = !isMobile || tb.id === "tb-active" || tb === boxesToPlot[boxesToPlot.length - 1];
+              const shouldAddText = tb.id === "tb-active" || tb === boxesToPlot[boxesToPlot.length - 1];
 
               // 1. Reward Zone Box (Take Profit - Electric Cyber Lime)
               const d1 = ws.chart.drawings.add("box", {

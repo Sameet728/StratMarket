@@ -25,6 +25,10 @@ export default async function MarketPage() {
                 border: "1px solid rgba(255, 255, 255, 0.15)",
                 padding: "2px 8px",
                 borderRadius: "999px",
+                whiteSpace: "nowrap",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
               }}
             >
               By Elvaris Capital · <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>elvariscapital.in ↗</a>

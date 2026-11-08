@@ -57,10 +57,11 @@ export function HeaderNav() {
           rel="noopener noreferrer"
           title="Parent Organization: Elvaris Capital (elvariscapital.in)"
           className="nav-parent-badge"
+          style={{ whiteSpace: "nowrap" }}
         >
           <span className="nav-parent-dot" />
-          <span className="nav-parent-label">by Elvaris Capital</span>
-          <span style={{ opacity: 0.7 }}>↗</span>
+          <span className="nav-parent-label" style={{ whiteSpace: "nowrap" }}>by Elvaris Capital</span>
+          <span style={{ opacity: 0.7, fontSize: "10px", marginLeft: "1px" }}>↗</span>
         </a>
       </div>
 

@@ -40,6 +40,8 @@ export function Footer() {
                   padding: "2px 7px",
                   borderRadius: "999px",
                   fontFamily: "var(--font-mono, monospace)",
+                  whiteSpace: "nowrap",
+                  lineHeight: "1",
                 }}
               >
                 by Elvaris Capital
