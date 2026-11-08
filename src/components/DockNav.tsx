@@ -149,11 +149,11 @@ export function DockNav() {
       </Link>
 
       <Link
-        href="/pricing"
+        href="/chart"
         className="l"
-        data-t="Pricing"
-        aria-label="Pricing"
-        aria-current={isActive("/pricing") ? "true" : undefined}
+        data-t="Live Charts"
+        aria-label="Live Charts"
+        aria-current={isActive("/chart") ? "true" : undefined}
       >
         <svg
           width="20"
@@ -165,8 +165,8 @@ export function DockNav() {
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <path d="M3 12l9-9h9v9l-9 9z" />
-          <circle cx="16" cy="8" r="1.4" />
+          <path d="M3 3v18h18" />
+          <path d="M18 9l-5 5-4-4-4 4" />
         </svg>
       </Link>
     </nav>

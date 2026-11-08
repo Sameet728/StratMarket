@@ -61,15 +61,11 @@ export function StrategyChart({
   const [hasPaid, setHasPaid] = useState<boolean>(initialHasPaid);
   const [alertEnabled, setAlertEnabled] = useState(false);
   const [activatingTrial, setActivatingTrial] = useState(false);
-  const [paywallType, setPaywallType] = useState<"NONE" | "SIGNIN" | "TRIAL_REQUIRED" | "EXPIRED">(
-    initialTrialStatus === "EXPIRED" && !initialHasPaid
-      ? "EXPIRED"
-      : (initialTrialStatus === "NOT_STARTED" || !initialTrialStatus) && !initialHasPaid && !initialHasAccess
-      ? "TRIAL_REQUIRED"
-      : "NONE"
+  const [paywallType, setPaywallType] = useState<"NONE" | "SIGNIN">(
+    !initialUser ? "SIGNIN" : "NONE"
   );
 
-  // Load alert and trial status from backend
+  // Load alert status from backend
   useEffect(() => {
     fetch("/api/me/alerts")
       .then((res) => res.json())
@@ -82,20 +78,6 @@ export function StrategyChart({
           );
           if (current) {
             setAlertEnabled(Boolean(current.enabled));
-            setTrialStatus(current.trialStatus || "NOT_STARTED");
-            setDaysLeft(current.daysLeft || 0);
-            if (current.expiryTime) {
-              setTrialExpiry(current.expiryTime);
-            }
-            setHasPaid(Boolean(current.hasPaid));
-            if (current.hasPaid || current.trialStatus === "ACTIVE" || current.hasAccess) {
-              setPaywallType("NONE");
-              setTrialStatus("ACTIVE");
-            } else if (current.trialStatus === "EXPIRED") {
-              setPaywallType("EXPIRED");
-            } else if (current.trialStatus === "NOT_STARTED") {
-              setPaywallType("TRIAL_REQUIRED");
-            }
           }
         }
       })
@@ -161,16 +143,6 @@ export function StrategyChart({
       });
       if (res.ok) {
         setAlertEnabled(newEnabled);
-        if (trialStatus === "NOT_STARTED") {
-          setTrialStatus("ACTIVE");
-          setDaysLeft(7);
-          setPaywallType("NONE");
-        }
-      } else {
-        const data = await res.json();
-        if (data.code === "TRIAL_EXPIRED") {
-          setPaywallType("EXPIRED");
-        }
       }
     } catch (err) {
       console.error("Failed to toggle alert in chart:", err);
@@ -211,16 +183,9 @@ export function StrategyChart({
           return;
         }
 
-        // Handle 403 Forbidden (Trial Required or Trial Expired)
-        if (res.status === 403) {
-          const errData = await res.json().catch(() => ({}));
-          if (errData.code === "TRIAL_EXPIRED" || errData.paywallType === "UPGRADE_REQUIRED") {
-            setPaywallType("EXPIRED");
-            setTrialStatus("EXPIRED");
-          } else {
-            setPaywallType("TRIAL_REQUIRED");
-            setTrialStatus("NOT_STARTED");
-          }
+        // Handle 401 Unauthorized or 403 Forbidden
+        if (res.status === 401 || res.status === 403) {
+          setPaywallType("SIGNIN");
           setLoading(false);
           return;
         }
@@ -484,7 +449,7 @@ export function StrategyChart({
                 Authentication Required to Stream Live Chart
               </h2>
               <p style={{ maxWidth: 480, color: "#a1a1aa", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
-                Live TradingView tick streaming, Long/Short execution overlays, and 24/7 VPS signals for <b>{contract?.name || strategyId}</b> are available exclusively to authenticated traders with an active 7-Day Free Trial or Pro Membership.
+                Live TradingView tick streaming, Long/Short execution overlays, and 24/7 VPS signals for <b>{contract?.name || strategyId}</b> are available to registered traders. Sign in or create a free account to unlock instant access.
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
                 <Link
@@ -500,146 +465,10 @@ export function StrategyChart({
                     border: "none",
                   }}
                 >
-                  Sign In / Create Account →
+                  Sign In / Create Free Account →
                 </Link>
                 <Link href="/market" className="pill g sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.2)", color: "#ffffff" }}>
                   Explore Strategies
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* PAYWALL 2: 7-Day Free Trial Required (Trial not started yet) */}
-          {(paywallType === "TRIAL_REQUIRED" || (trialStatus === "NOT_STARTED" && !hasPaid)) && paywallType !== "SIGNIN" && paywallType !== "EXPIRED" && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 100,
-                background: "rgba(0, 0, 0, 0.88)",
-                backdropFilter: "blur(24px)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "24px 16px",
-                textAlign: "center",
-              }}
-            >
-              <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: "50%",
-                  background: "rgba(255, 255, 255, 0.06)",
-                  border: "1px solid rgba(255, 255, 255, 0.16)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 16,
-                }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </div>
-              <div
-                style={{
-                  display: "inline-block",
-                  padding: "4px 12px",
-                  borderRadius: 20,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#ffffff",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  background: "rgba(255, 255, 255, 0.08)",
-                  marginBottom: 12,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  textTransform: "uppercase",
-                }}
-              >
-                7-Day Risk-Free Trial
-              </div>
-              <h2 style={{ fontSize: 24, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>
-                Unlock {contract?.name || strategyId} Live Terminal
-              </h2>
-              <p style={{ maxWidth: 480, color: "#a1a1aa", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
-                Access to private LuxAlgo Vela live market charting, real-time Long/Short trade execution boxes, and 24/7 VPS signal alerts is reserved for active 7-Day Trial and StratMarket Pro members.
-              </p>
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-                <button
-                  onClick={handleStartTrial}
-                  disabled={activatingTrial}
-                  className="pill action-btn"
-                  style={{
-                    fontSize: 14,
-                    padding: "12px 28px",
-                    cursor: activatingTrial ? "wait" : "pointer",
-                    background: "#ffffff",
-                    color: "#000000",
-                    fontWeight: 700,
-                    border: "none",
-                  }}
-                >
-                  {activatingTrial ? "Activating 7-Day Trial..." : "Start 7-Day Free Trial (Instant Access)"}
-                </button>
-                <Link href="/pricing" className="pill g sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.2)", color: "#ffffff" }}>
-                  Upgrade to Pro
-                </Link>
-                <Link href="/dashboard" className="pill sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.2)", color: "#ffffff" }}>
-                  Dashboard
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* PAYWALL 3: 7-Day Free Trial Concluded */}
-          {(paywallType === "EXPIRED" || (trialStatus === "EXPIRED" && !hasPaid)) && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 100,
-                background: "rgba(0, 0, 0, 0.88)",
-                backdropFilter: "blur(24px)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "24px 16px",
-                textAlign: "center",
-              }}
-            >
-              <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: "50%",
-                  background: "rgba(255, 255, 255, 0.06)",
-                  border: "1px solid rgba(255, 255, 255, 0.16)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 16,
-                }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-              </div>
-              <h2 style={{ fontSize: 24, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>
-                7-Day Free Trial Concluded
-              </h2>
-              <p style={{ maxWidth: 480, color: "#a1a1aa", fontSize: 14, lineHeight: 1.6, margin: "0 0 24px" }}>
-                Your 7-day evaluation period for <b>{contract?.name || strategyId}</b> has ended. Upgrade to StratMarket Pro to unlock continuous 24/7 autonomous VPS signals, candlestick streaming, and execution overlays.
-              </p>
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-                <Link href="/pricing" className="pill action-btn" style={{ fontSize: 14, padding: "12px 28px", textDecoration: "none", background: "#ffffff", color: "#000000", fontWeight: 700, border: "none" }}>
-                  Upgrade to StratMarket Pro →
-                </Link>
-                <Link href="/dashboard" className="pill g sm" style={{ fontSize: 14, padding: "12px 20px", textDecoration: "none", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.2)", color: "#ffffff" }}>
-                  Back to Dashboard
                 </Link>
               </div>
             </div>

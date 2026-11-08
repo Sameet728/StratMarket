@@ -15,16 +15,7 @@ export async function GET(
     }
 
     const user = await getSession();
-    let isEntitled = false;
-
-    if (user) {
-      if (user.role === "ADMIN") {
-        isEntitled = true;
-      } else {
-        const access = await db.checkUserStrategyAccess(user.id, strategy.id);
-        isEntitled = access.hasAccess;
-      }
-    }
+    const isEntitled = Boolean(user);
 
     const limit = isEntitled ? 50 : 3;
     const signals = await db.getSignals(strategy.id, limit);
@@ -34,8 +25,8 @@ export async function GET(
       strategyId: strategy.id,
       isEntitled,
       accessNotice: isEntitled
-        ? "Full signal feed active."
-        : "Preview mode: start a 7-day trial to unlock full live signals.",
+        ? "Full real-time signal feed active."
+        : "Preview mode: sign in to unlock full real-time signals.",
       count: signals.length,
       data: signals,
     });

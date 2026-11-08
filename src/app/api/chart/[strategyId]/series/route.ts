@@ -36,61 +36,7 @@ export async function GET(request: NextRequest, { params }: Props) {
       );
     }
 
-    // 2. Strict Entitlement & 7-Day Trial Check
-    const access = await db.checkUserStrategyAccess(user.id, strategy.id);
-    const userTrials = await db.getUserTrials(user.id);
-    const now = new Date();
-    let currentTrial = userTrials.find(
-      (t) =>
-        t.strategyId.toUpperCase() === strategy.id.toUpperCase() ||
-        t.strategyId.toLowerCase() === strategy.slug.toLowerCase()
-    );
-
-    // Check resilient cookie for serverless environments
-    if (!currentTrial) {
-      const trialCookie = request.cookies.get(`stratmarket_trial_${strategy.slug}`)?.value;
-      if (trialCookie) {
-        try {
-          const parsed = JSON.parse(trialCookie);
-          if (parsed.expiryTime && new Date(parsed.expiryTime) > now) {
-            currentTrial = {
-              id: `trl_cookie_${strategy.id}`,
-              userId: user.id,
-              strategyId: strategy.id,
-              startTime: new Date(),
-              expiryTime: new Date(parsed.expiryTime),
-              status: "ACTIVE",
-              eligibilityResult: "APPROVED",
-              associatedEntitlementId: `ent_cookie_${strategy.id}`,
-            };
-          }
-        } catch (_) {}
-      }
-    }
-
-    const isTrialActive = Boolean(
-      currentTrial && currentTrial.status === "ACTIVE" && new Date(currentTrial.expiryTime) > now
-    );
-
-    if (!access.hasAccess && !isTrialActive) {
-      const isExpired = Boolean(
-        currentTrial && (currentTrial.status === "EXPIRED" || new Date(currentTrial.expiryTime) <= now)
-      );
-
-      return NextResponse.json(
-        {
-          success: false,
-          error: isExpired
-            ? "Your 7-day free trial has expired. Upgrade to StratMarket Pro to continue."
-            : "Activate your 7-day free trial to unlock this live strategy chart.",
-          code: isExpired ? "TRIAL_EXPIRED" : "TRIAL_REQUIRED",
-          paywallType: isExpired ? "UPGRADE_REQUIRED" : "TRIAL_REQUIRED",
-          trialEligibility: Boolean(strategy.trialEligibility),
-        },
-        { status: 403 }
-      );
-    }
-
+    // 2. Open Access: All authenticated traders have full access to live streaming data
     const { searchParams } = new URL(request.url);
     const count = parseInt(searchParams.get("count") || "1500", 10);
     const timeframe = searchParams.get("timeframe") || strategy.timeframe;

@@ -246,9 +246,7 @@ export function DashboardClient() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        if (res.status === 403 || errData.code === "TRIAL_EXPIRED") {
-          alert(errData.error || "Your 7-day free trial has expired. Upgrade to StratMarket Pro to enable live email signals.");
-        }
+        alert(errData.error || "Failed to update alert preference. Please try again.");
         // Revert on failure
         setStrategies((prev) =>
           prev.map((s) => (s.id === strategy.id ? { ...s, enabled: strategy.enabled } : s))
@@ -354,7 +352,7 @@ export function DashboardClient() {
           return [...filtered, data.connection];
         });
       } else {
-        alert(data.error || "Broker routing and virtual simulation require an active 7-Day Free Trial or StratMarket Pro membership.");
+        alert(data.error || "Failed to launch virtual paper simulator.");
       }
     } catch (err) {
       console.error(err);
@@ -482,9 +480,9 @@ export function DashboardClient() {
           }}
         >
           <div style={{ fontSize: 26, fontWeight: 800, color: "#ffffff", fontFamily: "'JetBrains Mono', monospace" }}>
-            {activeTrialsCount}
+            {strategies.length}
           </div>
-          <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>Active 7-Day Trials</div>
+          <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>Available Strategies</div>
         </div>
 
         <div
@@ -854,65 +852,21 @@ function StrategyDashboardCard({
             </span>
           </div>
 
-          {/* Access / Trial Badge */}
+          {/* Access Badge */}
           <div>
-            {strategy.hasPaid ? (
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  padding: "2px 8px",
-                  borderRadius: 6,
-                  background: "rgba(168, 85, 247, 0.15)",
-                  color: "#c084fc",
-                  border: "1px solid rgba(168, 85, 247, 0.3)",
-                }}
-              >
-                Pro Active
-              </span>
-            ) : strategy.trialStatus === "ACTIVE" ? (
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  padding: "2px 8px",
-                  borderRadius: 6,
-                  background: "rgba(255, 255, 255, 0.1)",
-                  color: "#34d399",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                Trial: {countdown || `${strategy.daysLeft}d left`}
-              </span>
-            ) : strategy.trialStatus === "EXPIRED" ? (
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  padding: "2px 8px",
-                  borderRadius: 6,
-                  background: "rgba(239, 68, 68, 0.15)",
-                  color: "#f87171",
-                  border: "1px solid rgba(239, 68, 68, 0.3)",
-                }}
-              >
-                Trial Expired
-              </span>
-            ) : (
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  padding: "2px 8px",
-                  borderRadius: 6,
-                  background: "rgba(56, 189, 248, 0.1)",
-                  color: "#38bdf8",
-                  border: "1px solid rgba(56, 189, 248, 0.2)",
-                }}
-              >
-                7-Day Trial Available
-              </span>
-            )}
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "2px 8px",
+                borderRadius: 6,
+                background: "rgba(255, 255, 255, 0.08)",
+                color: "#ffffff",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+              }}
+            >
+              Free Access
+            </span>
           </div>
         </div>
 
@@ -960,75 +914,52 @@ function StrategyDashboardCard({
       <div>
         {/* Email Alerts Toggle Switch */}
         <div style={{ marginBottom: 12 }}>
-          {strategy.trialStatus === "EXPIRED" && !strategy.hasPaid ? (
-            <Link
-              href="/pricing"
-              style={{
-                width: "100%",
-                padding: "9px 12px",
-                borderRadius: 8,
-                background: "rgba(239, 68, 68, 0.12)",
-                border: "1px solid rgba(239, 68, 68, 0.3)",
-                color: "#f87171",
-                fontSize: 12,
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                textDecoration: "none",
-              }}
-            >
-              7-Day Trial Ended · Upgrade to Re-enable Alerts →
-            </Link>
-          ) : (
-            <button
-              onClick={onToggleAlert}
-              disabled={updating}
-              style={{
-                width: "100%",
-                padding: "9px 14px",
-                borderRadius: 8,
-                border: strategy.enabled
-                  ? "1px solid rgba(255, 255, 255, 0.1)"
-                  : "1px solid var(--line)",
-                background: strategy.enabled
-                  ? "linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.15) 100%)"
-                  : "rgba(255,255,255,0.03)",
-                color: strategy.enabled ? "#ffffff" : "var(--mut)",
-                fontWeight: 700,
-                fontSize: 13,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                transition: "all 0.2s",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ color: strategy.enabled ? "#ffffff" : "var(--mut)" }}>●</span>
-                <span>
-                  {updating
-                    ? (strategy.enabled ? "Saving Active..." : "Saving...")
-                    : strategy.enabled
-                    ? "Email Alerts Active"
-                    : "Turn Alerts ON"}
-                </span>
+          <button
+            onClick={onToggleAlert}
+            disabled={updating}
+            style={{
+              width: "100%",
+              padding: "9px 14px",
+              borderRadius: 8,
+              border: strategy.enabled
+                ? "1px solid rgba(255, 255, 255, 0.1)"
+                : "1px solid var(--line)",
+              background: strategy.enabled
+                ? "linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.15) 100%)"
+                : "rgba(255,255,255,0.03)",
+              color: strategy.enabled ? "#ffffff" : "var(--mut)",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              transition: "all 0.2s",
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ color: strategy.enabled ? "#ffffff" : "var(--mut)" }}>●</span>
+              <span>
+                {updating
+                  ? (strategy.enabled ? "Saving Active..." : "Saving...")
+                  : strategy.enabled
+                  ? "Email Alerts Active"
+                  : "Turn Alerts ON"}
               </span>
+            </span>
 
-              <span
-                style={{
-                  fontSize: 11,
-                  padding: "2px 8px",
-                  borderRadius: 12,
-                  background: strategy.enabled ? "rgba(255, 255, 255, 0.1)" : "rgba(255,255,255,0.06)",
-                  color: strategy.enabled ? "#fff" : "var(--mut)",
-                }}
-              >
-                {strategy.enabled ? "● ON" : "○ OFF"}
-              </span>
-            </button>
-          )}
+            <span
+              style={{
+                fontSize: 11,
+                padding: "2px 8px",
+                borderRadius: 12,
+                background: strategy.enabled ? "rgba(255, 255, 255, 0.1)" : "rgba(255,255,255,0.06)",
+                color: strategy.enabled ? "#fff" : "var(--mut)",
+              }}
+            >
+              {strategy.enabled ? "● ON" : "○ OFF"}
+            </span>
+          </button>
         </div>
 
         {/* Action Buttons: Live Chart & Performance Report */}

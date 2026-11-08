@@ -15,8 +15,8 @@ export function Footer() {
           <Link href="/how" style={{ marginRight: "12px" }}>
             How it works
           </Link>
-          <Link href="/pricing" style={{ marginRight: "12px" }}>
-            Pricing
+          <Link href="/chart" style={{ marginRight: "12px" }}>
+            Live Charts
           </Link>
           <a
             href="https://elvariscapital.in"

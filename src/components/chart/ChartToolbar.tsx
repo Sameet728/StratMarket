@@ -131,18 +131,6 @@ export function ChartToolbar({
           <span className="dot">·</span>
           <span className="tf">15m</span>
         </div>
-
-        {trialStatus === "ACTIVE" && (
-          <span className="chart-trial-pill" title="7-Day Risk-Free Trial Countdown">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.85 }}>
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span className="chart-trial-countdown">
-              {timerText || `${daysLeft || 7}d left`}
-            </span>
-          </span>
-        )}
       </div>
 
       <div className="chart-toolbar-right">

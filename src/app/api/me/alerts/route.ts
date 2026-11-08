@@ -156,11 +156,11 @@ export async function GET(request: NextRequest) {
           netReturn: s.metrics.netReturn,
           maxDrawdown: s.metrics.maxDrawdown,
           enabled,
-          hasAccess,
-          hasPaid,
-          trialStatus: (isTrialActive ? "ACTIVE" : isTrialExpired ? "EXPIRED" : "NOT_STARTED") as "ACTIVE" | "EXPIRED" | "NOT_STARTED",
-          daysLeft,
-          expiryTime: userTrial?.expiryTime ? new Date(userTrial.expiryTime).toISOString() : undefined,
+          hasAccess: true,
+          hasPaid: true,
+          trialStatus: "ACTIVE" as const,
+          daysLeft: 365,
+          expiryTime: undefined,
           chartUrl: `/chart/${s.slug}`,
           reportUrl: `/strategies/${s.slug}`,
         };
@@ -254,56 +254,6 @@ export async function PUT(request: NextRequest) {
     }
 
     const { strategyId, enabled, alertTypes, destinationEmail } = parsed.data;
-
-    // If enabling alerts on a strategy: enforce active trial or Pro membership
-    if (enabled && strategyId !== "ALL" && user.role !== "ADMIN") {
-      try {
-        const [trials, entitlements] = await Promise.all([
-          db.getUserTrials(user.id),
-          db.getUserEntitlements(user.id),
-        ]);
-        const now = new Date();
-        const hasPaid = entitlements.some(
-          (e) =>
-            e.status === "ACTIVE" &&
-            new Date(e.expiryTime) > now &&
-            e.entitlementType === "PAID" &&
-            (e.strategyId === strategyId || e.strategyId === null)
-        );
-        const strategyTrial = trials.find(
-          (t) =>
-            t.strategyId.toUpperCase() === strategyId.toUpperCase() ||
-            t.strategyId.toLowerCase() === strategyId.toLowerCase()
-        );
-        const isTrialExpired = Boolean(
-          strategyTrial && (strategyTrial.status === "EXPIRED" || new Date(strategyTrial.expiryTime) <= now)
-        );
-
-        if (isTrialExpired && !hasPaid) {
-          return NextResponse.json(
-            {
-              error: "Your 7-day free trial for this strategy has ended. Upgrade to StratMarket Pro to enable real-time email alerts.",
-              code: "TRIAL_EXPIRED",
-            },
-            { status: 403 }
-          );
-        }
-
-        if (!strategyTrial) {
-          await db.startTrial(user.id, strategyId.toLowerCase());
-        }
-      } catch (err: any) {
-        if (err?.message === "TRIAL_ALREADY_USED") {
-          return NextResponse.json(
-            {
-              error: "Your 7-day trial for this strategy has already been used. Upgrade to StratMarket Pro to continue.",
-              code: "TRIAL_EXPIRED",
-            },
-            { status: 403 }
-          );
-        }
-      }
-    }
 
     const cleanEmail =
       destinationEmail && destinationEmail.includes("@")

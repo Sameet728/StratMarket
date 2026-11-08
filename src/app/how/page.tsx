@@ -39,9 +39,9 @@ export default function HowPage() {
             </div>
 
             <div className="ts">
-              <h3>4. Start a seven-day trial</h3>
+              <h3>4. Free Trader Account</h3>
               <p>
-                Instantly activate a server-enforced 7-day trial on any eligible strategy. Full access to real-time signals and research reports without providing payment details upfront.
+                Sign in or register for free. Get full instant access to real-time charts, candle streaming, and signals with zero subscription fees.
               </p>
             </div>
 

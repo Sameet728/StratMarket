@@ -351,8 +351,8 @@ export default function ProfilePage() {
               <Link href="/dashboard" className="pill g sm" style={{ fontSize: 13 }}>
                 Open Dashboard →
               </Link>
-              <Link href="/pricing" className="pill sm" style={{ fontSize: 13, background: "#ffffff", color: "#000", fontWeight: 800 }}>
-                Subscription Plans →
+              <Link href="/chart/ps-01" className="pill sm" style={{ fontSize: 13, background: "#ffffff", color: "#000", fontWeight: 800 }}>
+                Live Charts →
               </Link>
               <button
                 type="button"
@@ -398,14 +398,14 @@ export default function ProfilePage() {
                   </p>
                 </div>
                 <Link
-                  href="/pricing"
-                  className="pill g sm"
+                  href="/chart/ps-01"
+                  className="pill sm"
                   style={{
                     fontSize: 13,
                     fontWeight: 600,
                   }}
                 >
-                  Manage / Upgrade Plans →
+                  Open Live Charts →
                 </Link>
               </div>
 
@@ -535,10 +535,10 @@ export default function ProfilePage() {
                   }}
                 >
                   <p style={{ margin: "0 0 12px", color: "var(--mut)", fontSize: 14 }}>
-                    You do not currently have any active paid subscriptions. Upgrade to unlock 24/7 institutional signals and live execution terminals.
+                    Your account includes open access to all quantitative trading strategies and live execution terminals.
                   </p>
                   <Link
-                    href="/pricing"
+                    href="/market"
                     className="pill sm"
                     style={{
                       background: "#ffffff",
@@ -547,7 +547,7 @@ export default function ProfilePage() {
                       display: "inline-block",
                     }}
                   >
-                    View All Subscription Plans ($79/mo) →
+                    Explore Marketplace Strategies →
                   </Link>
                 </div>
               )}
@@ -691,17 +691,14 @@ export default function ProfilePage() {
                   </p>
                 </div>
                 <Link
-                  href="/pricing"
-                  className="pill sm"
+                  href="/market"
+                  className="pill g sm"
                   style={{
-                    background: "#ffffff",
-                    border: "none",
-                    color: "#000000",
                     fontWeight: 700,
                     fontSize: 13,
                   }}
                 >
-                  View All Subscription Plans →
+                  Browse Marketplace →
                 </Link>
               </div>
 
@@ -799,25 +796,10 @@ export default function ProfilePage() {
                         <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line)", display: "flex", gap: 8 }}>
                           <Link
                             href={`/chart/${encodeURIComponent(t.strategyId)}`}
-                            className="pill g sm"
-                            style={{ flex: 1, textAlign: "center", fontSize: 12 }}
-                          >
-                            Live Chart ↗
-                          </Link>
-                          <Link
-                            href="/pricing"
                             className="pill sm"
-                            style={{
-                              flex: 1.4,
-                              textAlign: "center",
-                              fontSize: 12,
-                              background: "#ffffff",
-                              color: "#000000",
-                              border: "none",
-                              fontWeight: 700,
-                            }}
+                            style={{ flex: 1, textAlign: "center", fontSize: 12, background: "#ffffff", color: "#000", fontWeight: 700 }}
                           >
-                            Subscribe ($49/mo) →
+                            Open Live Chart ↗
                           </Link>
                         </div>
                       </div>
@@ -871,7 +853,7 @@ export default function ProfilePage() {
                           </div>
                         </div>
                         <Link
-                          href="/pricing"
+                          href={`/chart/${encodeURIComponent(et.strategyId)}`}
                           style={{
                             fontSize: 12,
                             padding: "6px 12px",
@@ -883,7 +865,7 @@ export default function ProfilePage() {
                             fontWeight: 600,
                           }}
                         >
-                          Reactivate →
+                          Open Chart →
                         </Link>
                       </div>
                     ))}

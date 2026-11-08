@@ -44,27 +44,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Require active 7-Day Free Trial or Pro Membership to connect brokers or run virtual simulator
-    const [trials, entitlements] = await Promise.all([
-      db.getUserTrials(user.id),
-      db.getUserEntitlements(user.id),
-    ]);
-    const now = new Date();
-    const hasActiveTrial = trials.some((t) => t.status === "ACTIVE" && new Date(t.expiryTime) > now);
-    const hasPaid = entitlements.some(
-      (e) => e.status === "ACTIVE" && new Date(e.expiryTime) > now && e.entitlementType === "PAID"
-    );
-
-    if (!hasActiveTrial && !hasPaid && user.role !== "ADMIN") {
-      return NextResponse.json(
-        {
-          error: "Broker routing and virtual simulation require an active 7-Day Free Trial or StratMarket Pro membership.",
-          code: "PAYWALL_REQUIRED",
-        },
-        { status: 403 }
-      );
-    }
-
     const body = await request.json();
     const parsed = ConnectionSchema.safeParse(body);
 

@@ -285,28 +285,25 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
         {trialError && <div className="err" style={{ marginTop: "12px" }}>{trialError}</div>}
 
         <div style={{ marginTop: "20px", display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
-          <button
-            className="pill"
-            onClick={handleStartTrial}
-            disabled={trialLoading || trialActive}
-            style={{ opacity: trialActive ? 0.6 : 1 }}
-          >
-            {trialLoading ? "Activating..." : trialActive ? "Trial Active" : "Start 7-day trial"}
-          </button>
-
           <a
             href={`/chart/${s.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            className="pill"
+            style={{ textDecoration: "none" }}
+          >
+            Open Live Chart →
+          </a>
+
+          <a
+            href={`/strategies/${s.slug}`}
             className="pill g sm"
             style={{ textDecoration: "none" }}
           >
-            Open Live Chart ↗
+            Full Quant Report ↗
           </a>
 
           {!user && (
             <span className="note">
-              No credit card required. Creates full access to reports &amp; signals.
+              Sign in to stream live candlesticks and execution overlays.
             </span>
           )}
         </div>

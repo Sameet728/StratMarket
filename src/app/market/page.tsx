@@ -16,7 +16,7 @@ export default async function MarketPage() {
         <div className="wrap">
           <h2>Marketplace</h2>
           <p className="lede">
-            Quantitative Pine Script strategies evaluated by the Elvaris Capital quant engine. Real database-backed queries with multi-dimensional filtering, provenance data, and 7-day trials.
+            Quantitative Pine Script strategies evaluated by the Elvaris Capital quant engine. Real database-backed queries with multi-dimensional filtering, provenance data, and open-access live charting.
           </p>
           <MarketplaceCatalogue initialStrategies={strategies} />
         </div>

@@ -999,7 +999,7 @@ export function StrategyReportView({ strategy }: Props) {
                 <li><b>LuxAlgo Vela Live Terminal:</b> Real-time candlestick charting with automated Long/Short trade brackets.</li>
               </ul>
               <div style={{ padding: "10px 14px", background: "rgba(255, 255, 255, 0.05)", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.08)", fontSize: "12px", color: "#a1a1aa" }}>
-                Your active 7-Day Trial or Pro subscription includes instantaneous access routing to this strategy.
+                Your registered trader account includes instantaneous live chart and execution access to this strategy.
               </div>
             </div>
 

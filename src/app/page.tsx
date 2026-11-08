@@ -100,17 +100,17 @@ export default async function HomePage() {
       {/* Three Ways to Use a Strategy */}
       <ThreeWaysSection />
 
-      {/* 7-Day Trial Call-To-Action */}
+      {/* Open Access Call-To-Action */}
       <section className="b" style={{ paddingTop: 0, paddingBottom: "150px", overflow: "hidden" }}>
         <div className="wrap" style={{ textAlign: "center", position: "relative" }}>
           <h2 style={{ fontSize: "clamp(40px, 7vw, 104px)" }}>
-            Seven days to explore your next strategy.
+            Open access quantitative intelligence.
           </h2>
           <p className="lede" style={{ marginInline: "auto" }}>
-            Start a demo trial on any listed strategy. Pricing to be announced; no payment is taken here.
+            Explore institutional-grade quantitative strategies with free live charts and trade execution overlays.
           </p>
           <Link className="pill" href="/market">
-            Choose a strategy
+            Explore Strategy Marketplace →
           </Link>
         </div>
       </section>

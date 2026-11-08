@@ -470,7 +470,7 @@ function SignInContent() {
               </h2>
               <p className="lede" style={{ margin: "0 auto 28px", fontSize: 15, color: "var(--mut)", maxWidth: 360 }}>
                 {isRegister
-                  ? "Register for a free 7-day trial on any strategy."
+                  ? "Register for free access to all live charts and signals."
                   : "Sign in to access your live strategy signals and dashboard."}
               </p>
 

@@ -261,7 +261,7 @@ export async function sendWelcomeEmail(params: {
                 Welcome to StratMarket
               </h1>
               <p class="mobile-subtitle" style="margin: 10px 0 0 0; color: #9c9ca8; font-size: 15px; line-height: 1.5;">
-                AI-Researched Trading Strategies on Gold (XAUUSD) with server-enforced 7-day risk-free trials.
+                AI-Researched Trading Strategies on Gold (XAUUSD) with open access live charting.
               </p>
             </td>
           </tr>
@@ -314,17 +314,17 @@ export async function sendWelcomeEmail(params: {
                       </table>
                     </div>
 
-                    <!-- Feature 3: 7-Day Trials -->
+                    <!-- Feature 3: Open Access Platform -->
                     <div style="background-color: #111117; border: 1px solid #20202c; border-radius: 12px; padding: 16px 18px;">
                       <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                         <tr>
                           <td style="vertical-align: top;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                              <strong style="color: #ffffff; font-size: 14px; font-weight: 700;">7-Day Risk-Free Trials</strong>
-                              <span style="font-size: 11px; color: #f5d77f; font-family: 'SF Mono', monospace; font-weight: 700;">Server Enforced</span>
+                              <strong style="color: #ffffff; font-size: 14px; font-weight: 700;">Open Access Platform</strong>
+                              <span style="font-size: 11px; color: #f5d77f; font-family: 'SF Mono', monospace; font-weight: 700;">Full Access</span>
                             </div>
                             <div style="font-size: 13px; color: #8e8e9c; line-height: 1.5;">
-                              Activate server-enforced full access to any strategy with automated countdowns and zero commitment.
+                              Instant access to all strategies with live TradingView candlestick charts, execution overlays, and real-time signals.
                             </div>
                           </td>
                         </tr>
