@@ -43,6 +43,7 @@ export function StrategyChart({
   const containerRef = useRef<HTMLDivElement>(null);
   const workspaceRef = useRef<any>(null);
   const mountedKeyRef = useRef<string>("");
+  const tradeBoxDrawingIdsRef = useRef<string[]>([]);
 
   const [contract, setContract] = useState<StrategyChartContract | null>(null);
   const [candles, setCandles] = useState<MarketCandle[]>([]);
@@ -246,22 +247,31 @@ export function StrategyChart({
         );
         marks?.forEach((el) => el.remove());
 
-        // Plot authentic Long/Short Position Tool boxes with clear TP and SL zones across visible trades
-        if (showBoxes && data.contract?.tradeBoxes && ws.chart?.drawings) {
-          const lockDrawing = (d: any) => {
-            if (!d) return;
-            try {
-              d.locked = true;
-              if (d.id) {
-                ws.chart?.drawings?.lock(d.id, true);
-              }
-            } catch (_) {}
-          };
+        // Plot authentic Long/Short Position Tool boxes with explicit Entry, TP, and SL price labels
+        tradeBoxDrawingIdsRef.current = [];
 
+        const lockDrawing = (d: any) => {
+          if (!d) return;
+          try {
+            d.locked = true;
+            if (d.id) {
+              tradeBoxDrawingIdsRef.current.push(d.id);
+              ws.chart?.drawings?.lock(d.id, true);
+              if (!showBoxes) {
+                ws.chart?.drawings?.update(d.id, { visible: false });
+              }
+            }
+          } catch (_) {}
+        };
+
+        if (data.contract?.tradeBoxes && ws.chart?.drawings) {
           const boxesToPlot = (data.contract.tradeBoxes || []).slice(-25);
 
           for (const tb of boxesToPlot) {
             try {
+              const tpPts = Math.abs(tb.tpPrice - tb.entryPrice).toFixed(1);
+              const slPts = Math.abs(tb.slPrice - tb.entryPrice).toFixed(1);
+
               // 1. Reward Zone Box (Take Profit - Vibrant Emerald Green)
               const d1 = ws.chart.drawings.add("box", {
                 anchors: [
@@ -299,27 +309,123 @@ export function StrategyChart({
                   { time: tb.exitTime, price: tb.entryPrice },
                 ],
                 style: {
-                  lineColor: "rgba(255, 255, 255, 0.6)",
+                  lineColor: "rgba(255, 255, 255, 0.7)",
                   lineStyle: "dashed",
                   lineWidth: 1.5,
                 },
               });
               lockDrawing(d3);
 
-              // 4. Single Clean Entry Price Pin
-              const d4 = ws.chart.drawings.add("text", {
+              // 4. Take Profit (TP) Explicit Price Pin (Emerald)
+              const dTP = ws.chart.drawings.add("text", {
+                anchors: [
+                  { time: tb.entryTime, price: tb.tpPrice },
+                ],
+                text: {
+                  value: `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts} pts)`,
+                  color: "#10b981",
+                  size: "small",
+                  hAlign: "left",
+                  vAlign: tb.type === "LONG" ? "bottom" : "top",
+                  bold: true,
+                },
+              });
+              lockDrawing(dTP);
+
+              // 5. Entry Explicit Price Pin (Crisp White)
+              const dEntry = ws.chart.drawings.add("text", {
                 anchors: [
                   { time: tb.entryTime, price: tb.entryPrice },
                 ],
                 text: {
-                  value: `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} $${tb.entryPrice.toFixed(2)}`,
+                  value: `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} Entry: $${tb.entryPrice.toFixed(2)}`,
                   color: "#ffffff",
                   size: "small",
                   hAlign: "left",
                   vAlign: "center",
+                  bold: true,
                 },
               });
-              lockDrawing(d4);
+              lockDrawing(dEntry);
+
+              // 6. Stop Loss (SL) Explicit Price Pin (Crimson)
+              const dSL = ws.chart.drawings.add("text", {
+                anchors: [
+                  { time: tb.entryTime, price: tb.slPrice },
+                ],
+                text: {
+                  value: `SL: $${tb.slPrice.toFixed(2)} (-${slPts} pts)`,
+                  color: "#ef4444",
+                  size: "small",
+                  hAlign: "left",
+                  vAlign: tb.type === "LONG" ? "top" : "bottom",
+                  bold: true,
+                },
+              });
+              lockDrawing(dSL);
+
+              // 7. Trade Exit Outcome Badge
+              const dExit = ws.chart.drawings.add("text", {
+                anchors: [
+                  { time: tb.exitTime, price: tb.exitPrice || (tb.isWin ? tb.tpPrice : tb.slPrice) },
+                ],
+                text: {
+                  value: tb.isWin
+                    ? `✓ TP HIT (+${((Math.abs(tb.tpPrice - tb.entryPrice)) / (Math.abs(tb.slPrice - tb.entryPrice))).toFixed(2)}R)`
+                    : `✕ SL HIT (-1.00R)`,
+                  color: tb.isWin ? "#10b981" : "#ef4444",
+                  size: "small",
+                  hAlign: "left",
+                  vAlign: "center",
+                  bold: true,
+                },
+              });
+              lockDrawing(dExit);
+            } catch (_) {}
+          }
+        }
+
+        // 8. Plot Live Prospective Price Levels (Target TP, Market Price, Max SL)
+        if (data.contract?.priceLevels && ws.chart?.drawings && (data.candles || []).length > 0) {
+          const candles = data.candles;
+          const lastCandle = candles[candles.length - 1];
+          const futureTime = lastCandle.time + 15 * 60 * 1000 * 8; // 8 bars forward
+
+          for (const lvl of data.contract.priceLevels) {
+            try {
+              const isTP = lvl.name.toLowerCase().includes("target") || lvl.name.toLowerCase().includes("take profit");
+              const isSL = lvl.name.toLowerCase().includes("risk") || lvl.name.toLowerCase().includes("stop");
+              const isEntry = lvl.name.toLowerCase().includes("entry");
+              const color = isTP ? "#10b981" : isSL ? "#ef4444" : isEntry ? "#ffffff" : "#a1a1aa";
+              const labelPrefix = isTP ? "Target TP" : isSL ? "Max SL" : isEntry ? "Active Entry" : "Market";
+
+              const line = ws.chart.drawings.add("trendline", {
+                anchors: [
+                  { time: lastCandle.time, price: lvl.price },
+                  { time: futureTime, price: lvl.price },
+                ],
+                style: {
+                  lineColor: color,
+                  lineStyle: lvl.style === "solid" ? "solid" : "dashed",
+                  lineWidth: 1.5,
+                },
+              });
+              lockDrawing(line);
+
+              const label = ws.chart.drawings.add("text", {
+                anchors: [
+                  { time: futureTime, price: lvl.price },
+                ],
+                text: {
+                  value: `${labelPrefix}: $${lvl.price.toFixed(2)}`,
+                  color: color,
+                  size: "small",
+                  hAlign: "left",
+                  vAlign: "center",
+                  bold: true,
+                },
+              });
+              lockDrawing(label);
             } catch (_) {}
           }
         }
@@ -352,6 +458,17 @@ export function StrategyChart({
       }
     };
   }, [strategyId, timeframe]);
+
+  // Toggle trade box drawings visibility whenever user clicks "Position Boxes" in the topbar
+  useEffect(() => {
+    if (!workspaceRef.current?.chart?.drawings) return;
+    const drawingsCtrl = workspaceRef.current.chart.drawings;
+    for (const id of tradeBoxDrawingIdsRef.current) {
+      try {
+        drawingsCtrl.update(id, { visible: showBoxes });
+      } catch (_) {}
+    }
+  }, [showBoxes]);
 
   const handleTimeframeChange = (tf: string) => {
     const clean = tf.replace("M", "").toLowerCase();

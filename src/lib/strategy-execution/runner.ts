@@ -636,27 +636,45 @@ export class PrivateStrategyExecutionRunner {
       priceLevels.push({
         name: "Active Take Profit",
         price: currTP,
-        color: "#ffffff",
+        color: "#10b981",
         style: "dashed",
       });
       priceLevels.push({
         name: "Active Entry Price",
         price: entryPrice,
-        color: "#a1a1aa",
+        color: "#ffffff",
         style: "solid",
       });
       priceLevels.push({
         name: "Active Stop Loss",
         price: currSL,
-        color: "#71717a",
+        color: "#ef4444",
         style: "dashed",
       });
+
+      if (candles.length > 0) {
+        const lastCandle = candles[candles.length - 1];
+        tradeBoxes.push({
+          id: `tb-active`,
+          type: position === 1 ? "LONG" : "SHORT",
+          entryTime,
+          exitTime: lastCandle.time + 15 * 60 * 1000 * 4,
+          entryPrice,
+          exitPrice: latestClose,
+          tpPrice: currTP,
+          slPrice: currSL,
+          profitUsd: position === 1 ? latestClose - entryPrice : entryPrice - latestClose,
+          isWin: position === 1 ? latestClose >= entryPrice : latestClose <= entryPrice,
+          entryBadge: `ACTIVE ${position === 1 ? "LONG" : "SHORT"} @ $${entryPrice.toFixed(2)}\nTP: $${currTP.toFixed(2)} | SL: $${currSL.toFixed(2)}`,
+          exitBadge: "ACTIVE (IN PROGRESS)",
+        });
+      }
     } else if (latestClose > 0) {
       // Prospective Bracket from Current Market Close
       priceLevels.push({
         name: `Target Payoff (+${config.tpDist.toFixed(2)})`,
         price: Number((latestClose + config.tpDist).toFixed(2)),
-        color: "#ffffff",
+        color: "#10b981",
         style: "dashed",
       });
       priceLevels.push({
@@ -668,7 +686,7 @@ export class PrivateStrategyExecutionRunner {
       priceLevels.push({
         name: `Max Risk Stop (-${config.slDist.toFixed(2)})`,
         price: Number((latestClose - config.slDist).toFixed(2)),
-        color: "#71717a",
+        color: "#ef4444",
         style: "dashed",
       });
     }
