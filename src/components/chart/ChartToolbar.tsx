@@ -99,14 +99,14 @@ export function ChartToolbar({
   return (
     <header className="chart-toolbar">
       <div className="chart-toolbar-left">
-        <Link href="/market" className="chart-back-btn" title="Back to Marketplace">
+        <a href="/market" className="chart-back-btn" title="Back to Marketplace">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ marginRight: "2px" }}>
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
           <StratMarketLogo size={17} color="#ffffff" style={{ marginRight: "6px" }} />
           <span className="chart-brand">StratMarket</span>
           <span style={{ fontSize: "10.5px", color: "#a1a1aa", fontWeight: 500, marginLeft: "4px", opacity: 0.9 }}>by Elvaris Capital</span>
-        </Link>
+        </a>
 
         <div className="chart-divider" />
 

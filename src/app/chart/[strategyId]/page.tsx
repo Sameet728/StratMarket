@@ -47,7 +47,7 @@ export default async function ChartPage({ params }: Props) {
 
   // 2. Open Access: All authenticated traders receive instant full access
   return (
-    <main className="chart-page-fullscreen">
+    <div className="chart-page-fullscreen">
       <StrategyChart
         strategyId={strategy.id}
         initialUser={{ id: user.id, name: user.name, email: user.email }}
@@ -57,6 +57,6 @@ export default async function ChartPage({ params }: Props) {
         initialHasPaid={true}
         initialTrialExpiry={null}
       />
-    </main>
+    </div>
   );
 }

@@ -93,48 +93,6 @@ code, pre, .mono, .badge, .tick, .kp b, .mm b, .stats b, .metric, [data-mono] {
   letter-spacing: -0.02em;
 }
 
-/* Custom Magnetic Cursor */
-#cur {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 32px;
-  height: 32px;
-  margin: -16px 0 0 -16px;
-  border: 1px solid rgba(163, 230, 53, 0.75);
-  box-shadow: 0 0 10px rgba(163, 230, 53, 0.2);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 999;
-  mix-blend-mode: difference;
-  opacity: 0;
-  transition: opacity 0.18s ease,
-              width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              height 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              margin 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              background 0.28s,
-              border-color 0.28s,
-              box-shadow 0.28s;
-}
-
-#cur.visible {
-  opacity: 1;
-}
-
-#cur.h {
-  width: 68px;
-  height: 68px;
-  margin: -34px 0 0 -34px;
-  background: var(--lime);
-  border-color: var(--lime);
-  box-shadow: 0 0 20px rgba(163, 230, 53, 0.4);
-}
-
-@media (pointer: coarse) {
-  #cur {
-    display: none;
-  }
-}
 
 a {
   color: inherit;
@@ -1294,7 +1252,8 @@ section h2 {
   left: 12px;
   top: 0;
   width: 2px;
-  background: var(--gold);
+  background: var(--lime);
+  box-shadow: 0 0 10px rgba(163, 230, 53, 0.5);
   transition: height 1.6s ease;
 }
 
@@ -1313,7 +1272,8 @@ section h2 {
   height: 12px;
   border-radius: 50%;
   background: var(--bg);
-  border: 2px solid var(--gold);
+  border: 2px solid var(--lime);
+  box-shadow: 0 0 8px rgba(163, 230, 53, 0.4);
 }
 
 .ts h3 {
@@ -1457,6 +1417,7 @@ footer p {
   transform: scaleX(0);
   z-index: 60;
   transition: transform 0.1s linear;
+  pointer-events: none;
 }
 
 /* Ambient Radial FX with Cyber-Lime Atmospheric Depth */
@@ -2140,31 +2101,12 @@ footer p {
    STRATMARKET PRIVATE LIVE CHARTING PLATFORM (LUXALGO VELA)
    ========================================================================== */
 
-body:has(.chart-page-fullscreen) footer,
-body:has(.chart-page-fullscreen) #nav,
-body:has(.chart-page-fullscreen) #dock,
-body:has(.chart-page-fullscreen) .top-progress-bar,
-body:has(.chart-page-fullscreen) .fx {
-  display: none !important;
-}
-
-body:has(.chart-page-fullscreen) {
-  overflow: hidden !important;
-  background: #000000 !important;
-}
-
-body:has(.chart-page-fullscreen) main {
-  padding: 0 !important;
-  margin: 0 !important;
-  height: 100vh !important;
-  width: 100vw !important;
-  max-width: none !important;
-  overflow: hidden !important;
-}
-
 .chart-page-fullscreen {
+  position: fixed;
+  inset: 0;
   width: 100vw;
   height: 100vh;
+  z-index: 50;
   margin: 0;
   padding: 0;
   overflow: hidden;

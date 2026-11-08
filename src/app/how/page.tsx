@@ -18,11 +18,15 @@ export default function HowPage() {
                 fontFamily: "var(--font-mono, monospace)",
                 color: "#e4e4e7",
                 background: "rgba(255, 255, 255, 0.06)",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                padding: "2px 8px",
+                border: "1px solid rgba(163, 230, 53, 0.25)",
+                padding: "3px 9px",
                 borderRadius: "999px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
               }}
             >
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#a3e635", boxShadow: "0 0 6px #a3e635", display: "inline-block" }} />
               By Elvaris Capital · <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>elvariscapital.in ↗</a>
             </span>
           </div>
@@ -70,11 +74,11 @@ export default function HowPage() {
           </div>
 
           <div style={{ marginTop: "40px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <Link className="pill" href="/market">
-              Explore the strategy catalogue
+            <Link className="pill lime" href="/market">
+              Explore the strategy catalogue →
             </Link>
             <Link className="pill g" href="/docs">
-              Read Documentation Hub
+              Read Documentation Hub →
             </Link>
           </div>
         </div>

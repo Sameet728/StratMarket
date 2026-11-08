@@ -461,6 +461,10 @@ export function StrategyChart({
         } catch (_) {}
         workspaceRef.current = null;
       }
+      try {
+        document.body.style.overflow = "";
+        document.documentElement.style.overflow = "";
+      } catch (_) {}
     };
   }, [strategyId, timeframe]);
 
@@ -468,6 +472,10 @@ export function StrategyChart({
   useEffect(() => {
     const handleVisibilityOrFocus = () => {
       if (document.visibilityState === "visible") {
+        try {
+          document.body.style.overflow = "";
+          document.documentElement.style.overflow = "";
+        } catch (_) {}
         // Tab was switched back - force canvas resize and drawings refresh without freezing
         try {
           if (workspaceRef.current) {
@@ -487,6 +495,8 @@ export function StrategyChart({
     const handlePageShow = (e: PageTransitionEvent) => {
       // Restored from browser back/forward history cache
       try {
+        document.body.style.overflow = "";
+        document.documentElement.style.overflow = "";
         if (workspaceRef.current) {
           workspaceRef.current.chart?.resize?.();
           workspaceRef.current.resize?.();

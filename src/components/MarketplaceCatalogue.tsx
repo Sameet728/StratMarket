@@ -171,7 +171,11 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
                 style={{ cursor: "pointer" }}
                 onClick={(e) => {
                   if ((e.target as HTMLElement).closest("a, button")) return;
-                  router.push(isPython ? `/strategies/${s.slug}` : `/chart/${s.id}`);
+                  if (isPython) {
+                    router.push(`/strategies/${s.slug}`);
+                  } else {
+                    window.location.href = `/chart/${s.id}`;
+                  }
                 }}
               >
                 <div className="card-top-accent" />
@@ -205,13 +209,13 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: "12px", gap: "8px", flexWrap: "wrap" }}>
                   {!isPython ? (
-                    <Link
+                    <a
                       href={`/chart/${s.id}`}
                       className="card-chart-link"
                       title={`Open ${s.name} on LuxAlgo Vela live chart`}
                     >
                       View Live Chart ↗
-                    </Link>
+                    </a>
                   ) : (
                     <span className="note-tag-py">Institutional MT5</span>
                   )}

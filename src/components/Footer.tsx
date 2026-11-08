@@ -1,7 +1,16 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { StratMarketLogo } from "@/components/StratMarketLogo";
 
 export function Footer() {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith("/chart")) {
+    return null;
+  }
+
   return (
     <footer style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", background: "rgba(10, 10, 12, 0.95)", padding: "48px 0 36px" }}>
       <div className="wrap" style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
