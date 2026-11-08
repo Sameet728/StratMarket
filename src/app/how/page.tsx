@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "How It Works — StratMarket by Elvaris Capital",
+  title: "How It Works — StratMarket by Elvaris Capital (elvariscapital.in)",
   description: "Step-by-step walkthrough of finding, evaluating, trialing, and connecting trading strategies on StratMarket.",
 };
 
@@ -11,6 +11,22 @@ export default function HowPage() {
     <div className="page" id="p-how">
       <section className="b">
         <div className="wrap">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+            <span
+              style={{
+                fontSize: "11px",
+                fontFamily: "var(--font-mono, monospace)",
+                color: "#e2b342",
+                background: "rgba(226, 179, 66, 0.1)",
+                border: "1px solid rgba(226, 179, 66, 0.3)",
+                padding: "2px 8px",
+                borderRadius: "999px",
+              }}
+            >
+              By Elvaris Capital · <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>elvariscapital.in ↗</a>
+            </span>
+          </div>
+
           <h2>How StratMarket works.</h2>
           <p className="lede">From first look to live execution in five systematic steps.</p>
 
@@ -53,9 +69,12 @@ export default function HowPage() {
             </div>
           </div>
 
-          <div style={{ marginTop: "40px" }}>
+          <div style={{ marginTop: "40px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <Link className="pill" href="/market">
               Explore the strategy catalogue
+            </Link>
+            <Link className="pill g" href="/docs">
+              Read Documentation Hub
             </Link>
           </div>
         </div>

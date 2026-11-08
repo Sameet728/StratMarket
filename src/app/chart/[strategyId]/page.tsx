@@ -25,8 +25,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `${strategy.name} (${strategy.id}) Live Chart — StratMarket`,
-    description: `Interactive LuxAlgo Vela charting terminal with live market data and private Pine Script execution overlays for ${strategy.name} (${strategy.instrument} ${strategy.timeframe}).`,
+    title: `${strategy.name} (${strategy.id}) Live Chart — StratMarket by Elvaris Capital (elvariscapital.in)`,
+    description: `Interactive LuxAlgo Vela charting terminal with live market data and private Pine Script execution overlays for ${strategy.name} (${strategy.instrument} ${strategy.timeframe}) by Elvaris Capital (https://elvariscapital.in).`,
   };
 }
 

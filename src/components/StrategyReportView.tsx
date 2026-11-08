@@ -206,7 +206,7 @@ export function StrategyReportView({ strategy }: Props) {
       <section className="report-hero" style={{ padding: "0 0 36px", borderBottom: "1px solid var(--line)" }}>
         <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "5px 14px", borderRadius: "99px", border: isPython ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(255, 255, 255, 0.08)" }}>
           <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: isPython ? "#ffffff" : "#ffffff", display: "inline-block", boxShadow: isPython ? "0 0 8px #ffffff" : "0 0 8px #ffffff" }}></span>
-          <b>StratMarket Verified</b> · {isPython ? "MetaTrader 5 Quantitative Tear Sheet" : "TradingView Pine Script v5 Tear Sheet"}
+          <b>StratMarket by Elvaris Capital</b> · <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#e2b342", textDecoration: "underline" }}>elvariscapital.in ↗</a> · {isPython ? "MetaTrader 5 Quantitative Tear Sheet" : "TradingView Pine Script v5 Tear Sheet"}
         </span>
         
         <h1 style={{ fontSize: "clamp(34px, 5.5vw, 60px)", margin: "16px 0 16px", fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1.05 }}>

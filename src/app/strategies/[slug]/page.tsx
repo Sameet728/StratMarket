@@ -22,13 +22,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!strategy) {
     return {
-      title: "Strategy Not Found — StratMarket",
+      title: "Strategy Not Found — StratMarket by Elvaris Capital",
     };
   }
 
   return {
-    title: `${strategy.name} (${strategy.id}) Performance Report — StratMarket`,
-    description: `${strategy.description} Audited institutional metrics: Net Return +${strategy.metrics.netReturn}%, Max Drawdown ${strategy.metrics.maxDrawdown}%, Profit Factor ${strategy.metrics.profitFactor}.`,
+    title: `${strategy.name} (${strategy.id}) Performance Report — StratMarket by Elvaris Capital (elvariscapital.in)`,
+    description: `${strategy.description} Researched by Elvaris Capital (https://elvariscapital.in). Audited institutional metrics: Net Return +${strategy.metrics.netReturn}%, Max Drawdown ${strategy.metrics.maxDrawdown}%, Profit Factor ${strategy.metrics.profitFactor}, Sharpe Ratio ${strategy.metrics.sharpeRatio}.`,
+    openGraph: {
+      title: `${strategy.name} (${strategy.id}) — StratMarket by Elvaris Capital`,
+      description: `${strategy.description} Audited institutional metrics by Elvaris Capital (elvariscapital.in).`,
+    },
   };
 }
 
@@ -40,8 +44,29 @@ export default async function StrategyReportPage({ params }: Props) {
     notFound();
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: `${strategy.name} (${strategy.id}) Quantitative Performance Report`,
+    description: strategy.description,
+    author: {
+      "@type": "Organization",
+      name: "Elvaris Capital",
+      url: "https://elvariscapital.in",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Elvaris Capital",
+      url: "https://elvariscapital.in",
+    },
+  };
+
   return (
     <div className="page" id="p-strategy-report" style={{ minHeight: "100vh", paddingTop: "20px" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <StrategyReportView strategy={strategy} />
     </div>
   );

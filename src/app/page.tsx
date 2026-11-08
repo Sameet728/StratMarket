@@ -16,7 +16,15 @@ export default async function HomePage() {
       <div className="h0">
         <div className="hc">
           <span className="tag">
-            <b>New</b> StratMarket, by Elvaris Capital
+            <b>Product by</b> Elvaris Capital ·{" "}
+            <a
+              href="https://elvariscapital.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "inherit", textDecoration: "underline" }}
+            >
+              elvariscapital.in ↗
+            </a>
           </span>
           <h1>Research-driven strategies. Built for the markets.</h1>
           <p>
@@ -25,6 +33,9 @@ export default async function HomePage() {
           <div className="cta" style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <Link className="pill" href="/market">
               Explore strategies
+            </Link>
+            <Link className="pill g" href="/docs">
+              Documentation
             </Link>
             <Link className="pill g" href="/research">
               Our research process
@@ -99,6 +110,102 @@ export default async function HomePage() {
 
       {/* Three Ways to Use a Strategy */}
       <ThreeWaysSection />
+
+      {/* Elvaris Capital Parent Organization Authority Section */}
+      <section className="b" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", background: "rgba(18, 18, 22, 0.5)", padding: "80px 0" }}>
+        <div className="wrap">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "48px", alignItems: "center" }}>
+            <div>
+              <span
+                style={{
+                  fontSize: "12px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  color: "#e2b342",
+                  fontWeight: 600,
+                  display: "inline-block",
+                  marginBottom: "12px",
+                }}
+              >
+                Parent Organization
+              </span>
+              <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", lineHeight: "1.15", margin: "0 0 16px" }}>
+                Built &amp; backed by Elvaris Capital.
+              </h2>
+              <p style={{ color: "#9ca3af", fontSize: "16px", lineHeight: "1.6", margin: "0 0 24px" }}>
+                StratMarket is the proprietary algorithmic strategy flagship of <strong>Elvaris Capital</strong> (
+                <a
+                  href="https://elvariscapital.in"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#e2b342", textDecoration: "underline" }}
+                >
+                  elvariscapital.in
+                </a>
+                ). Our quantitative laboratory engineers systematic trading models, high-frequency execution bridges, and mathematical risk protocols designed for prop traders, hedge funds, and discerning retail quants.
+              </p>
+              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                <a
+                  href="https://elvariscapital.in"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="pill"
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                >
+                  <span>Visit Elvaris Capital (elvariscapital.in)</span>
+                  <span>↗</span>
+                </a>
+                <Link href="/docs/elvaris-capital" className="pill g">
+                  About the Quant Lab
+                </Link>
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: "rgba(255, 255, 255, 0.02)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "16px",
+                padding: "32px",
+              }}
+            >
+              <h3 style={{ fontSize: "18px", marginBottom: "20px", color: "#fff" }}>
+                Institutional Quant Standards
+              </h3>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "18px" }}>
+                <li style={{ display: "flex", gap: "14px" }}>
+                  <span style={{ color: "#e2b342", fontWeight: "700" }}>01.</span>
+                  <div>
+                    <strong style={{ color: "#e5e7eb", display: "block" }}>Zero Curve-Fitting Guarantee</strong>
+                    <span style={{ color: "#9ca3af", fontSize: "13px" }}>All models validated across out-of-sample datasets (30%) and 1,000+ Monte Carlo reshufflings.</span>
+                  </div>
+                </li>
+                <li style={{ display: "flex", gap: "14px" }}>
+                  <span style={{ color: "#e2b342", fontWeight: "700" }}>02.</span>
+                  <div>
+                    <strong style={{ color: "#e5e7eb", display: "block" }}>Realistic Transaction Drag</strong>
+                    <span style={{ color: "#9ca3af", fontSize: "13px" }}>Backtests account for $2.50/lot commission, live spreads, and 1.0+ pip slippage drag on execution.</span>
+                  </div>
+                </li>
+                <li style={{ display: "flex", gap: "14px" }}>
+                  <span style={{ color: "#e2b342", fontWeight: "700" }}>03.</span>
+                  <div>
+                    <strong style={{ color: "#e5e7eb", display: "block" }}>Dedicated 24/7 VPS Relay</strong>
+                    <span style={{ color: "#9ca3af", fontSize: "13px" }}>Sub-50ms signal dispatch to TradingView webhooks, MetaTrader 5, and institutional FIX endpoints.</span>
+                  </div>
+                </li>
+                <li style={{ display: "flex", gap: "14px" }}>
+                  <span style={{ color: "#e2b342", fontWeight: "700" }}>04.</span>
+                  <div>
+                    <strong style={{ color: "#e5e7eb", display: "block" }}>100% Free Open Access</strong>
+                    <span style={{ color: "#9ca3af", fontSize: "13px" }}>Free registration grants full interactive charts and real-time execution signals without paywalls or trial limits.</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Open Access Call-To-Action */}
       <section className="b" style={{ paddingTop: 0, paddingBottom: "150px", overflow: "hidden" }}>

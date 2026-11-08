@@ -1,0 +1,29 @@
+# StratMarket by Elvaris Capital
+
+> StratMarket (https://stratmarket.elvariscapital.in) is an institutional-grade quantitative trading strategy marketplace engineered and operated by Elvaris Capital (parent organization: https://elvariscapital.in).
+
+## Overview
+StratMarket provides traders, fund managers, and systematic investors with 100% open-access quantitative algorithmic trading strategies. All strategies are researched using AI-assisted hypothesis generation, verified with multi-year tick-level backtests, and stress-tested with Walk-Forward Optimization (WFO) and Monte Carlo simulations.
+
+## Parent Organization
+- **Parent Organization:** Elvaris Capital
+- **Official Website:** https://elvariscapital.in
+- **Role:** Quantitative research lab, algorithmic strategy design, institutional risk governance, and VPS signal execution engine.
+
+## Core Capabilities
+- **Systematic Strategy Catalog:** 14 verified quant strategies across Pine Script (PS-01 to PS-04) and Python MT5 Single-Digit Drawdown Ensembles (PY-01 to PY-10).
+- **Public Research Reports:** Unauthenticated public access to institutional research reports including hypothesis, Sharpe ratio, Calmar ratio, maximum drawdown, and slippage assumptions.
+- **Private Live Interactive Charts:** High-fidelity Vela canvas candlestick streaming with real-time indicators and Long/Short execution visual trade boxes (free with login).
+- **Real-Time Signal Relays:** Sub-50ms execution alerts dispatched via authenticated Webhooks and instant email delivery.
+- **Sovereign Risk Governance:** Server-enforced drawdown circuit breakers, Friday session closing rules, and volatility-adaptive stop losses.
+
+## Essential Documentation Links
+- [Documentation Hub](https://stratmarket.elvariscapital.in/docs): Complete technical guides and API references.
+- [About Elvaris Capital](https://stratmarket.elvariscapital.in/docs/elvaris-capital): Corporate profile, quant lab philosophy, and parent organization credentials.
+- [Quantitative Methodology](https://stratmarket.elvariscapital.in/docs/quantitative-methodology): Mathematical formulas, backtest validation, and anti-curve-fitting protocols.
+- [Algorithmic Strategy Catalog](https://stratmarket.elvariscapital.in/docs/algorithmic-strategies): Complete breakdown of all 14 Pine Script and Python MT5 strategies.
+- [Signals & VPS Execution](https://stratmarket.elvariscapital.in/docs/signals-and-execution): Low-latency execution relay and webhook architecture.
+- [Sovereign Risk Management](https://stratmarket.elvariscapital.in/docs/risk-management): Capital preservation, ATR bracket stops, and daily risk caps.
+- [Broker Integration & API Reference](https://stratmarket.elvariscapital.in/docs/broker-integration): Webhook JSON contracts and automated execution setup.
+- [Frequently Asked Questions (FAQ)](https://stratmarket.elvariscapital.in/docs/faq): Key answers for traders and institutional allocators.
+- [Full LLM Knowledge Document](https://stratmarket.elvariscapital.in/llms-full.txt): Complete plain-text knowledge base for LLMs and AI search engines.

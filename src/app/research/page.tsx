@@ -1,7 +1,8 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Quant Research Process — StratMarket by Elvaris Capital",
+  title: "Quant Research Process — StratMarket by Elvaris Capital (elvariscapital.in)",
   description: "Learn how Elvaris Capital generates, backtests, refines, and validates systematic trading strategies.",
 };
 
@@ -10,10 +11,35 @@ export default function ResearchPage() {
     <div className="page" id="p-research">
       <section className="b">
         <div className="wrap">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+            <span
+              style={{
+                fontSize: "11px",
+                fontFamily: "var(--font-mono, monospace)",
+                color: "#e2b342",
+                background: "rgba(226, 179, 66, 0.1)",
+                border: "1px solid rgba(226, 179, 66, 0.3)",
+                padding: "2px 8px",
+                borderRadius: "999px",
+              }}
+            >
+              By Elvaris Capital · <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>elvariscapital.in ↗</a>
+            </span>
+          </div>
+
           <h2>From hypothesis to strategy.</h2>
           <p className="lede">
-            Every candidate strategy undergoes rigorous quant verification. No results are curve-fitted, parameters are locked before out-of-sample evaluation, and execution latency is accounted for.
+            Every candidate strategy undergoes rigorous quant verification by <strong>Elvaris Capital</strong>. No results are curve-fitted, parameters are locked before out-of-sample evaluation, and execution latency is accounted for.
           </p>
+
+          <div style={{ margin: "24px 0 40px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <Link href="/docs/quantitative-methodology" className="pill sm">
+              Read Mathematical Methodology →
+            </Link>
+            <Link href="/docs" className="pill g sm">
+              Documentation Hub
+            </Link>
+          </div>
 
           <div className="pipe" id="pipe">
             <div className="st">

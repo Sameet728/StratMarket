@@ -45,21 +45,46 @@ export function HeaderNav() {
 
   return (
     <header id="nav" className={scrolled ? "s" : ""}>
-      <Link href="/" className="logo">
-        <svg
-          className="mk"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#fff"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <Link href="/" className="logo">
+          <svg
+            className="mk"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="1.5" y="1.5" width="21" height="21" rx="6" stroke="#444" />
+            <path d="M5 16 L10 10 L14 14 L19 7" pathLength="1" />
+          </svg>
+          StratMarket
+        </Link>
+        <a
+          href="https://elvariscapital.in"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Parent Organization: Elvaris Capital (elvariscapital.in)"
+          style={{
+            fontSize: "11px",
+            fontFamily: "var(--font-mono, monospace)",
+            color: "#e2b342",
+            background: "rgba(226, 179, 66, 0.08)",
+            border: "1px solid rgba(226, 179, 66, 0.25)",
+            padding: "3px 9px",
+            borderRadius: "999px",
+            letterSpacing: "0.02em",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
+          }}
         >
-          <rect x="1.5" y="1.5" width="21" height="21" rx="6" stroke="#444" />
-          <path d="M5 16 L10 10 L14 14 L19 7" pathLength="1" />
-        </svg>
-        StratMarket
-      </Link>
+          <span>by Elvaris Capital</span>
+          <span style={{ opacity: 0.7 }}>↗</span>
+        </a>
+      </div>
 
       <span className="chip0">
         <i />
@@ -67,6 +92,9 @@ export function HeaderNav() {
       </span>
 
       <div className="r">
+        <Link href="/docs" className="pill g sm">
+          Docs
+        </Link>
         {!loading && (
           <>
             {user ? (
