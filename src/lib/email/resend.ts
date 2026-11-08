@@ -1,12 +1,14 @@
 /**
- * StratMarket Institutional Email Service
- * Operated by: Elvaris Capital (https://elvariscapital.in)
- * Verified Domain: elvariscapital.in
- * 
- * Supports:
- * 1. User Signup / Welcome Email
- * 2. User Login / Security Alert Email
- * 3. Real-Time Trading Signal Alert Email (ENTRY, EXIT, STOP_LOSS, TAKE_PROFIT)
+ * StratMarket Institutional Email Service — V3 Theme
+ * Brand: StratMarket by Elvaris Capital
+ * Parent Organization: Elvaris Capital (https://elvariscapital.in)
+ * Verified Sender Domain: elvariscapital.in
+ *
+ * All emails adopt the official StratMarket V3 email template specification:
+ * - otp-verification.html
+ * - welcome-account-created.html
+ * - trade-alert.html
+ * - login-security-alert
  */
 
 export interface EmailResult {
@@ -49,7 +51,7 @@ async function sendResendMail(payload: {
 
   try {
     const toRecipients = Array.isArray(payload.to) ? payload.to : [payload.to];
-    
+
     // Strict domain check: Sender MUST be from @elvariscapital.in
     const fromAddress = payload.from || DEFAULT_FROM;
     const finalFrom = fromAddress.includes("elvariscapital.in")
@@ -59,7 +61,7 @@ async function sendResendMail(payload: {
     let res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${activeKey}`,
+        Authorization: `Bearer ${activeKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -80,7 +82,7 @@ async function sendResendMail(payload: {
         res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${activeKey}`,
+            Authorization: `Bearer ${activeKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -107,128 +109,91 @@ async function sendResendMail(payload: {
 }
 
 /**
- * Shared HTML Head with Mobile-Responsive Styles matching StratMarket Dark Theme
+ * Shared V3 HTML Head with Email-Safe Responsive Styles
  */
 function getEmailHead(title: string): string {
   return `
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="dark">
-  <meta name="supported-color-schemes" content="dark">
-  <title>${title}</title>
-  <style>
-    :root { color-scheme: dark; }
-    body { margin: 0; padding: 0; background-color: #000000 !important; color: #ffffff !important; }
-    @media only screen and (max-width: 600px) {
-      .container-table { width: 100% !important; max-width: 100% !important; }
-      .content-cell { padding: 20px 16px !important; }
-      .header-cell { padding: 24px 16px !important; }
-      .mobile-stack { display: block !important; width: 100% !important; max-width: 100% !important; }
-      .mobile-mb-10 { margin-bottom: 10px !important; }
-      .mobile-mb-16 { margin-bottom: 16px !important; }
-      .mobile-title { font-size: 22px !important; line-height: 1.2 !important; }
-      .mobile-subtitle { font-size: 13px !important; }
-      .mobile-box { width: 100% !important; display: block !important; box-sizing: border-box !important; margin-bottom: 10px !important; }
-      .mobile-btn { display: block !important; width: 100% !important; box-sizing: border-box !important; text-align: center !important; }
-      .mobile-stat-col { display: block !important; width: 100% !important; border-right: none !important; border-bottom: 1px solid #1f1f28 !important; padding: 12px 14px !important; }
-      .mobile-hide { display: none !important; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>${title}</title>
+<style>
+  html,body{margin:0!important;padding:0!important;width:100%!important;background:#f3f5f7;color:#202a36;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;}
+  table{border-collapse:collapse!important;border-spacing:0!important;}
+  img{border:0;outline:none;text-decoration:none;}
+  a{color:#8a6b2d;}
+  .page{width:100%;background:#f3f5f7;}
+  .outer{padding:38px 14px;}
+  .shell{width:600px;max-width:600px;background:#fff;border:1px solid #e1e5e9;}
+  .pad{padding-left:42px;padding-right:42px;}
+  .brand{font-size:18px;line-height:22px;font-weight:700;letter-spacing:-.45px;color:#182331;}
+  .eyebrow{font-size:9px;line-height:14px;letter-spacing:1.5px;text-transform:uppercase;color:#7c8490;font-weight:700;}
+  .company{font-size:9px;line-height:14px;letter-spacing:1.4px;color:#7c8490;text-transform:uppercase;margin-top:4px;}
+  .site{font-size:11px;line-height:16px;margin-top:3px;}
+  .site a{text-decoration:none;color:#8a6b2d;}
+  .headline{font-size:28px;line-height:34px;letter-spacing:-.7px;color:#182331;margin:10px 0 12px;font-weight:700;}
+  .bodycopy{font-size:14px;line-height:23px;color:#5e6976;margin:0;}
+  .muted{font-size:12px;line-height:19px;color:#77818d;}
+  .rule{border-top:1px solid #e9ecef;}
+  .footer{background:#fafbfc;border-top:1px solid #e9ecef;padding-top:22px;padding-bottom:24px;}
+  .button{display:inline-block;background:#263343;color:#fff!important;text-decoration:none;font-size:12px;line-height:16px;font-weight:700;padding:13px 22px;}
+  @media only screen and (max-width:620px){
+    .outer{padding:12px 8px!important;}
+    .shell{width:100%!important;max-width:100%!important;}
+    .pad{padding-left:22px!important;padding-right:22px!important;}
+    .headline{font-size:24px!important;line-height:30px!important;}
+    .mobile-block{display:block!important;width:100%!important;}
+    .mobile-center{text-align:left!important;}
+    .otp{font-size:28px!important;letter-spacing:5px!important;}
+    .metric{font-size:22px!important;}
+  }
+</style>
   `;
 }
 
 /**
- * Shared Institutional Header matching Website Navigation
+ * Shared V3 Brand Header
  */
-function getEmailHeader(badgeText: string, badgeColor: "gold" | "emerald" | "blue" = "gold"): string {
-  const badgeColors = {
-    gold: {
-      bg: "rgba(212, 175, 55, 0.12)",
-      border: "rgba(212, 175, 55, 0.35)",
-      text: "#f5d77f",
-    },
-    emerald: {
-      bg: "rgba(16, 185, 129, 0.12)",
-      border: "rgba(16, 185, 129, 0.35)",
-      text: "#10b981",
-    },
-    blue: {
-      bg: "rgba(56, 189, 248, 0.12)",
-      border: "rgba(56, 189, 248, 0.35)",
-      text: "#38bdf8",
-    },
-  }[badgeColor];
-
+function getEmailHeader(categoryEyebrow: string): string {
   return `
-  <!-- Brand Top Bar -->
-  <tr>
-    <td style="background-color: #070709; padding: 18px 28px; border-bottom: 1px solid #1f1f28;">
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-        <tr>
-          <td align="left" style="vertical-align: middle;">
-            <a href="${BASE_URL}" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-              <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #d4af37; box-shadow: 0 0 10px rgba(212, 175, 55, 0.7); vertical-align: middle; margin-right: 8px;"></span>
-              <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 16px; font-weight: 800; letter-spacing: -0.03em; color: #ffffff;">StratMarket</span>
-              <span style="font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; font-weight: 500; color: #888894; margin-left: 6px;">by ELVARIS CAPITAL</span>
-            </a>
-          </td>
-          <td align="right" style="vertical-align: middle;">
-            <span style="display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; background: ${badgeColors.bg}; border: 1px solid ${badgeColors.border}; color: ${badgeColors.text}; font-family: 'SF Mono', Menlo, monospace;">
-              ${badgeText}
-            </span>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
+<tr><td class="pad" style="padding-top:25px;padding-bottom:21px;">
+<table role="presentation" width="100%"><tr>
+<td valign="top">
+<div class="brand">STRATMARKET</div>
+<div class="company">BY ELVARIS CAPITAL</div>
+<div class="site"><a href="https://elvariscapital.in">elvariscapital.in</a></div>
+</td>
+<td align="right" valign="top" class="eyebrow">${categoryEyebrow}</td>
+</tr></table>
+</td></tr>
   `;
 }
 
 /**
- * Shared Institutional Footer matching Website Theme
+ * Shared V3 Footer
  */
-function getEmailFooter(contextNote?: string): string {
+function getEmailFooter(): string {
   return `
-  <!-- Institutional Footer -->
-  <tr>
-    <td style="background-color: #050507; padding: 26px 28px; border-top: 1px solid #1a1a24; text-align: center;">
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-        <tr>
-          <td align="center">
-            <p style="margin: 0 0 10px 0; font-size: 12px; color: #8a8a98; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
-              ${contextNote || "Institutional Quantitative Strategies • 24x7 VPS Research Engine"}
-            </p>
-            <div style="font-size: 11px; color: #555562; margin-bottom: 14px; font-family: 'SF Mono', Menlo, monospace;">
-              Verified Domain: <strong style="color: #9d9daf;">elvariscapital.in</strong> • Node: <strong style="color: #9d9daf;">AP-NORTHEAST-1</strong>
-            </div>
-            <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
-              <tr>
-                <td style="padding: 0 8px;">
-                  <a href="${BASE_URL}/market" style="font-size: 11px; color: #a0a0b2; text-decoration: none;">Marketplace</a>
-                </td>
-                <td style="color: #33333f;">•</td>
-                <td style="padding: 0 8px;">
-                  <a href="${BASE_URL}/dashboard" style="font-size: 11px; color: #a0a0b2; text-decoration: none;">Dashboard</a>
-                </td>
-                <td style="color: #33333f;">•</td>
-                <td style="padding: 0 8px;">
-                  <a href="${BASE_URL}/profile" style="font-size: 11px; color: #a0a0b2; text-decoration: none;">Alert Settings</a>
-                </td>
-              </tr>
-            </table>
-            <p style="margin: 16px 0 0 0; font-size: 10px; color: #40404c; line-height: 1.4;">
-              © 2026 Elvaris Capital. StratMarket Quantitative Research & Live Execution Platform. All rights reserved.
-            </p>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
+<tr><td class="pad footer">
+  <div style="font-size:11px;line-height:19px;color:#697482;">
+    StratMarket is a product by <strong style="color:#394553;">Elvaris Capital</strong>.<br>
+    <a href="https://elvariscapital.in" style="color:#697482;text-decoration:underline;">elvariscapital.in</a>
+  </div>
+  <div style="font-size:10px;line-height:17px;color:#9aa2ab;margin-top:12px;">
+    © 2026 Elvaris Capital. All rights reserved.<br>
+    This is an automated notification from StratMarket. Please do not reply directly.
+  </div>
+</td></tr>
+</table>
+<div style="font-size:10px;line-height:16px;color:#9aa2ab;text-align:center;padding:14px 10px;max-width:560px;">
+  You are receiving this email because of activity on your StratMarket account.
+</div>
   `;
 }
 
 /**
- * 1. User Signup / Welcome Email
+ * 1. User Signup / Welcome Email (V3 Template: welcome-account-created.html)
  */
 export async function sendWelcomeEmail(params: {
   to: string;
@@ -236,266 +201,56 @@ export async function sendWelcomeEmail(params: {
 }): Promise<EmailResult> {
   const { to, name } = params;
   const firstName = name.split(" ")[0] || "Trader";
+  const dashboardUrl = `${BASE_URL}/dashboard`;
+  const supportUrl = `https://elvariscapital.in`;
 
-  const html = `
-<!DOCTYPE html>
+  const html = `<!doctype html>
 <html lang="en">
 <head>
-  ${getEmailHead("Welcome to StratMarket — Account Active")}
+${getEmailHead("StratMarket | Welcome")}
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 36px 12px;">
-    <tr>
-      <td align="center">
-        <!-- Main Card Container -->
-        <table role="presentation" width="100%" class="container-table" style="max-width: 600px; background-color: #0a0a0d; border: 1px solid #22222c; border-radius: 18px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);">
-          ${getEmailHeader("PORTFOLIO ACCESS ACTIVE", "gold")}
+<body>
+<table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0">
+<tr><td align="center" class="outer">
+<table role="presentation" class="shell" width="600" cellpadding="0" cellspacing="0">
+${getEmailHeader("ACCOUNT NOTIFICATION")}
 
-          <!-- Hero Section -->
-          <tr>
-            <td class="header-cell" style="background: linear-gradient(180deg, #101016 0%, #0a0a0d 100%); padding: 36px 32px; text-align: left; border-bottom: 1px solid #1a1a24;">
-              <div style="display: inline-block; padding: 5px 12px; background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; font-size: 11px; font-weight: 700; color: #f5d77f; letter-spacing: 0.06em; text-transform: uppercase; font-family: 'SF Mono', Menlo, monospace; margin-bottom: 14px;">
-                Institutional Trading Hub
-              </div>
-              <h1 class="mobile-title" style="margin: 0; font-size: 28px; font-weight: 800; color: #ffffff; letter-spacing: -0.03em; line-height: 1.15;">
-                Welcome to StratMarket
-              </h1>
-              <p class="mobile-subtitle" style="margin: 10px 0 0 0; color: #9c9ca8; font-size: 15px; line-height: 1.5;">
-                AI-Researched Trading Strategies on Gold (XAUUSD) with open access live charting.
-              </p>
-            </td>
-          </tr>
-
-          <!-- Content Body -->
-          <tr>
-            <td class="content-cell" style="padding: 32px 32px;">
-              <p style="margin: 0 0 16px 0; font-size: 15px; color: #eaeaf2; line-height: 1.6;">
-                Hello <strong style="color: #ffffff;">${firstName}</strong>,
-              </p>
-              <p style="margin: 0 0 24px 0; font-size: 14.5px; line-height: 1.65; color: #a4a4b2;">
-                Your account is confirmed and ready. You now have instant access to our audited strategy catalog, interactive TradingView & LuxAlgo Vela charting terminal, and autonomous 24/7 VPS signal delivery.
-              </p>
-
-              <!-- Strategy Highlights Grid -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
-                <tr>
-                  <td>
-                    <!-- Feature 1: Pine Script Champions -->
-                    <div style="background-color: #111117; border: 1px solid #20202c; border-radius: 12px; padding: 16px 18px; margin-bottom: 12px;">
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                        <tr>
-                          <td style="vertical-align: top;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                              <strong style="color: #ffffff; font-size: 14px; font-weight: 700;">4 Pine Script M15 Champions</strong>
-                              <span style="font-size: 11px; color: #10b981; font-family: 'SF Mono', monospace; font-weight: 700;">Up to 88.5% WR</span>
-                            </div>
-                            <div style="font-size: 13px; color: #8e8e9c; line-height: 1.5;">
-                              Grandmaster Dual 10R, Apex 88% WR, Strict 1:2 R:R, and Elite. Tested on tick data with zero repainting.
-                            </div>
-                          </td>
-                        </tr>
-                      </table>
-                    </div>
-
-                    <!-- Feature 2: MT5 Ensembles -->
-                    <div style="background-color: #111117; border: 1px solid #20202c; border-radius: 12px; padding: 16px 18px; margin-bottom: 12px;">
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                        <tr>
-                          <td style="vertical-align: top;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                              <strong style="color: #ffffff; font-size: 14px; font-weight: 700;">Quantitative Fleet</strong>
-                              <span style="font-size: 11px; color: #ffffff; font-family: 'SF Mono', monospace; font-weight: 700;">Peak Alpha</span>
-                            </div>
-                            <div style="font-size: 13px; color: #8e8e9c; line-height: 1.5;">
-                              Multi-engine quantitative models running on live broker data with dedicated VPS engine.
-                            </div>
-                          </td>
-                        </tr>
-                      </table>
-                    </div>
-
-                    <!-- Feature 3: Open Access Platform -->
-                    <div style="background-color: #111117; border: 1px solid #20202c; border-radius: 12px; padding: 16px 18px;">
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                        <tr>
-                          <td style="vertical-align: top;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                              <strong style="color: #ffffff; font-size: 14px; font-weight: 700;">Open Access Platform</strong>
-                              <span style="font-size: 11px; color: #f5d77f; font-family: 'SF Mono', monospace; font-weight: 700;">Full Access</span>
-                            </div>
-                            <div style="font-size: 13px; color: #8e8e9c; line-height: 1.5;">
-                              Instant access to all strategies with live TradingView candlestick charts, execution overlays, and real-time signals.
-                            </div>
-                          </td>
-                        </tr>
-                      </table>
-                    </div>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Primary CTA Button -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 28px 0 16px 0;">
-                <tr>
-                  <td align="center">
-                    <a href="${BASE_URL}/market" class="mobile-btn" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #b89728 100%); color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 800; font-size: 14.5px; padding: 14px 34px; text-decoration: none; border-radius: 30px; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.35); letter-spacing: -0.01em;">
-                      Explore Quantitative Strategies →
-                    </a>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Secondary Link -->
-              <div style="text-align: center; margin-top: 8px;">
-                <a href="${BASE_URL}/dashboard" style="font-size: 13px; color: #8a8a9a; text-decoration: none; border-bottom: 1px dotted #444454;">
-                  Open Trader Dashboard
-                </a>
-              </div>
-            </td>
-          </tr>
-
-          ${getEmailFooter("Welcome to Elvaris Capital Quantitative Systems")}
-        </table>
-      </td>
-    </tr>
+<tr><td class="pad" style="padding-top:34px;padding-bottom:12px;">
+  <div class="eyebrow" style="color:#8a6b2d;">Account confirmation</div>
+  <h1 class="headline">Your account is ready.</h1>
+  <p class="bodycopy">Hello ${firstName}, your StratMarket account has been successfully created. You can now sign in and explore the platform.</p>
+</td></tr>
+<tr><td class="pad" style="padding-top:18px;padding-bottom:24px;">
+  <table role="presentation" width="100%" style="border:1px solid #e2e6ea;">
+    <tr><td style="padding:17px 19px;border-bottom:1px solid #e9ecef;">
+      <div class="eyebrow">Account details</div>
+      <div style="font-size:13px;line-height:20px;color:#394553;margin-top:8px;">Email address: <strong>${to}</strong></div>
+      <div style="font-size:13px;line-height:20px;color:#394553;">Account status: <strong style="color:#28734d;">Active</strong></div>
+    </td></tr>
+    <tr><td style="padding:17px 19px;">
+      <div style="font-size:13px;line-height:20px;color:#394553;font-weight:700;">Getting started</div>
+      <div class="muted" style="margin-top:6px;">Sign in to review your account, explore available strategies and manage your notification preferences.</div>
+    </td></tr>
   </table>
-</body>
-</html>
-  `;
+</td></tr>
+<tr><td class="pad" style="padding-bottom:36px;">
+  <a class="button" href="${dashboardUrl}">OPEN STRATMARKET</a>
+  <div class="muted" style="margin-top:16px;">If you did not create this account, please contact <a href="${supportUrl}">our support team</a>.</div>
+</td></tr>
+
+${getEmailFooter()}
+</td></tr></table>
+</body></html>`;
 
   return sendResendMail({
     to,
-    subject: "Welcome to StratMarket — Account Active & Ready",
+    subject: "Welcome to StratMarket — Account Active",
     html,
   });
 }
 
 /**
- * 2. Login Security Alert Email
- */
-export async function sendLoginSecurityEmail(params: {
-  to: string;
-  name: string;
-  ip?: string;
-  userAgent?: string;
-  time?: string;
-}): Promise<EmailResult> {
-  const { to, name, ip = "Recorded", userAgent = "Web Browser", time = new Date().toUTCString() } = params;
-  const firstName = name.split(" ")[0] || "Trader";
-
-  const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  ${getEmailHead("Security Notification: StratMarket Account Login")}
-</head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 36px 12px;">
-    <tr>
-      <td align="center">
-        <!-- Main Card Container -->
-        <table role="presentation" width="100%" class="container-table" style="max-width: 600px; background-color: #0a0a0d; border: 1px solid #22222c; border-radius: 18px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);">
-          ${getEmailHeader("SECURITY AUDIT NOTIFICATION", "emerald")}
-
-          <!-- Header -->
-          <tr>
-            <td class="header-cell" style="background: linear-gradient(180deg, #101016 0%, #0a0a0d 100%); padding: 32px 32px; text-align: left; border-bottom: 1px solid #1a1a24;">
-              <div style="display: inline-block; padding: 5px 12px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 20px; font-size: 11px; font-weight: 700; color: #10b981; letter-spacing: 0.06em; text-transform: uppercase; font-family: 'SF Mono', Menlo, monospace; margin-bottom: 12px;">
-                ● Session Initiated
-              </div>
-              <h1 class="mobile-title" style="margin: 0; font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.03em;">
-                New Account Sign-in
-              </h1>
-              <p class="mobile-subtitle" style="margin: 8px 0 0 0; color: #9c9ca8; font-size: 14px;">
-                We logged a successful authentication session on your StratMarket trader profile.
-              </p>
-            </td>
-          </tr>
-
-          <!-- Content Body -->
-          <tr>
-            <td class="content-cell" style="padding: 28px 32px;">
-              <p style="margin: 0 0 16px 0; font-size: 15px; color: #eaeaf2;">
-                Hello <strong style="color: #ffffff;">${firstName}</strong>,
-              </p>
-              <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #9c9ca8;">
-                Here are the connection and environment details for this sign-in:
-              </p>
-
-              <!-- Telemetry Card -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111117; border: 1px solid #22222e; border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
-                <tr>
-                  <td style="padding: 13px 18px; border-bottom: 1px solid #1e1e28; width: 34%; font-size: 12.5px; color: #828290; font-family: 'SF Mono', Menlo, monospace;">
-                    Timestamp (UTC)
-                  </td>
-                  <td style="padding: 13px 18px; border-bottom: 1px solid #1e1e28; font-size: 13px; color: #ffffff; font-weight: 600; font-family: 'SF Mono', Menlo, monospace;">
-                    ${time}
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 13px 18px; border-bottom: 1px solid #1e1e28; font-size: 12.5px; color: #828290; font-family: 'SF Mono', Menlo, monospace;">
-                    IP Address
-                  </td>
-                  <td style="padding: 13px 18px; border-bottom: 1px solid #1e1e28; font-size: 13.5px; color: #38bdf8; font-weight: 700; font-family: 'SF Mono', Menlo, monospace;">
-                    ${ip}
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 13px 18px; border-bottom: 1px solid #1e1e28; font-size: 12.5px; color: #828290; font-family: 'SF Mono', Menlo, monospace;">
-                    Session Status
-                  </td>
-                  <td style="padding: 13px 18px; border-bottom: 1px solid #1e1e28; font-size: 12.5px; color: #10b981; font-weight: 700; font-family: 'SF Mono', Menlo, monospace;">
-                    ● ACTIVE & VERIFIED
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 13px 18px; font-size: 12.5px; color: #828290; font-family: 'SF Mono', Menlo, monospace;">
-                    Client Device
-                  </td>
-                  <td style="padding: 13px 18px; font-size: 12.5px; color: #c4c4d4; word-break: break-all; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
-                    ${userAgent.substring(0, 95)}
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Safety Notice -->
-              <div style="background-color: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 10px; padding: 14px 16px; margin-bottom: 24px;">
-                <p style="margin: 0; font-size: 12.5px; color: #94b8db; line-height: 1.55;">
-                  <strong>Did not initiate this sign-in?</strong> Someone may have access to your credentials. Please immediately secure your account or reach out to <a href="mailto:security@elvariscapital.in" style="color: #38bdf8; text-decoration: underline;">security@elvariscapital.in</a>.
-                </p>
-              </div>
-
-              <!-- Button -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td align="center">
-                    <a href="${BASE_URL}/profile" class="mobile-btn" style="display: inline-block; background-color: #171720; border: 1px solid #2e2e3e; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 700; font-size: 13.5px; padding: 12px 28px; text-decoration: none; border-radius: 25px;">
-                      Review Active Sessions in Profile →
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          ${getEmailFooter("Security audit dispatched by Elvaris Capital Identity Desk")}
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `;
-
-  return sendResendMail({
-    to,
-    subject: "Security Alert: New Sign-in to StratMarket Account",
-    html,
-  });
-}
-
-/**
- * 2b. Password Reset Verification OTP Email
+ * 2. Password Reset OTP Email (V3 Template: otp-verification.html)
  */
 export async function sendPasswordResetOtpEmail(params: {
   to: string;
@@ -505,108 +260,54 @@ export async function sendPasswordResetOtpEmail(params: {
 }): Promise<EmailResult> {
   const { to, name = "Trader", otp, expiresInMinutes = 10 } = params;
   const firstName = name.split(" ")[0] || "Trader";
+  const supportUrl = `https://elvariscapital.in`;
 
-  const html = `
-<!DOCTYPE html>
+  const html = `<!doctype html>
 <html lang="en">
 <head>
-  ${getEmailHead("Reset Your Password — StratMarket Security Verification")}
+${getEmailHead("StratMarket | Verify your account")}
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 36px 12px;">
-    <tr>
-      <td align="center">
-        <!-- Main Card Container -->
-        <table role="presentation" width="100%" class="container-table" style="max-width: 600px; background-color: #0a0a0d; border: 1px solid #22222c; border-radius: 18px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);">
-          ${getEmailHeader("SECURITY AUTHENTICATION", "gold")}
+<body>
+<table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0">
+<tr><td align="center" class="outer">
+<table role="presentation" class="shell" width="600" cellpadding="0" cellspacing="0">
+${getEmailHeader("ACCOUNT SECURITY")}
 
-          <!-- Hero Section -->
-          <tr>
-            <td class="header-cell" style="background: linear-gradient(180deg, #101016 0%, #0a0a0d 100%); padding: 36px 32px; text-align: left; border-bottom: 1px solid #1a1a24;">
-              <div style="display: inline-block; padding: 5px 12px; background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; font-size: 11px; font-weight: 700; color: #f5d77f; letter-spacing: 0.06em; text-transform: uppercase; font-family: 'SF Mono', Menlo, monospace; margin-bottom: 14px;">
-                Account Recovery Protocol
-              </div>
-              <h1 class="mobile-title" style="margin: 0; font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.03em; line-height: 1.2;">
-                Reset Your Password
-              </h1>
-              <p class="mobile-subtitle" style="margin: 10px 0 0 0; color: #9c9ca8; font-size: 14.5px; line-height: 1.5;">
-                We received an authorized request to reset your StratMarket account credentials.
-              </p>
-            </td>
-          </tr>
-
-          <!-- Content Body -->
-          <tr>
-            <td class="content-cell" style="padding: 32px 32px;">
-              <p style="margin: 0 0 16px 0; font-size: 15px; color: #eaeaf2; line-height: 1.6;">
-                Hello <strong style="color: #ffffff;">${firstName}</strong>,
-              </p>
-              <p style="margin: 0 0 24px 0; font-size: 14.5px; line-height: 1.65; color: #a4a4b2;">
-                Please use the following single-use One-Time Password (OTP) to verify your identity and set a new password for your account:
-              </p>
-
-              <!-- OTP Display Box -->
-              <div style="background-color: #0d0d12; border: 2px solid #d4af37; border-radius: 14px; padding: 26px 20px; text-align: center; margin: 26px 0; box-shadow: 0 0 25px rgba(212, 175, 55, 0.15);">
-                <div style="font-size: 11px; font-weight: 700; color: #f5d77f; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px; font-family: 'SF Mono', Menlo, monospace;">
-                  One-Time Verification Code
-                </div>
-                <div style="font-family: 'SF Mono', Menlo, Consolas, Monaco, monospace; font-size: 40px; font-weight: 800; letter-spacing: 12px; color: #ffffff; text-indent: 12px; text-shadow: 0 0 16px rgba(255, 255, 255, 0.35);">
-                  ${otp}
-                </div>
-                <div style="margin-top: 14px; font-size: 12px; color: #8e8e9c; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-                  Valid for <strong style="color: #ffffff;">${expiresInMinutes} minutes</strong> • Single use only
-                </div>
-              </div>
-
-              <!-- Security Information Note -->
-              <div style="background-color: #111117; border: 1px solid #20202c; border-radius: 12px; padding: 16px 18px; margin-bottom: 24px;">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                  <tr>
-                    <td style="vertical-align: top;">
-                      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #f5d77f; margin-right: 6px;"></span>
-                        <strong style="color: #ffffff; font-size: 13.5px; font-weight: 700;">Security Safeguards</strong>
-                      </div>
-                      <div style="font-size: 13px; color: #8e8e9c; line-height: 1.55;">
-                        • Never disclose this OTP to anyone. StratMarket administrators will never ask for your code or password.<br>
-                        • If you did not request this reset, your account credentials remain safe. No action is required.
-                      </div>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-
-              <!-- Action Link -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 20px 0 8px 0;">
-                <tr>
-                  <td align="center">
-                    <a href="${BASE_URL}/forgot-password?email=${encodeURIComponent(to)}&code=${otp}" class="mobile-btn" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #b89728 100%); color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 800; font-size: 14px; padding: 13px 32px; text-decoration: none; border-radius: 30px; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.35); letter-spacing: -0.01em;">
-                      Continue on StratMarket →
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          ${getEmailFooter("Elvaris Capital Institutional Security • Node: AP-NORTHEAST-1")}
-        </table>
-      </td>
-    </tr>
+<tr><td class="pad" style="padding-top:34px;padding-bottom:10px;">
+  <div class="eyebrow" style="color:#8a6b2d;">Identity verification</div>
+  <h1 class="headline">Confirm it’s you</h1>
+  <p class="bodycopy">Hello ${firstName}, enter the one-time verification code below to securely continue with your StratMarket account.</p>
+</td></tr>
+<tr><td class="pad" style="padding-top:20px;padding-bottom:18px;">
+  <table role="presentation" width="100%" style="background:#f8f9fa;border:1px solid #e2e6ea;">
+    <tr><td align="center" style="padding:25px 18px;">
+      <div class="eyebrow">Your one-time password</div>
+      <div class="otp" style="font-size:32px;letter-spacing:8px;font-weight:700;color:#182331;margin:15px 0;">${otp}</div>
+      <div class="muted">This code expires in <strong style="color:#394553;">${expiresInMinutes} minutes</strong>.</div>
+    </td></tr>
   </table>
-</body>
-</html>
-  `;
+</td></tr>
+<tr><td class="pad" style="padding-top:8px;padding-bottom:34px;">
+  <div style="font-size:12px;line-height:20px;color:#697482;">
+    <strong style="color:#394553;">Security reminder</strong><br>
+    Never share this code with anyone. StratMarket and Elvaris Capital will never ask you to disclose your OTP or password. If you did not initiate this request, you can safely ignore this email.
+  </div>
+  <div class="muted" style="margin-top:16px;">Need help? Contact <a href="${supportUrl}">support</a>.</div>
+</td></tr>
+
+${getEmailFooter()}
+</td></tr></table>
+</body></html>`;
 
   return sendResendMail({
     to,
-    subject: `StratMarket Security: ${otp} is your verification code`,
+    subject: `${otp} is your StratMarket verification code`,
     html,
   });
 }
 
 /**
- * 3. Real-Time Signal Alert Email (High-Impact Quantitative Tear Card)
+ * 3. Trade Alert Email (V3 Template: trade-alert.html)
  */
 export async function sendSignalAlertEmail(params: {
   to: string;
@@ -638,207 +339,80 @@ export async function sendSignalAlertEmail(params: {
     targetPrice,
     timestamp = new Date(),
     sourceEventId,
-    winRate = "82.6%",
-    profitFactor = "6.11",
-    maxDrawdown = "0.03%",
   } = params;
 
-  const isLong = direction === "LONG";
-  const badgeColor = isLong ? "#10b981" : "#ef4444";
-  const badgeBg = isLong ? "rgba(16, 185, 129, 0.14)" : "rgba(239, 68, 68, 0.14)";
-  const badgeBorder = isLong ? "rgba(16, 185, 129, 0.45)" : "rgba(239, 68, 68, 0.45)";
-  const directionArrow = isLong ? "▲ BUY / LONG" : "▼ SELL / SHORT";
-
-  // Formatted price strings
   const formattedEntry = entryPrice !== undefined ? `$${Number(entryPrice).toFixed(2)}` : "Market Open";
   const formattedTP = targetPrice !== undefined ? `$${Number(targetPrice).toFixed(2)}` : "Trailing Target";
-  const formattedSL = stopLoss !== undefined ? `$${Number(stopLoss).toFixed(2)}` : "Fixed Protective Stop";
+  const formattedSL = stopLoss !== undefined ? `$${Number(stopLoss).toFixed(2)}` : "Protective Stop";
 
-  // Calculate delta points if numeric
-  let tpPoints = "";
-  let slPoints = "";
-  if (entryPrice && targetPrice) {
-    const diff = Math.abs(targetPrice - entryPrice).toFixed(2);
-    tpPoints = `(+$${diff})`;
-  }
-  if (entryPrice && stopLoss) {
-    const diff = Math.abs(entryPrice - stopLoss).toFixed(2);
-    slPoints = `(-$${diff})`;
+  let riskReward = "1.96 : 1";
+  if (entryPrice && stopLoss && targetPrice) {
+    const risk = Math.abs(entryPrice - stopLoss);
+    const reward = Math.abs(targetPrice - entryPrice);
+    if (risk > 0) {
+      riskReward = `${(reward / risk).toFixed(2)} : 1`;
+    }
   }
 
-  const timeString = timestamp instanceof Date ? timestamp.toUTCString() : new Date(timestamp).toUTCString();
+  const alertTime = timestamp instanceof Date
+    ? timestamp.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC"
+    : new Date(timestamp).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC";
+
   const cleanSlug = strategyId.toLowerCase();
+  const dashboardUrl = `${BASE_URL}/strategies/${cleanSlug}`;
+  const signalId = sourceEventId || `SIG-${strategyId}-${Date.now().toString().slice(-6)}`;
+  const marketStatus = "Active Session";
 
-  const html = `
-<!DOCTYPE html>
+  const html = `<!doctype html>
 <html lang="en">
 <head>
-  ${getEmailHead(`[SIGNAL] ${signalType} ${direction} ${instrument} • ${strategyName}`)}
+${getEmailHead(`StratMarket | Trade alert — ${instrument}`)}
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 36px 12px;">
+<body>
+<table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0">
+<tr><td align="center" class="outer">
+<table role="presentation" class="shell" width="600" cellpadding="0" cellspacing="0">
+${getEmailHeader("TRADING NOTIFICATION")}
+
+<tr><td class="pad" style="padding-top:32px;padding-bottom:18px;">
+  <div class="eyebrow" style="color:#8a6b2d;">Strategy alert · ${alertTime}</div>
+  <h1 class="headline" style="margin-bottom:7px;">${instrument} <span style="font-size:15px;letter-spacing:0;color:#6f7a87;font-weight:400;">· ${timeframe}</span></h1>
+  <p class="bodycopy">${strategyName} (${strategyId}) has generated a new ${direction} signal.</p>
+</td></tr>
+<tr><td class="pad" style="padding-bottom:20px;">
+  <table role="presentation" width="100%" style="border:1px solid #e2e6ea;">
     <tr>
-      <td align="center">
-        <!-- Main Card Container -->
-        <table role="presentation" width="100%" class="container-table" style="max-width: 600px; background-color: #0a0a0d; border: 1px solid #22222c; border-radius: 18px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);">
-          ${getEmailHeader("LIVE 24/7 VPS QUANT SIGNAL", isLong ? "emerald" : "gold")}
-
-          <!-- Signal Hero Banner -->
-          <tr>
-            <td class="header-cell" style="background: linear-gradient(180deg, ${isLong ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)"} 0%, #0a0a0d 100%); padding: 32px 32px 24px 32px; text-align: left; border-bottom: 1px solid #1a1a24;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td align="left">
-                    <!-- Action Pill -->
-                    <div style="display: inline-block; padding: 6px 14px; background: ${badgeBg}; border: 1px solid ${badgeBorder}; border-radius: 20px; font-size: 13px; font-weight: 800; color: ${badgeColor}; letter-spacing: 0.04em; text-transform: uppercase; font-family: 'SF Mono', Menlo, monospace;">
-                      ${signalType} • ${directionArrow}
-                    </div>
-                  </td>
-                  <td align="right">
-                    <span style="display: inline-block; padding: 4px 10px; background-color: #121218; border: 1px solid #262634; border-radius: 8px; font-size: 12px; color: #f5d77f; font-family: 'SF Mono', Menlo, monospace; font-weight: 700;">
-                      ${instrument} • ${timeframe}
-                    </span>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Instrument & Strategy Title -->
-              <h1 class="mobile-title" style="margin: 16px 0 0 0; font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.03em; line-height: 1.2;">
-                ${instrument} <span style="font-size: 18px; color: #8e8e9e; font-weight: 500;">— ${strategyName}</span>
-              </h1>
-              <div style="margin-top: 6px; font-size: 13px; color: #7a7a88; font-family: 'SF Mono', Menlo, monospace;">
-                Strategy ID: <strong style="color: #d4af37;">${strategyId}</strong> • Engine: <strong style="color: #a4a4b2;">Autonomous VPS Runner</strong>
-              </div>
-            </td>
-          </tr>
-
-          <!-- Price Matrix Section (3 Visual Columns) -->
-          <tr>
-            <td class="content-cell" style="padding: 28px 32px 20px 32px;">
-              <div style="font-size: 11.5px; font-weight: 700; color: #8a8a9a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; font-family: 'SF Mono', Menlo, monospace;">
-                Trade Execution Bracket
-              </div>
-
-              <!-- Price Cards Container -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 22px;">
-                <tr>
-                  <td class="mobile-stack mobile-mb-10" style="width: 33.33%; padding-right: 6px; vertical-align: top;">
-                    <!-- Entry Box -->
-                    <div style="background-color: #10141d; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 12px; padding: 16px 14px; text-align: center; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.08);">
-                      <div style="font-size: 10.5px; color: #7cb3d9; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'SF Mono', monospace;">
-                        EXECUTION ENTRY
-                      </div>
-                      <div style="font-size: 19px; font-weight: 800; color: #38bdf8; margin: 6px 0 2px 0; font-family: 'SF Mono', Menlo, Consolas, monospace;">
-                        ${formattedEntry}
-                      </div>
-                      <div style="font-size: 11px; color: #5d89ad;">
-                        Market Open
-                      </div>
-                    </div>
-                  </td>
-                  <td class="mobile-stack mobile-mb-10" style="width: 33.33%; padding: 0 3px; vertical-align: top;">
-                    <!-- Take Profit Box -->
-                    <div style="background-color: #0f1713; border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 16px 14px; text-align: center; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.08);">
-                      <div style="font-size: 10.5px; color: #6ee7b7; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'SF Mono', monospace;">
-                        TAKE PROFIT (TP)
-                      </div>
-                      <div style="font-size: 19px; font-weight: 800; color: #10b981; margin: 6px 0 2px 0; font-family: 'SF Mono', Menlo, Consolas, monospace;">
-                        ${formattedTP}
-                      </div>
-                      <div style="font-size: 11px; color: #4b8d74; font-family: 'SF Mono', monospace;">
-                        ${tpPoints || "Target Level"}
-                      </div>
-                    </div>
-                  </td>
-                  <td class="mobile-stack" style="width: 33.33%; padding-left: 6px; vertical-align: top;">
-                    <!-- Stop Loss Box -->
-                    <div style="background-color: #171012; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 16px 14px; text-align: center; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.08);">
-                      <div style="font-size: 10.5px; color: #fca5a5; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'SF Mono', monospace;">
-                        STOP LOSS (SL)
-                      </div>
-                      <div style="font-size: 19px; font-weight: 800; color: #f87171; margin: 6px 0 2px 0; font-family: 'SF Mono', Menlo, Consolas, monospace;">
-                        ${formattedSL}
-                      </div>
-                      <div style="font-size: 11px; color: #9a5858; font-family: 'SF Mono', monospace;">
-                        ${slPoints || "Risk Cut"}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Strategy Performance Telemetry Row -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111116; border: 1px solid #1f1f2a; border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
-                <tr>
-                  <td class="mobile-stat-col" style="padding: 14px 18px; border-right: 1px solid #1f1f2a; width: 33.33%; text-align: center;">
-                    <div style="font-size: 10.5px; color: #7e7e8e; text-transform: uppercase; font-family: 'SF Mono', monospace;">
-                      Win Rate
-                    </div>
-                    <div style="font-size: 16px; font-weight: 800; color: #10b981; font-family: 'SF Mono', monospace; margin-top: 3px;">
-                      ${winRate}
-                    </div>
-                  </td>
-                  <td class="mobile-stat-col" style="padding: 14px 18px; border-right: 1px solid #1f1f2a; width: 33.33%; text-align: center;">
-                    <div style="font-size: 10.5px; color: #7e7e8e; text-transform: uppercase; font-family: 'SF Mono', monospace;">
-                      Profit Factor
-                    </div>
-                    <div style="font-size: 16px; font-weight: 800; color: #f5d77f; font-family: 'SF Mono', monospace; margin-top: 3px;">
-                      ${profitFactor}
-                    </div>
-                  </td>
-                  <td class="mobile-stat-col" style="padding: 14px 18px; width: 33.33%; text-align: center;">
-                    <div style="font-size: 10.5px; color: #7e7e8e; text-transform: uppercase; font-family: 'SF Mono', monospace;">
-                      Max Drawdown
-                    </div>
-                    <div style="font-size: 16px; font-weight: 800; color: #a4a4b4; font-family: 'SF Mono', monospace; margin-top: 3px;">
-                      ${maxDrawdown}
-                    </div>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Autonomous Provenance & Time Info -->
-              <div style="background-color: #0b0b0e; border: 1px dashed #20202c; border-radius: 10px; padding: 12px 16px; margin-bottom: 26px;">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                  <tr>
-                    <td align="left" style="font-size: 11.5px; color: #777786; font-family: 'SF Mono', Menlo, monospace;">
-                      Dispatched At: <strong style="color: #d1d1dc;">${timeString}</strong>
-                    </td>
-                    <td align="right" style="font-size: 11px; color: #555564; font-family: 'SF Mono', Menlo, monospace;">
-                      ${sourceEventId ? "Ref: " + sourceEventId.substring(0, 18) : "24/7 VPS Telemetry"}
-                    </td>
-                  </tr>
-                </table>
-              </div>
-
-              <!-- Action CTAs -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td align="center" style="padding-bottom: 12px;">
-                    <a href="${BASE_URL}/chart/${cleanSlug}" class="mobile-btn" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #b89728 100%); color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 800; font-size: 14px; padding: 13px 32px; text-decoration: none; border-radius: 30px; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.3);">
-                      Open Live Chart & Order Boxes →
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center">
-                    <a href="${BASE_URL}/strategies/${cleanSlug}" style="display: inline-block; font-size: 12.5px; color: #9c9cad; text-decoration: none; padding: 6px 14px; border: 1px solid #20202c; border-radius: 16px; background-color: #0d0d12;">
-                      View Quantitative Tear Sheet
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          ${getEmailFooter("Real-time algorithmic signal alert delivered to authorized subscriber")}
-        </table>
+      <td width="50%" style="padding:16px 17px;border-bottom:1px solid #e9ecef;border-right:1px solid #e9ecef;">
+        <div class="eyebrow">Entry price</div><div class="metric" style="font-size:23px;font-weight:700;color:#182331;margin-top:8px;">${formattedEntry}</div>
+      </td>
+      <td width="50%" style="padding:16px 17px;border-bottom:1px solid #e9ecef;">
+        <div class="eyebrow">Take profit</div><div class="metric" style="font-size:23px;font-weight:700;color:#28734d;margin-top:8px;">${formattedTP}</div>
+      </td>
+    </tr>
+    <tr>
+      <td width="50%" style="padding:16px 17px;border-right:1px solid #e9ecef;">
+        <div class="eyebrow">Stop loss</div><div class="metric" style="font-size:23px;font-weight:700;color:#a44747;margin-top:8px;">${formattedSL}</div>
+      </td>
+      <td width="50%" style="padding:16px 17px;">
+        <div class="eyebrow">Risk / reward</div><div class="metric" style="font-size:23px;font-weight:700;color:#182331;margin-top:8px;">${riskReward}</div>
       </td>
     </tr>
   </table>
-</body>
-</html>
-  `;
+</td></tr>
+<tr><td class="pad" style="padding-bottom:28px;">
+  <table role="presentation" width="100%" style="background:#f8f9fa;border:1px solid #e7eaee;">
+    <tr><td style="padding:14px 16px;">
+      <div class="eyebrow">Signal reference</div>
+      <div style="font-size:12px;line-height:20px;color:#56616e;margin-top:5px;">${signalId} &nbsp;·&nbsp; ${marketStatus}</div>
+    </td></tr>
+  </table>
+  <div style="margin-top:18px;"><a class="button" href="${dashboardUrl}">VIEW TRADE DETAILS</a></div>
+  <p class="muted" style="margin-top:17px;">This notification is informational and is not investment advice. Trading involves risk. Review the full strategy details and manage risk before taking any action.</p>
+</td></tr>
+
+${getEmailFooter()}
+</td></tr></table>
+</body></html>`;
 
   return sendResendMail({
     to,
@@ -848,7 +422,72 @@ export async function sendSignalAlertEmail(params: {
 }
 
 /**
- * 4. Broadcast Signal Alert to subscribers & administrators
+ * 4. Login Security Alert Email (V3 Theme Integration)
+ */
+export async function sendLoginSecurityEmail(params: {
+  to: string;
+  name: string;
+  ip?: string;
+  userAgent?: string;
+  time?: string;
+}): Promise<EmailResult> {
+  const { to, name, ip = "Recorded", userAgent = "Web Browser", time = new Date().toUTCString() } = params;
+  const firstName = name.split(" ")[0] || "Trader";
+  const profileUrl = `${BASE_URL}/profile`;
+
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+${getEmailHead("StratMarket | Security Alert")}
+</head>
+<body>
+<table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0">
+<tr><td align="center" class="outer">
+<table role="presentation" class="shell" width="600" cellpadding="0" cellspacing="0">
+${getEmailHeader("SECURITY AUDIT")}
+
+<tr><td class="pad" style="padding-top:34px;padding-bottom:12px;">
+  <div class="eyebrow" style="color:#8a6b2d;">Session authentication</div>
+  <h1 class="headline">New sign-in detected</h1>
+  <p class="bodycopy">Hello ${firstName}, a successful sign-in was recorded for your StratMarket trader account.</p>
+</td></tr>
+<tr><td class="pad" style="padding-top:18px;padding-bottom:24px;">
+  <table role="presentation" width="100%" style="border:1px solid #e2e6ea;">
+    <tr><td style="padding:16px 18px;border-bottom:1px solid #e9ecef;">
+      <div class="eyebrow">IP Address</div>
+      <div style="font-size:13px;line-height:20px;color:#182331;font-weight:700;margin-top:4px;">${ip}</div>
+    </td></tr>
+    <tr><td style="padding:16px 18px;border-bottom:1px solid #e9ecef;">
+      <div class="eyebrow">Client Environment</div>
+      <div style="font-size:13px;line-height:20px;color:#394553;margin-top:4px;">${userAgent}</div>
+    </td></tr>
+    <tr><td style="padding:16px 18px;">
+      <div class="eyebrow">Timestamp (UTC)</div>
+      <div style="font-size:13px;line-height:20px;color:#394553;margin-top:4px;">${time}</div>
+    </td></tr>
+  </table>
+</td></tr>
+<tr><td class="pad" style="padding-bottom:34px;">
+  <div style="font-size:12px;line-height:20px;color:#697482;margin-bottom:18px;">
+    <strong style="color:#394553;">Security notice</strong><br>
+    If this was you, no action is required. If you did not initiate this sign-in, please reset your password immediately to protect your account.
+  </div>
+  <a class="button" href="${profileUrl}">REVIEW ACCOUNT SECURITY</a>
+</td></tr>
+
+${getEmailFooter()}
+</td></tr></table>
+</body></html>`;
+
+  return sendResendMail({
+    to,
+    subject: "Security Notification: StratMarket Account Sign-in",
+    html,
+  });
+}
+
+/**
+ * 5. Broadcast Signal Alert to subscribers & administrators
  */
 export async function dispatchSignalAlertEmails(params: {
   strategyName: string;
