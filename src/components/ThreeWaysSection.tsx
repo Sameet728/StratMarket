@@ -39,7 +39,9 @@ export function ThreeWaysSection() {
         <div className="three">
           {/* 1. View on chart */}
           <button
+            type="button"
             className="fc"
+            style={{ touchAction: "manipulation" }}
             onClick={() =>
               setDemoMessage(
                 "View on Chart: Interactive overlay that plots Elvaris quantitative entry, stop-loss, and target points directly against the historical candlestick series."
@@ -71,7 +73,9 @@ export function ThreeWaysSection() {
 
           {/* 2. Receive email alerts */}
           <button
+            type="button"
             className="fc"
+            style={{ touchAction: "manipulation" }}
             onClick={() =>
               setDemoMessage(
                 "Receive Email Alerts: StratMarket dispatches immediate notifications to your verified email within milliseconds of signal generation on the Elvaris VPS."
@@ -91,7 +95,9 @@ export function ThreeWaysSection() {
 
           {/* 3. Connect a trading account */}
           <button
+            type="button"
             className="fc"
+            style={{ touchAction: "manipulation" }}
             onClick={() =>
               setDemoMessage(
                 "Connect a Trading Account: Link your supported broker (Alpaca, Interactive Brokers, Binance) or use the zero-risk Virtual Paper Simulator to route signals automatically."

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { StrategySeedItem, getStrategySortOrder } from "@/lib/db/seed-data";
 import { StrategyDetailModal } from "./StrategyDetailModal";
 
@@ -13,6 +15,7 @@ const TIMEFRAMES = ["All timeframes", "M5", "M15"];
 const CATEGORIES = ["All categories", "Trend", "Mean reversion", "Breakout", "Momentum", "Volatility"];
 
 export function MarketplaceCatalogue({ initialStrategies }: Props) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<"All" | "Python" | "Pine Script">("All");
   const [instrument, setInstrument] = useState("All instruments");
@@ -139,6 +142,7 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
         {(["All", "Pine Script"] as const).map((t) => (
           <button
             key={t}
+            type="button"
             className={`chip ${type === t ? "on" : ""} chip-pn`}
             onClick={() => setType(t)}
           >
@@ -151,7 +155,7 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
         <span id="count">
           {filteredStrategies.length} of {initialStrategies.length} strategies · institutional metrics
         </span>
-        <button className="chip" id="clear" onClick={clearFilters}>
+        <button type="button" className="chip" id="clear" onClick={clearFilters}>
           Clear filters
         </button>
       </div>
@@ -165,13 +169,10 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
                 key={s.id}
                 className={`card ${isPython ? "card-python" : "card-pine"}`}
                 style={{ cursor: "pointer" }}
-                onClick={() =>
-                  window.open(
-                    isPython ? `/strategies/${s.slug}` : `/chart/${s.id}`,
-                    "_blank",
-                    "noopener,noreferrer"
-                  )
-                }
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest("a, button")) return;
+                  router.push(isPython ? `/strategies/${s.slug}` : `/chart/${s.id}`);
+                }}
               >
                 <div className="card-top-accent" />
                 <div className="row" style={{ alignItems: "center" }}>
@@ -204,29 +205,23 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: "12px", gap: "8px", flexWrap: "wrap" }}>
                   {!isPython ? (
-                    <a
+                    <Link
                       href={`/chart/${s.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="card-chart-link"
-                      onClick={(e) => e.stopPropagation()}
                       title={`Open ${s.name} on LuxAlgo Vela live chart`}
                     >
                       View Live Chart ↗
-                    </a>
+                    </Link>
                   ) : (
                     <span className="note-tag-py">Institutional MT5</span>
                   )}
-                  <a
+                  <Link
                     href={`/strategies/${s.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="note"
                     style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "var(--tx)", fontWeight: 600, fontSize: "12px" }}
-                    onClick={(e) => e.stopPropagation()}
                   >
                     View Report ↗
-                  </a>
+                  </Link>
                 </div>
               </div>
             );

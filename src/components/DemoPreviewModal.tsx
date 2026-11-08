@@ -32,7 +32,7 @@ export function DemoPreviewModal({ title = "Prototype preview", message, onClose
       }}
     >
       <div className="modal">
-        <button className="x" aria-label="Close" onClick={onClose}>
+        <button type="button" className="x" aria-label="Close" onClick={onClose} style={{ touchAction: "manipulation" }}>
           ×
         </button>
         <h2>{title}</h2>
@@ -43,7 +43,7 @@ export function DemoPreviewModal({ title = "Prototype preview", message, onClose
           <Link href="/market" className="pill" onClick={onClose}>
             Browse strategies
           </Link>
-          <button className="pill g" onClick={onClose}>
+          <button type="button" className="pill g" onClick={onClose} style={{ touchAction: "manipulation" }}>
             Dismiss
           </button>
         </div>

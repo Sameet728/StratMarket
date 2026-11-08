@@ -18,10 +18,39 @@ export function StrategyReportView({ strategy }: Props) {
     ? (ensembleReportsData as any)[strategy.slug] || (ensembleReportsData as any)["py-01"]
     : (pineReportsData as any)[strategy.slug] || (pineReportsData as any)["ps-01"];
 
-  // Modals state
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [automationModalOpen, setAutomationModalOpen] = useState(false);
   const [chartModalOpen, setChartModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("mech");
+
+  // Synchronize active tab on scroll
+  useEffect(() => {
+    const sectionIds = ["mech", "kpi", "pay", "dir", "reg", "year", "month"];
+    const handleScroll = () => {
+      const scrollPos = window.scrollY + 160;
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sectionIds[i]);
+        if (el && el.offsetTop <= scrollPos) {
+          setActiveTab(sectionIds[i]);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToSection = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    setActiveTab(id);
+    const target = document.getElementById(id);
+    if (target) {
+      const yOffset = -120; // Accounts for sticky header + report nav bar
+      const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+  };
 
   // Form states
   const [email, setEmail] = useState("");
@@ -261,13 +290,24 @@ export function StrategyReportView({ strategy }: Props) {
 
       {/* In-Page Navigation Bar */}
       <nav className="report-nav-bar" aria-label="Report Sections">
-        <a href="#mech" className="report-nav-link">Architecture &amp; Subsystems</a>
-        <a href="#kpi" className="report-nav-link">Core Metrics</a>
-        <a href="#pay" className="report-nav-link">Payoff Structure</a>
-        <a href="#dir" className="report-nav-link">Long vs Short</a>
-        <a href="#reg" className="report-nav-link">Market Regimes</a>
-        <a href="#year" className="report-nav-link">Yearly Return</a>
-        <a href="#month" className="report-nav-link">Monthly Heatmap</a>
+        {[
+          { id: "mech", label: "Architecture & Subsystems" },
+          { id: "kpi", label: "Core Metrics" },
+          { id: "pay", label: "Payoff Structure" },
+          { id: "dir", label: "Long vs Short" },
+          { id: "reg", label: "Market Regimes" },
+          { id: "year", label: "Yearly Return" },
+          { id: "month", label: "Monthly Heatmap" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={`report-nav-link ${activeTab === tab.id ? "active" : ""}`}
+            onClick={(e) => scrollToSection(e, tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </nav>
 
       {/* SECTION 1: HOW THE STRATEGY WORKS (INDICATOR/MECHANISM COLUMN REMOVED) */}
@@ -694,6 +734,7 @@ export function StrategyReportView({ strategy }: Props) {
                   Open Live Chart
                 </Link>
                 <button
+                  type="button"
                   id="btn-email-trades"
                   className="pill action-btn"
                   onClick={() => setEmailModalOpen(true)}
@@ -706,6 +747,7 @@ export function StrategyReportView({ strategy }: Props) {
                   Email Trades
                 </button>
                 <button
+                  type="button"
                   id="btn-full-automation"
                   className="pill action-btn action-btn-accent"
                   onClick={() => setAutomationModalOpen(true)}
@@ -730,6 +772,7 @@ export function StrategyReportView({ strategy }: Props) {
                   Open Live Chart
                 </Link>
                 <button
+                  type="button"
                   id="btn-email-trades"
                   className="pill action-btn"
                   onClick={() => setEmailModalOpen(true)}
@@ -742,6 +785,7 @@ export function StrategyReportView({ strategy }: Props) {
                   Email Trades
                 </button>
                 <button
+                  type="button"
                   id="btn-tradingview"
                   className="pill action-btn"
                   onClick={() => setChartModalOpen(true)}
@@ -750,6 +794,7 @@ export function StrategyReportView({ strategy }: Props) {
                   TradingView Code
                 </button>
                 <button
+                  type="button"
                   id="btn-connect-account"
                   className="pill action-btn action-btn-accent"
                   onClick={() => setAutomationModalOpen(true)}
@@ -767,7 +812,7 @@ export function StrategyReportView({ strategy }: Props) {
       {emailModalOpen && (
         <div className="ov on" role="dialog" aria-modal="true" onClick={() => setEmailModalOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="x" aria-label="Close" onClick={() => setEmailModalOpen(false)}>
+            <button type="button" className="x" aria-label="Close" onClick={() => setEmailModalOpen(false)}>
               ×
             </button>
 
@@ -837,7 +882,7 @@ export function StrategyReportView({ strategy }: Props) {
       {automationModalOpen && (
         <div className="ov on" role="dialog" aria-modal="true" onClick={() => setAutomationModalOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="x" aria-label="Close" onClick={() => setAutomationModalOpen(false)}>
+            <button type="button" className="x" aria-label="Close" onClick={() => setAutomationModalOpen(false)}>
               ×
             </button>
 
@@ -956,7 +1001,7 @@ export function StrategyReportView({ strategy }: Props) {
       {chartModalOpen && (
         <div className="ov on" role="dialog" aria-modal="true" onClick={() => setChartModalOpen(false)}>
           <div className="modal" style={{ maxWidth: "740px" }} onClick={(e) => e.stopPropagation()}>
-            <button className="x" aria-label="Close" onClick={() => setChartModalOpen(false)}>
+            <button type="button" className="x" aria-label="Close" onClick={() => setChartModalOpen(false)}>
               ×
             </button>
 

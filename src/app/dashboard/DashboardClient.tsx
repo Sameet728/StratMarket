@@ -564,17 +564,19 @@ export function DashboardClient() {
 
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <button
+              type="button"
               onClick={handleSendTestSignal}
               disabled={sendingTest}
               className="pill g sm"
-              style={{ fontSize: 12, fontWeight: 600 }}
+              style={{ fontSize: 12, fontWeight: 600, touchAction: "manipulation" }}
             >
               {sendingTest ? "Sending..." : "Send Test Signal"}
             </button>
             <button
+              type="button"
               onClick={() => setEditingEmail(!editingEmail)}
               className="pill sm"
-              style={{ fontSize: 12, fontWeight: 600 }}
+              style={{ fontSize: 12, fontWeight: 600, touchAction: "manipulation" }}
             >
               {editingEmail ? "Cancel" : "Change Inbox"}
             </button>
@@ -602,10 +604,11 @@ export function DashboardClient() {
                 }}
               />
               <button
+                type="button"
                 onClick={handleSaveEmail}
                 disabled={savingEmail}
                 className="pill sm"
-                style={{ fontSize: 12, padding: "0 18px" }}
+                style={{ fontSize: 12, padding: "0 18px", touchAction: "manipulation" }}
               >
                 {savingEmail ? "Saving..." : "Save"}
               </button>
@@ -692,17 +695,20 @@ export function DashboardClient() {
         {/* Filter Tabs */}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", borderBottom: "1px solid var(--line)", paddingBottom: 12 }}>
           <button
+            type="button"
             onClick={() => setActiveTab("ALL")}
             className={`pill ${activeTab === "ALL" ? "" : "g"} sm`}
-            style={{ fontSize: 12 }}
+            style={{ fontSize: 12, touchAction: "manipulation" }}
           >
             All Pine Script Strategies ({strategies.length})
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("ACTIVE")}
             className={`pill ${activeTab === "ACTIVE" ? "" : "g"} sm`}
             style={{
               fontSize: 12,
+              touchAction: "manipulation",
               color: activeAlertsCount > 0 ? "#ffffff" : undefined,
             }}
           >
@@ -748,9 +754,10 @@ export function DashboardClient() {
             </p>
           </div>
           <button
+            type="button"
             onClick={connectSimulator}
             className="pill g sm"
-            style={{ fontSize: 12, fontWeight: 600 }}
+            style={{ fontSize: 12, fontWeight: 600, touchAction: "manipulation" }}
           >
             + Connect Paper Simulator
           </button>
@@ -915,6 +922,7 @@ function StrategyDashboardCard({
         {/* Email Alerts Toggle Switch */}
         <div style={{ marginBottom: 12 }}>
           <button
+            type="button"
             onClick={onToggleAlert}
             disabled={updating}
             style={{
@@ -931,6 +939,7 @@ function StrategyDashboardCard({
               fontWeight: 700,
               fontSize: 13,
               cursor: "pointer",
+              touchAction: "manipulation",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",

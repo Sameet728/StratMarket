@@ -111,9 +111,10 @@ export function HeaderNav() {
                   </Link>
                 )}
                 <button
+                  type="button"
                   onClick={handleLogout}
                   className="pill g sm"
-                  style={{ color: "var(--mut)", border: "none", padding: "7px 10px" }}
+                  style={{ color: "var(--mut)", border: "none", padding: "7px 10px", touchAction: "manipulation" }}
                 >
                   Sign out
                 </button>

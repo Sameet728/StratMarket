@@ -598,7 +598,7 @@ export function StrategyChart({
           {error && !isLocked && (
             <div className="chart-error-banner">
               <p>{error}</p>
-              <button className="chart-retry-btn" onClick={handleRetry}>
+              <button type="button" className="chart-retry-btn" onClick={handleRetry} style={{ touchAction: "manipulation" }}>
                 Retry Connection
               </button>
             </div>

@@ -137,8 +137,10 @@ export function ChartToolbar({
       <div className="chart-toolbar-right">
         {/* Toggle On-Chart Position Tool Boxes */}
         <button
+          type="button"
           className={`chart-btn-clean ${showBoxes ? "active" : ""}`}
           onClick={onToggleBoxes}
+          style={{ touchAction: "manipulation" }}
           title="Toggle Visual Long/Short Position Tool Boxes on Chart"
         >
           <span
@@ -155,8 +157,10 @@ export function ChartToolbar({
 
         {onToggleAlert && (
           <button
+            type="button"
             className={`chart-btn-clean ${alertEnabled ? "active" : ""}`}
             onClick={onToggleAlert}
+            style={{ touchAction: "manipulation" }}
             title={alertEnabled ? "Email alerts active - click to mute" : "Click to enable real-time email trade alerts"}
           >
             <span>{alertEnabled ? "Alerts ON" : "Alerts OFF"}</span>
@@ -176,8 +180,10 @@ export function ChartToolbar({
 
         {/* Strategy Details Sidebar Toggle */}
         <button
+          type="button"
           className={`chart-btn-clean ${panelOpen ? "active" : ""}`}
           onClick={onTogglePanel}
+          style={{ touchAction: "manipulation" }}
           title={panelOpen ? "Hide Strategy Details Panel" : "Show Strategy Details Panel"}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

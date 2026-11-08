@@ -116,7 +116,7 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
       }}
     >
       <div className="modal">
-        <button className="x" aria-label="Close" onClick={onClose}>
+        <button type="button" className="x" aria-label="Close" onClick={onClose}>
           ×
         </button>
 
@@ -212,22 +212,28 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
         {/* Interactive Mode Tabs */}
         <div className="three" style={{ margin: "16px 0" }}>
           <button
+            type="button"
             className={`fc ${activeTab === "chart" ? "border-gold" : ""}`}
             onClick={() => setActiveTab(activeTab === "chart" ? null : "chart")}
+            style={{ touchAction: "manipulation" }}
           >
             <h3>View on chart</h3>
             <p>Interactive signal markers</p>
           </button>
           <button
+            type="button"
             className={`fc ${activeTab === "alert" ? "border-gold" : ""}`}
             onClick={() => setActiveTab(activeTab === "alert" ? null : "alert")}
+            style={{ touchAction: "manipulation" }}
           >
             <h3>Email alerts</h3>
             <p>Configured trade signals</p>
           </button>
           <button
+            type="button"
             className={`fc ${activeTab === "acct" ? "border-gold" : ""}`}
             onClick={() => setActiveTab(activeTab === "acct" ? null : "acct")}
+            style={{ touchAction: "manipulation" }}
           >
             <h3>Connect account</h3>
             <p>Broker routing preview</p>

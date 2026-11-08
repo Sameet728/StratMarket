@@ -126,7 +126,7 @@ export function AdminClient() {
       <div className="wrap" style={{ padding: "120px 24px", textAlign: "center" }}>
         <h2 style={{ color: "var(--dn)" }}>Access Restricted</h2>
         <p className="note" style={{ margin: "16px 0 24px" }}>{error}</p>
-        <button className="pill" onClick={() => router.push("/signin")}>
+        <button type="button" className="pill" onClick={() => router.push("/signin")} style={{ touchAction: "manipulation" }}>
           Sign in as Administrator
         </button>
       </div>
@@ -180,26 +180,34 @@ export function AdminClient() {
       {/* Admin Navigation Tabs */}
       <div className="chips" style={{ marginBottom: "24px" }}>
         <button
+          type="button"
           className={`chip ${activeTab === "strategies" ? "on" : ""}`}
           onClick={() => setActiveTab("strategies")}
+          style={{ touchAction: "manipulation" }}
         >
           Strategy Management ({strategies.length})
         </button>
         <button
+          type="button"
           className={`chip ${activeTab === "runtime" ? "on" : ""}`}
           onClick={() => setActiveTab("runtime")}
+          style={{ touchAction: "manipulation" }}
         >
           VPS Runtime &amp; Signals
         </button>
         <button
+          type="button"
           className={`chip ${activeTab === "customers" ? "on" : ""}`}
           onClick={() => setActiveTab("customers")}
+          style={{ touchAction: "manipulation" }}
         >
           Customer Access ({users.length})
         </button>
         <button
+          type="button"
           className={`chip ${activeTab === "audit" ? "on" : ""}`}
           onClick={() => setActiveTab("audit")}
+          style={{ touchAction: "manipulation" }}
         >
           Audit Log ({auditLogs.length})
         </button>
@@ -246,8 +254,10 @@ export function AdminClient() {
                     {s.visibilityStatus}
                   </span>
                   <button
+                    type="button"
                     className="chip"
                     onClick={() => toggleStrategyStatus(s.id, s.visibilityStatus)}
+                    style={{ touchAction: "manipulation" }}
                   >
                     {s.visibilityStatus === "PUBLIC" ? "Make Private" : "Publish Public"}
                   </button>

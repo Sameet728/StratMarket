@@ -37,7 +37,7 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
           <span className="panel-id-badge">{contract.strategyId}</span>
           <h3>{contract.name}</h3>
         </div>
-        <button className="panel-close-btn" onClick={onClose} aria-label="Close panel">
+        <button type="button" className="panel-close-btn" onClick={onClose} aria-label="Close panel" style={{ touchAction: "manipulation" }}>
           ✕
         </button>
       </div>

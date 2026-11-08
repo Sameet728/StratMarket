@@ -362,6 +362,7 @@ export function PricingClient({
         {/* Monthly / Annual Billing Toggle */}
         <div style={{ display: "inline-flex", alignItems: "center", background: "rgba(255,255,255,0.04)", border: "1px solid var(--line)", borderRadius: 30, padding: 4 }}>
           <button
+            type="button"
             onClick={() => setBillingCycle("monthly")}
             style={{
               padding: "7px 18px",
@@ -370,6 +371,7 @@ export function PricingClient({
               fontSize: 13,
               fontWeight: 700,
               cursor: "pointer",
+              touchAction: "manipulation",
               transition: "all 0.2s",
               background: billingCycle === "monthly" ? "#ffffff" : "transparent",
               color: billingCycle === "monthly" ? "#000000" : "var(--mut)",
@@ -378,6 +380,7 @@ export function PricingClient({
             Monthly Billing
           </button>
           <button
+            type="button"
             onClick={() => setBillingCycle("annual")}
             style={{
               padding: "7px 18px",
@@ -386,6 +389,7 @@ export function PricingClient({
               fontSize: 13,
               fontWeight: 700,
               cursor: "pointer",
+              touchAction: "manipulation",
               transition: "all 0.2s",
               display: "inline-flex",
               alignItems: "center",
@@ -544,6 +548,7 @@ export function PricingClient({
             </Link>
           ) : (
             <button
+              type="button"
               onClick={() => {
                 const plan = plans.find((p) => p.slug === "single-strategy") || plans[0];
                 openCheckout(plan, selectedStrategyId);
@@ -557,6 +562,7 @@ export function PricingClient({
                 borderRadius: 10,
                 cursor: "pointer",
                 textAlign: "center",
+                touchAction: "manipulation",
               }}
             >
               Direct Pay ${billingCycle === "annual" ? "63" : "79"} · Unlock {selectedStrategyId} →
@@ -686,6 +692,7 @@ export function PricingClient({
             </Link>
           ) : (
             <button
+              type="button"
               onClick={() => {
                 const plan = plans.find((p) => p.slug === "all-access") || plans[1] || plans[0];
                 openCheckout(plan, undefined);
@@ -703,6 +710,7 @@ export function PricingClient({
                 color: "#000",
                 boxShadow: "0 4px 20px rgba(255, 255, 255, 0.12)",
                 border: "none",
+                touchAction: "manipulation",
               }}
             >
               Direct Pay ${billingCycle === "annual" ? "159" : "199"} · Unlock All Strategies →
@@ -781,6 +789,7 @@ export function PricingClient({
           </div>
 
           <button
+            type="button"
             onClick={() => {
               const plan = plans.find((p) => p.slug === "professional") || plans[2] || plans[0];
               openCheckout(plan, undefined);
@@ -794,6 +803,7 @@ export function PricingClient({
               borderRadius: 10,
               cursor: "pointer",
               textAlign: "center",
+              touchAction: "manipulation",
             }}
           >
             Direct Pay ${billingCycle === "annual" ? "399" : "499"} · Institutional Desk →
@@ -970,6 +980,7 @@ export function PricingClient({
 
               {!isProcessing && (
                 <button
+                  type="button"
                   onClick={() => setCheckoutOpen(false)}
                   style={{
                     background: "rgba(255,255,255,0.06)",
@@ -983,6 +994,7 @@ export function PricingClient({
                     color: "var(--mut)",
                     cursor: "pointer",
                     fontSize: 14,
+                    touchAction: "manipulation",
                   }}
                 >
                   ✕
@@ -1090,12 +1102,13 @@ export function PricingClient({
                       </Link>
                     )}
                     <button
+                      type="button"
                       onClick={() => {
                         setCheckoutOpen(false);
                         router.refresh();
                       }}
                       className="pill g"
-                      style={{ fontSize: 14, padding: "12px 20px" }}
+                      style={{ fontSize: 14, padding: "12px 20px", touchAction: "manipulation" }}
                     >
                       Done
                     </button>
@@ -1121,6 +1134,7 @@ export function PricingClient({
                   {/* Auth Tabs */}
                   <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
                     <button
+                      type="button"
                       onClick={() => setAuthMode("LOGIN")}
                       style={{
                         flex: 1,
@@ -1131,11 +1145,13 @@ export function PricingClient({
                         color: authMode === "LOGIN" ? "#fff" : "var(--mut)",
                         fontSize: 13,
                         fontWeight: 700,
+                        touchAction: "manipulation",
                       }}
                     >
                       Sign In
                     </button>
                     <button
+                      type="button"
                       onClick={() => setAuthMode("REGISTER")}
                       style={{
                         flex: 1,
@@ -1146,6 +1162,7 @@ export function PricingClient({
                         color: authMode === "REGISTER" ? "#fff" : "var(--mut)",
                         fontSize: 13,
                         fontWeight: 700,
+                        touchAction: "manipulation",
                       }}
                     >
                       Create Account
@@ -1487,6 +1504,7 @@ export function PricingClient({
 
                   {/* Submit Button */}
                   <button
+                    type="button"
                     onClick={handleDirectPayment}
                     disabled={isProcessing}
                     className="pill"
@@ -1503,6 +1521,7 @@ export function PricingClient({
                       alignItems: "center",
                       justifyContent: "center",
                       gap: 8,
+                      touchAction: "manipulation",
                     }}
                   >
                     {isProcessing ? (
