@@ -10,43 +10,79 @@
   --gold: #d8d8d8;
   --up: #ffffff;
   --dn: #6e6e6e;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   box-sizing: border-box;
 }
 
 html {
+  scroll-behavior: smooth;
   scroll-padding-top: 80px;
   background-color: var(--bg);
   color: var(--tx);
   color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* Custom Institutional Ultra-Thin Smooth Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* Refined High-Contrast Selection */
+::selection {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
 body {
   margin: 0;
   background: var(--bg);
   color: var(--tx);
-  font: 15.5px/1.65 "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.62;
+  letter-spacing: -0.012em;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
   padding-bottom: 96px;
-  letter-spacing: -0.01em;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Outfit", "Plus Jakarta Sans", sans-serif;
-  font-weight: 600;
-  letter-spacing: -0.04em;
-  line-height: 1.04;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.14;
   margin: 0;
+  color: #ffffff;
+  text-rendering: optimizeLegibility;
 }
 
-code, pre, .mono, .badge, .tick, .kp b, .mm b, .stats b {
-  font-family: "JetBrains Mono", monospace;
+code, pre, .mono, .badge, .tick, .kp b, .mm b, .stats b, .metric, [data-mono] {
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 /* Custom Magnetic Cursor */
@@ -119,23 +155,29 @@ a {
 
 /* Pills & Buttons */
 .pill {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 99px;
-  background: var(--tx);
-  color: var(--bg);
-  padding: 11px 24px;
+  background: #ffffff;
+  color: #000000;
+  padding: 10px 22px;
+  font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 15px;
-  border: 1px solid var(--tx);
-  transition: transform 0.25s, box-shadow 0.25s;
+  font-size: 14px;
+  letter-spacing: -0.015em;
+  border: 1px solid #ffffff;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease;
   position: relative;
   overflow: hidden;
   text-align: center;
+  cursor: pointer;
+  user-select: none;
 }
 
 .pill:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px -8px var(--gold);
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 24px -6px rgba(255, 255, 255, 0.25);
 }
 
 .pill::after {
@@ -145,7 +187,7 @@ a {
   left: -60%;
   width: 40%;
   height: 100%;
-  background: linear-gradient(100deg, transparent, rgba(130,130,130,0.45), transparent);
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.4), transparent);
   transform: skewX(-20deg);
   animation: sh 4.5s 1.2s infinite;
 }
@@ -155,18 +197,22 @@ a {
 }
 
 .pill.g {
-  background: none;
-  color: var(--tx);
-  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .pill.g:hover {
-  border-color: var(--gold);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.5);
 }
 
 .sm {
-  padding: 7px 16px;
-  font-size: 14px;
+  padding: 6px 14px;
+  font-size: 13px;
 }
 
 /* Header Navigation */
@@ -1434,7 +1480,7 @@ footer p {
   color: #000000;
   display: grid;
   place-items: center;
-  font-family: "Outfit", "Plus Jakarta Sans", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: clamp(34px, 6vw, 76px);
   letter-spacing: -0.05em;

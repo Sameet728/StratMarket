@@ -231,7 +231,7 @@ function SignInContent() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 10,
-                fontFamily: "var(--font-sans, 'Outfit', sans-serif)",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 700,
                 fontSize: 22,
                 letterSpacing: "-0.03em",
