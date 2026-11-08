@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { StratMarketLogo } from "@/components/StratMarketLogo";
 import { TerrainCanvas } from "@/components/TerrainCanvas";
 import { AnimatedStats } from "@/components/AnimatedStats";
 import { IndexPreview } from "@/components/IndexPreview";
@@ -15,8 +16,9 @@ export default async function HomePage() {
       {/* Hero Section */}
       <div className="h0">
         <div className="hc">
-          <span className="tag">
-            <b>Product by</b> Elvaris Capital ·{" "}
+          <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <StratMarketLogo size={13} color="#ffffff" />
+            <span><b>Product by</b> Elvaris Capital ·{" "}</span>
             <a
               href="https://elvariscapital.in"
               target="_blank"

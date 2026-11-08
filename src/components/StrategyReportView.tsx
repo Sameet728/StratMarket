@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { StratMarketLogo } from "@/components/StratMarketLogo";
 import { StrategySeedItem } from "@/lib/db/seed-data";
 import ensembleReportsData from "@/lib/data/ensembleReports.json";
 import pineReportsData from "@/lib/data/pineReports.json";
@@ -233,8 +234,8 @@ export function StrategyReportView({ strategy }: Props) {
 
       {/* Hero Header */}
       <section className="report-hero" style={{ padding: "0 0 36px", borderBottom: "1px solid var(--line)" }}>
-        <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "5px 14px", borderRadius: "99px", border: isPython ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(255, 255, 255, 0.08)" }}>
-          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: isPython ? "#ffffff" : "#ffffff", display: "inline-block", boxShadow: isPython ? "0 0 8px #ffffff" : "0 0 8px #ffffff" }}></span>
+        <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "5px 14px", borderRadius: "99px", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+          <StratMarketLogo size={14} color="#ffffff" />
           <b>StratMarket by Elvaris Capital</b> · <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff", textDecoration: "underline" }}>elvariscapital.in ↗</a> · {isPython ? "MetaTrader 5 Quantitative Tear Sheet" : "TradingView Pine Script v5 Tear Sheet"}
         </span>
         

@@ -61,7 +61,12 @@ export const metadata: Metadata = {
     creator: "@ElvarisCapital",
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/logo.png", type: "image/png" },
+    ],
+    apple: "/logo.png",
   },
 };
 
@@ -73,7 +78,7 @@ const jsonLdData = {
       "@id": "https://elvariscapital.in/#organization",
       name: "Elvaris Capital",
       url: "https://elvariscapital.in",
-      logo: "https://stratmarket.elvariscapital.in/globe.svg",
+      logo: "https://stratmarket.elvariscapital.in/logo.png",
       sameAs: ["https://elvariscapital.in"],
       description:
         "Elvaris Capital is an institutional quantitative research and financial technology firm developing proprietary systematic trading algorithms, risk governance frameworks, and automated execution engines.",

@@ -160,9 +160,16 @@ function getEmailHeader(categoryEyebrow: string): string {
 <tr><td class="pad" style="padding-top:25px;padding-bottom:21px;">
 <table role="presentation" width="100%"><tr>
 <td valign="top">
-<div class="brand">STRATMARKET</div>
-<div class="company">BY ELVARIS CAPITAL</div>
-<div class="site"><a href="https://elvariscapital.in">elvariscapital.in</a></div>
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td valign="middle" style="padding-right:10px;">
+  <img src="${BASE_URL}/logo-dark.png" width="22" height="26" alt="StratMarket Logo" style="display:block;border:0;outline:none;" />
+</td>
+<td valign="middle">
+  <div class="brand">STRATMARKET</div>
+  <div class="company">BY ELVARIS CAPITAL</div>
+</td>
+</tr></table>
+<div class="site" style="margin-top:6px;"><a href="https://elvariscapital.in">elvariscapital.in</a></div>
 </td>
 <td align="right" valign="top" class="eyebrow">${categoryEyebrow}</td>
 </tr></table>

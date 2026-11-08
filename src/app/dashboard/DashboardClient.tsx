@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { StratMarketLogo } from "@/components/StratMarketLogo";
 
 interface UserProfile {
   id: string;
@@ -443,8 +444,9 @@ export function DashboardClient() {
             </span>
           </div>
 
-          <h1 style={{ fontSize: 32, margin: "10px 0 0", fontWeight: 800 }}>
-            Trading Dashboard
+          <h1 style={{ fontSize: 32, margin: "10px 0 0", fontWeight: 800, display: "flex", alignItems: "center", gap: 10 }}>
+            <StratMarketLogo size={28} color="#ffffff" />
+            <span>Trading Dashboard</span>
           </h1>
           <p className="note" style={{ fontSize: 13, marginTop: 4 }}>
             Logged in as <b>{user?.name}</b> ({user?.email}) ·{" "}

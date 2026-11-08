@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { StratMarketLogo } from "@/components/StratMarketLogo";
 
 function SignInContent() {
   const searchParams = useSearchParams();
@@ -224,29 +225,26 @@ function SignInContent() {
         <div className="wrap" style={{ textAlign: "center", maxWidth: 480, margin: "0 auto" }}>
           {/* Logo mark */}
           <div style={{ marginBottom: 24, marginTop: 40 }}>
-            <span
+            <Link
+              href="/"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 8,
-                fontFamily: "'Outfit', sans-serif",
+                gap: 10,
+                fontFamily: "var(--font-sans, 'Outfit', sans-serif)",
                 fontWeight: 700,
-                fontSize: 20,
-                letterSpacing: "-0.04em",
-                color: "var(--tx)",
+                fontSize: 22,
+                letterSpacing: "-0.03em",
+                color: "#ffffff",
+                textDecoration: "none",
               }}
             >
-              <span
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  background: "linear-gradient(135deg, #fff 0%, #999 100%)",
-                  display: "inline-block",
-                }}
-              />
-              Elvaris Capital
-            </span>
+              <StratMarketLogo size={30} color="#ffffff" />
+              <span>StratMarket</span>
+            </Link>
+            <div style={{ fontSize: "11px", color: "#a1a1aa", marginTop: "4px" }}>
+              by Elvaris Capital
+            </div>
           </div>
 
           {mode === "FORGOT" ? (

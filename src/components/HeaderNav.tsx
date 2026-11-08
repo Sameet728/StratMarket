@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { StratMarketLogo } from "@/components/StratMarketLogo";
 
 export function HeaderNav() {
   const pathname = usePathname();
@@ -47,18 +48,7 @@ export function HeaderNav() {
     <header id="nav" className={scrolled ? "s" : ""}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <Link href="/" className="logo">
-          <svg
-            className="mk"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#fff"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="1.5" y="1.5" width="21" height="21" rx="6" stroke="#444" />
-            <path d="M5 16 L10 10 L14 14 L19 7" pathLength="1" />
-          </svg>
+          <StratMarketLogo size={22} className="mk" color="#ffffff" />
           StratMarket
         </Link>
         <a

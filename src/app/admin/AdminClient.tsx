@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { StratMarketLogo } from "@/components/StratMarketLogo";
 import { StrategySeedItem } from "@/lib/db/seed-data";
 
 interface AdminStats {
@@ -152,7 +153,10 @@ export function AdminClient() {
           <span className="badge pn" style={{ borderColor: "rgba(255, 255, 255, 0.15)", color: "#ffffff" }}>
             Elvaris Capital Core System
           </span>
-          <h1 style={{ fontSize: "36px", marginTop: "8px" }}>StratMarket Administration</h1>
+          <h1 style={{ fontSize: "36px", marginTop: "8px", display: "flex", alignItems: "center", gap: "12px" }}>
+            <StratMarketLogo size={32} color="#ffffff" />
+            <span>StratMarket Administration</span>
+          </h1>
           <p className="note" style={{ fontSize: "14px", marginTop: "4px" }}>
             Operational monitoring, Python VPS gateway management, customer entitlements, and security audits.
           </p>

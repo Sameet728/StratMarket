@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { StratMarketLogo } from "@/components/StratMarketLogo";
 
 export const DOCS_PAGES = [
   {
@@ -49,6 +50,10 @@ export function DocsNav() {
       }}
     >
       <div style={{ marginBottom: "28px" }}>
+        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none", color: "#fff", marginBottom: "14px" }}>
+          <StratMarketLogo size={20} color="#ffffff" />
+          <span style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "-0.02em" }}>StratMarket</span>
+        </Link>
         <span
           style={{
             fontSize: "10.5px",

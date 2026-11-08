@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { StratMarketLogo } from "@/components/StratMarketLogo";
 
 export function Footer() {
   return (
@@ -16,7 +17,8 @@ export function Footer() {
         >
           {/* Column 1: Brand & Parent Org Lockup */}
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "12px" }}>
+              <StratMarketLogo size={20} color="#ffffff" />
               <span style={{ fontSize: "18px", fontWeight: "700", letterSpacing: "-0.02em", color: "#fff" }}>
                 StratMarket
               </span>
