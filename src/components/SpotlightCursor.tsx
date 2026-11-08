@@ -11,15 +11,23 @@ export function SpotlightCursor() {
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
     if (isTouch) return;
 
-    let targetX = window.innerWidth / 2;
-    let targetY = window.innerHeight / 2;
-    let currentX = targetX;
-    let currentY = targetY;
+    let targetX = -100;
+    let targetY = -100;
+    let currentX = -100;
+    let currentY = -100;
     let animId: number;
+    let hasMoved = false;
 
     const handlePointerMove = (e: PointerEvent) => {
+      if (!hasMoved) {
+        hasMoved = true;
+        currentX = e.clientX;
+        currentY = e.clientY;
+      }
       targetX = e.clientX;
       targetY = e.clientY;
+      cur.classList.add("visible");
+
       const targetCard = (e.target as HTMLElement | null)?.closest(
         ".card, .fc, .plan, .st, .stage, .report-card, .metric-card"
       ) as HTMLElement | null;
@@ -36,13 +44,42 @@ export function SpotlightCursor() {
       cur.classList.toggle("h", Boolean(isInteractive));
     };
 
+    const handleMouseLeave = () => {
+      cur.classList.remove("visible");
+      cur.classList.remove("h");
+    };
+
+    const handleMouseEnter = (e: MouseEvent) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+      cur.classList.add("visible");
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        cur.classList.remove("visible");
+        cur.classList.remove("h");
+      }
+    };
+
+    const handleBlur = () => {
+      cur.classList.remove("visible");
+      cur.classList.remove("h");
+    };
+
     window.addEventListener("pointermove", handlePointerMove, { passive: true });
     window.addEventListener("pointerover", handlePointerOver, { passive: true });
+    document.addEventListener("mouseleave", handleMouseLeave);
+    document.addEventListener("mouseenter", handleMouseEnter);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleBlur);
 
     const loop = () => {
-      currentX += (targetX - currentX) * 0.28;
-      currentY += (targetY - currentY) * 0.28;
-      cur.style.transform = `translate3d(${Math.round(currentX)}px, ${Math.round(currentY)}px, 0)`;
+      if (hasMoved) {
+        currentX += (targetX - currentX) * 0.32;
+        currentY += (targetY - currentY) * 0.32;
+        cur.style.transform = `translate3d(${Math.round(currentX)}px, ${Math.round(currentY)}px, 0)`;
+      }
       animId = requestAnimationFrame(loop);
     };
 
@@ -52,6 +89,10 @@ export function SpotlightCursor() {
       cancelAnimationFrame(animId);
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerover", handlePointerOver);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      document.removeEventListener("mouseenter", handleMouseEnter);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleBlur);
     };
   }, []);
 

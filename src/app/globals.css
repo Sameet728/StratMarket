@@ -107,12 +107,18 @@ code, pre, .mono, .badge, .tick, .kp b, .mm b, .stats b, .metric, [data-mono] {
   pointer-events: none;
   z-index: 999;
   mix-blend-mode: difference;
-  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+  opacity: 0;
+  transition: opacity 0.18s ease,
+              width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
               height 0.28s cubic-bezier(0.16, 1, 0.3, 1),
               margin 0.28s cubic-bezier(0.16, 1, 0.3, 1),
               background 0.28s,
               border-color 0.28s,
               box-shadow 0.28s;
+}
+
+#cur.visible {
+  opacity: 1;
 }
 
 #cur.h {
@@ -1534,41 +1540,6 @@ footer p {
   }
   .ir .n, .ir .m {
     display: none;
-  }
-}
-
-/* High-Performance GPU-Accelerated Page Transition Wipe */
-#wp {
-  position: fixed;
-  inset: 0;
-  z-index: 95;
-  background: #ffffff;
-  color: #000000;
-  display: grid;
-  place-items: center;
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: clamp(34px, 6vw, 76px);
-  letter-spacing: -0.05em;
-  transform: translate3d(0, 100%, 0);
-  will-change: transform;
-  backface-visibility: hidden;
-  pointer-events: none;
-}
-
-#wp.go {
-  animation: wp 0.76s cubic-bezier(0.76, 0, 0.24, 1) forwards;
-}
-
-@keyframes wp {
-  0% {
-    transform: translate3d(0, 100%, 0);
-  }
-  38%, 56% {
-    transform: translate3d(0, 0%, 0);
-  }
-  100% {
-    transform: translate3d(0, -100%, 0);
   }
 }
 

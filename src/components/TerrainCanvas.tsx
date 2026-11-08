@@ -152,6 +152,24 @@ export function TerrainCanvas() {
       }
     };
 
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        lastRenderTime = performance.now();
+        rs();
+        render();
+      }
+    };
+
+    const handlePageShow = () => {
+      lastRenderTime = performance.now();
+      rs();
+      render();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("pageshow", handlePageShow);
+    window.addEventListener("focus", handleVisibility);
+
     const loop = (timestamp: number) => {
       animId = requestAnimationFrame(loop);
       if (!vis || document.hidden) return;
@@ -169,6 +187,9 @@ export function TerrainCanvas() {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("pointermove", onPointerMove);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("pageshow", handlePageShow);
+      window.removeEventListener("focus", handleVisibility);
       observer.disconnect();
     };
   }, []);

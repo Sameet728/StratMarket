@@ -38,6 +38,13 @@ export function IndexPreview({ initialStrategies }: IndexPreviewProps) {
 
     window.addEventListener("pointermove", handlePointerMove, { passive: true });
 
+    const handleReset = () => {
+      setHoveredStrategy(null);
+    };
+
+    window.addEventListener("blur", handleReset);
+    document.addEventListener("visibilitychange", handleReset);
+
     const loop = () => {
       if (hoveredRef.current && previewRef.current) {
         currentX += (targetX - currentX) * 0.22;
@@ -51,6 +58,8 @@ export function IndexPreview({ initialStrategies }: IndexPreviewProps) {
 
     return () => {
       window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("blur", handleReset);
+      document.removeEventListener("visibilitychange", handleReset);
       cancelAnimationFrame(animId);
     };
   }, []);

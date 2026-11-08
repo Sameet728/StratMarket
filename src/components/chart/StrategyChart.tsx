@@ -454,6 +454,7 @@ export function StrategyChart({
     return () => {
       disposed = true;
       abortCtrl.abort();
+      mountedKeyRef.current = "";
       if (workspaceRef.current) {
         try {
           workspaceRef.current.destroy();
@@ -462,6 +463,47 @@ export function StrategyChart({
       }
     };
   }, [strategyId, timeframe]);
+
+  // Handle tab switching & browser back/forward cache restoration (bfcache)
+  useEffect(() => {
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === "visible") {
+        // Tab was switched back - force canvas resize and drawings refresh without freezing
+        try {
+          if (workspaceRef.current) {
+            workspaceRef.current.chart?.resize?.();
+            workspaceRef.current.resize?.();
+            const drawingsCtrl = workspaceRef.current.chart?.drawings;
+            if (drawingsCtrl && tradeBoxDrawingIdsRef.current.length > 0) {
+              for (const id of tradeBoxDrawingIdsRef.current) {
+                drawingsCtrl.update(id, { visible: showBoxes });
+              }
+            }
+          }
+        } catch (_) {}
+      }
+    };
+
+    const handlePageShow = (e: PageTransitionEvent) => {
+      // Restored from browser back/forward history cache
+      try {
+        if (workspaceRef.current) {
+          workspaceRef.current.chart?.resize?.();
+          workspaceRef.current.resize?.();
+        }
+      } catch (_) {}
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    window.addEventListener("pageshow", handlePageShow);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      window.removeEventListener("pageshow", handlePageShow);
+    };
+  }, [showBoxes]);
 
   // Toggle trade box drawings visibility whenever user clicks "Position Boxes" in the topbar
   useEffect(() => {

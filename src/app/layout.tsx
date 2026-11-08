@@ -153,9 +153,6 @@ export default function RootLayout({
       </head>
       <body className={`${sansFont.className} antialiased`}>
         <SpotlightCursor />
-        <Suspense fallback={null}>
-          <PageTransitionWipe />
-        </Suspense>
         <div className="fx" aria-hidden="true">
           <i className="a1" />
           <i className="a2" />
