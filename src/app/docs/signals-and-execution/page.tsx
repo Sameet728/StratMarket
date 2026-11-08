@@ -117,3 +117,4 @@ Authorization: Bearer <SECURE_SIGNAL_DISPATCH_SECRET>
     </article>
   );
 }
+

@@ -27,3 +27,4 @@ StratMarket provides traders, fund managers, and systematic investors with 100% 
 - [Broker Integration & API Reference](https://stratmarket.elvariscapital.in/docs/broker-integration): Webhook JSON contracts and automated execution setup.
 - [Frequently Asked Questions (FAQ)](https://stratmarket.elvariscapital.in/docs/faq): Key answers for traders and institutional allocators.
 - [Full LLM Knowledge Document](https://stratmarket.elvariscapital.in/llms-full.txt): Complete plain-text knowledge base for LLMs and AI search engines.
+

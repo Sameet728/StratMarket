@@ -171,28 +171,6 @@ export function DockNav() {
           <path d="M9 11h6" />
         </svg>
       </Link>
-
-      <Link
-        href="/chart"
-        className="l"
-        data-t="Live Charts"
-        aria-label="Live Charts"
-        aria-current={isActive("/chart") ? "true" : undefined}
-      >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M3 3v18h18" />
-          <path d="M18 9l-5 5-4-4-4 4" />
-        </svg>
-      </Link>
     </nav>
   );
 }

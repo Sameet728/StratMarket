@@ -152,6 +152,7 @@ export function StrategyChart({
   // Mount Vela workspace ONCE per strategy/timeframe
   useEffect(() => {
     let disposed = false;
+    const abortCtrl = new AbortController();
 
     async function loadAndMount() {
       const key = `${strategyId}-${timeframe}`;
@@ -163,18 +164,10 @@ export function StrategyChart({
         setLoading(true);
         setError(null);
 
-        // Fetch 1,500 high-fidelity bars and strategy execution contract with defensive 6s abort timeout
-        const abortCtrl = new AbortController();
-        const abortTimeout = setTimeout(() => abortCtrl.abort(), 6000);
-
-        let res: Response;
-        try {
-          res = await fetch(`/api/chart/${strategyId}/series?count=1500&timeframe=${timeframe}`, {
-            signal: abortCtrl.signal,
-          });
-        } finally {
-          clearTimeout(abortTimeout);
-        }
+        // Fetch 1,500 high-fidelity bars and strategy execution contract
+        const res = await fetch(`/api/chart/${strategyId}/series?count=1500&timeframe=${timeframe}`, {
+          signal: abortCtrl.signal,
+        });
         
         // Handle 401 Unauthorized
         if (res.status === 401) {
@@ -331,6 +324,9 @@ export function StrategyChart({
           }
         }
       } catch (err: any) {
+        if (disposed || err.name === "AbortError" || abortCtrl.signal.aborted) {
+          return;
+        }
         console.error("Vela mount error:", err);
         if (!disposed) {
           setError(err.message || "Failed to load TradingView chart series");
@@ -347,6 +343,7 @@ export function StrategyChart({
 
     return () => {
       disposed = true;
+      abortCtrl.abort();
       if (workspaceRef.current) {
         try {
           workspaceRef.current.destroy();

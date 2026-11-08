@@ -33,7 +33,7 @@ export default function robots(): MetadataRoute.Robots {
           "/research",
           "/how",
           "/market",
-          "/chart",
+          "/chart/*",
           "/llms.txt",
           "/llms-full.txt",
         ],
@@ -43,3 +43,4 @@ export default function robots(): MetadataRoute.Robots {
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
+

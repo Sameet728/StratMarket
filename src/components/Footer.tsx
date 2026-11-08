@@ -72,11 +72,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/chart" style={{ color: "#9ca3af", textDecoration: "none" }}>
-                  Live Interactive Charts
-                </Link>
-              </li>
-              <li>
                 <Link href="/research" style={{ color: "#9ca3af", textDecoration: "none" }}>
                   Hypothesis & Research
                 </Link>
