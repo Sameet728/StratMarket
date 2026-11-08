@@ -140,13 +140,13 @@ export function LiveExecutionStage() {
               </g>
             ))}
 
-            {/* Dynamic Gold Price Line */}
+            {/* Dynamic Live Price Line */}
             <line
               x1="0"
               x2="1000"
               y1={svgData.lastY}
               y2={svgData.lastY}
-              stroke="var(--gold)"
+              stroke="var(--lime, #a3e635)"
               strokeDasharray="4 4"
               strokeWidth="1.2"
             />
@@ -154,7 +154,7 @@ export function LiveExecutionStage() {
               x="988"
               y={svgData.lastY - 6}
               textAnchor="end"
-              fill="var(--gold)"
+              fill="var(--lime, #a3e635)"
               fontSize="12"
               fontFamily="JetBrains Mono, monospace"
               fontWeight="600"
@@ -174,7 +174,7 @@ export function LiveExecutionStage() {
 
               return (
                 <g key={i}>
-                  <path d={pathD} fill="var(--gold)" />
+                  <path d={pathD} fill={sig.isBuy ? "var(--lime, #a3e635)" : "#ef4444"} />
                 </g>
               );
             })}

@@ -117,13 +117,13 @@ export function IndexPreview({ initialStrategies }: IndexPreviewProps) {
                   6
                 )}
                 fill="none"
-                stroke="#fff"
+                stroke="var(--lime, #a3e635)"
                 strokeWidth="2"
               />
             </svg>
             <div className="mm">
               <div>
-                Win rate*<b>{hoveredStrategy.metrics.winRate}%</b>
+                Win rate*<b style={{ color: "var(--lime, #a3e635)" }}>{hoveredStrategy.metrics.winRate}%</b>
               </div>
               <div>
                 PF*<b>{hoveredStrategy.metrics.profitFactor}</b>

@@ -194,7 +194,7 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
                 <p>{s.description}</p>
                 <div className="mm">
                   <div>
-                    Win rate*<b style={{ color: "#ffffff" }}>{s.metrics.winRate}%</b>
+                    Win rate*<b style={{ color: "var(--lime, #a3e635)" }}>{s.metrics.winRate}%</b>
                   </div>
                   <div>
                     Profit factor*<b style={{ color: "#ffffff" }}>{s.metrics.profitFactor}</b>

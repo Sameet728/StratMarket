@@ -61,16 +61,17 @@ export function HeaderNav() {
             fontFamily: "var(--font-mono, monospace)",
             color: "#e4e4e7",
             background: "rgba(255, 255, 255, 0.06)",
-            border: "1px solid rgba(255, 255, 255, 0.15)",
+            border: "1px solid rgba(163, 230, 53, 0.25)",
             padding: "3px 9px",
             borderRadius: "999px",
             letterSpacing: "0.02em",
             textDecoration: "none",
             display: "inline-flex",
             alignItems: "center",
-            gap: "4px",
+            gap: "5px",
           }}
         >
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#a3e635", boxShadow: "0 0 6px #a3e635", display: "inline-block" }} />
           <span>by Elvaris Capital</span>
           <span style={{ opacity: 0.7 }}>↗</span>
         </a>

@@ -150,7 +150,8 @@ export function ChartToolbar({
               width: 6,
               height: 6,
               borderRadius: "50%",
-              background: showBoxes ? "#ffffff" : "#52525b",
+              background: showBoxes ? "#a3e635" : "#52525b",
+              boxShadow: showBoxes ? "0 0 6px #a3e635" : "none",
               display: "inline-block",
             }}
           />
@@ -174,10 +175,11 @@ export function ChartToolbar({
           <span
             className="feed-dot"
             style={{
-              background: isLive ? "#ffffff" : "#71717a",
+              background: isLive ? "#a3e635" : "#71717a",
+              boxShadow: isLive ? "0 0 8px #a3e635" : "none",
             }}
           />
-          <span>{isLive ? "Live Feed" : "Connecting"}</span>
+          <span style={{ color: isLive ? "#a3e635" : "inherit" }}>{isLive ? "Live Feed" : "Connecting"}</span>
         </div>
 
         {/* Strategy Details Sidebar Toggle */}

@@ -16,14 +16,15 @@ export default async function HomePage() {
       {/* Hero Section */}
       <div className="h0">
         <div className="hc">
-          <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: "7px", borderColor: "rgba(163, 230, 53, 0.35)", background: "rgba(163, 230, 53, 0.04)" }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a3e635", boxShadow: "0 0 8px #a3e635", display: "inline-block" }} />
             <StratMarketLogo size={13} color="#ffffff" />
             <span><b>Product by</b> Elvaris Capital ·{" "}</span>
             <a
               href="https://elvariscapital.in"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "inherit", textDecoration: "underline" }}
+              style={{ color: "#a3e635", textDecoration: "underline", textUnderlineOffset: "2px" }}
             >
               elvariscapital.in ↗
             </a>
@@ -33,8 +34,8 @@ export default async function HomePage() {
             Discover algorithmic trading strategies developed through AI-assisted research, systematic backtesting and iterative improvement.
           </p>
           <div className="cta" style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            <Link className="pill" href="/market">
-              Explore strategies
+            <Link className="pill lime" href="/market">
+              Explore strategies →
             </Link>
             <Link className="pill g" href="/docs">
               Documentation
@@ -103,8 +104,8 @@ export default async function HomePage() {
           </p>
           <IndexPreview initialStrategies={strategies} />
           <p style={{ marginTop: "32px" }}>
-            <Link className="pill" href="/market">
-              View all strategies
+            <Link className="pill lime" href="/market">
+              View all strategies →
             </Link>
           </p>
         </div>

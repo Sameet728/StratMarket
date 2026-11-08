@@ -161,7 +161,12 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
               {contract.summary.hudMetrics.map((m, idx) => (
                 <div key={idx} className="panel-row">
                   <span className="label">{m.label}</span>
-                  <span className="value" style={{ color: "#ffffff" }}>
+                  <span
+                    className="value"
+                    style={{
+                      color: m.color === "#4ade80" ? "var(--lime, #a3e635)" : m.color || "#ffffff",
+                    }}
+                  >
                     {m.value}
                   </span>
                 </div>

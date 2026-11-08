@@ -273,15 +273,15 @@ export function StrategyChart({
               const tpPts = Math.abs(tb.tpPrice - tb.entryPrice).toFixed(1);
               const slPts = Math.abs(tb.slPrice - tb.entryPrice).toFixed(1);
 
-              // 1. Reward Zone Box (Take Profit - Vibrant Emerald Green)
+              // 1. Reward Zone Box (Take Profit - Electric Cyber Lime)
               const d1 = ws.chart.drawings.add("box", {
                 anchors: [
                   { time: tb.entryTime, price: tb.entryPrice },
                   { time: tb.exitTime, price: tb.tpPrice },
                 ],
                 style: {
-                  fillColor: "rgba(16, 185, 129, 0.22)",
-                  lineColor: "#10b981",
+                  fillColor: "rgba(163, 230, 53, 0.18)",
+                  lineColor: "#a3e635",
                   lineWidth: 1.5,
                   lineStyle: "solid",
                 },
@@ -317,12 +317,12 @@ export function StrategyChart({
               });
               lockDrawing(d3);
 
-              // 4. Take Profit (TP) Explicit Price Pin (Emerald)
+              // 4. Take Profit (TP) Explicit Price Pin (Electric Cyber Lime)
               const tpLabel = tb.id === "tb-active"
-                ? `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts} pts)`
+                ? `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts})`
                 : tb.isWin
-                ? `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts} pts) · ✓ HIT (+${rMultiple}R)`
-                : `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts} pts)`;
+                ? `TP: $${tb.tpPrice.toFixed(2)} · ✓ HIT (+${rMultiple}R)`
+                : `TP: $${tb.tpPrice.toFixed(2)}`;
 
               const dTP = ws.chart.drawings.add("text", {
                 anchors: [
@@ -330,7 +330,7 @@ export function StrategyChart({
                 ],
                 text: {
                   value: tpLabel,
-                  color: "#10b981",
+                  color: "#a3e635",
                   size: "small",
                   hAlign: "left",
                   vAlign: tb.type === "LONG" ? "bottom" : "top",
@@ -341,8 +341,8 @@ export function StrategyChart({
 
               // 5. Entry Explicit Price Pin (Crisp White)
               const entryLabel = tb.id === "tb-active"
-                ? `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} Entry: $${tb.entryPrice.toFixed(2)} · ACTIVE`
-                : `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} Entry: $${tb.entryPrice.toFixed(2)}`;
+                ? `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} $${tb.entryPrice.toFixed(2)} · LIVE`
+                : `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} $${tb.entryPrice.toFixed(2)}`;
 
               const dEntry = ws.chart.drawings.add("text", {
                 anchors: [
@@ -361,10 +361,10 @@ export function StrategyChart({
 
               // 6. Stop Loss (SL) Explicit Price Pin (Crimson)
               const slLabel = tb.id === "tb-active"
-                ? `SL: $${tb.slPrice.toFixed(2)} (-${slPts} pts)`
+                ? `SL: $${tb.slPrice.toFixed(2)} (-${slPts})`
                 : !tb.isWin
-                ? `SL: $${tb.slPrice.toFixed(2)} (-${slPts} pts) · ✕ HIT (-1.00R)`
-                : `SL: $${tb.slPrice.toFixed(2)} (-${slPts} pts)`;
+                ? `SL: $${tb.slPrice.toFixed(2)} · ✕ HIT (-1.0R)`
+                : `SL: $${tb.slPrice.toFixed(2)}`;
 
               const dSL = ws.chart.drawings.add("text", {
                 anchors: [
@@ -400,7 +400,7 @@ export function StrategyChart({
               const isTP = lvl.name.toLowerCase().includes("take profit") || lvl.name.toLowerCase().includes("tp");
               const isSL = lvl.name.toLowerCase().includes("stop loss") || lvl.name.toLowerCase().includes("sl");
               const isEntry = lvl.name.toLowerCase().includes("entry");
-              const color = isTP ? "#10b981" : isSL ? "#ef4444" : isEntry ? "#ffffff" : "#a1a1aa";
+              const color = isTP ? "#a3e635" : isSL ? "#ef4444" : isEntry ? "#ffffff" : "#a1a1aa";
               const labelPrefix = isTP ? "Active TP" : isSL ? "Active SL" : isEntry ? "Active Entry" : "Market";
 
               const line = ws.chart.drawings.add("trendline", {

@@ -8,7 +8,15 @@
   --tx: #ffffff;
   --mut: #8c8c8c;
   --gold: #d8d8d8;
-  --up: #ffffff;
+  /* Elite Institutional Cyber/Terminal Lime Green Tokens */
+  --lime: #a3e635;
+  --lime-bright: #bef264;
+  --lime-dim: #65a30d;
+  --lime-glow: rgba(163, 230, 53, 0.18);
+  --lime-glow-bright: rgba(163, 230, 53, 0.35);
+  --lime-bg: rgba(163, 230, 53, 0.08);
+  --lime-border: rgba(163, 230, 53, 0.28);
+  --up: #a3e635;
   --dn: #6e6e6e;
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -47,9 +55,9 @@ html {
   background: #3f3f46;
 }
 
-/* Refined High-Contrast Selection */
+/* Refined High-Contrast Selection with Subtle Lime Tint */
 ::selection {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(163, 230, 53, 0.22);
   color: #ffffff;
 }
 
@@ -93,7 +101,8 @@ code, pre, .mono, .badge, .tick, .kp b, .mm b, .stats b, .metric, [data-mono] {
   width: 32px;
   height: 32px;
   margin: -16px 0 0 -16px;
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(163, 230, 53, 0.75);
+  box-shadow: 0 0 10px rgba(163, 230, 53, 0.2);
   border-radius: 50%;
   pointer-events: none;
   z-index: 999;
@@ -102,15 +111,17 @@ code, pre, .mono, .badge, .tick, .kp b, .mm b, .stats b, .metric, [data-mono] {
               height 0.28s cubic-bezier(0.16, 1, 0.3, 1),
               margin 0.28s cubic-bezier(0.16, 1, 0.3, 1),
               background 0.28s,
-              border-color 0.28s;
+              border-color 0.28s,
+              box-shadow 0.28s;
 }
 
 #cur.h {
   width: 68px;
   height: 68px;
   margin: -34px 0 0 -34px;
-  background: #ffffff;
-  border-color: #ffffff;
+  background: var(--lime);
+  border-color: var(--lime);
+  box-shadow: 0 0 20px rgba(163, 230, 53, 0.4);
 }
 
 @media (pointer: coarse) {
@@ -210,6 +221,21 @@ a {
   box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.5);
 }
 
+.pill.lime {
+  background: var(--lime);
+  color: #000000;
+  border-color: var(--lime);
+  font-weight: 700;
+  box-shadow: 0 4px 20px -4px rgba(163, 230, 53, 0.4);
+}
+
+.pill.lime:hover {
+  background: var(--lime-bright);
+  border-color: var(--lime-bright);
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 28px -4px rgba(163, 230, 53, 0.55);
+}
+
 .sm {
   padding: 6px 14px;
   font-size: 13px;
@@ -286,17 +312,18 @@ a {
   gap: 8px;
   font-size: 12px;
   color: var(--mut);
-  border: 1px solid var(--line);
+  border: 1px solid var(--lime-border);
   border-radius: 99px;
   padding: 5px 14px;
-  background: rgba(10, 10, 10, 0.5);
+  background: rgba(163, 230, 53, 0.04);
 }
 
 .chip0 i {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime);
   animation: bl 1.2s infinite;
 }
 
@@ -483,7 +510,7 @@ a {
 
 .sb .live {
   margin-left: auto;
-  color: #ffffff;
+  color: var(--lime);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -499,8 +526,8 @@ a {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 0 10px #ffffff;
+  background: var(--lime);
+  box-shadow: 0 0 10px var(--lime);
   animation: bl 1.2s infinite;
 }
 
@@ -542,17 +569,21 @@ a {
 }
 
 .tick-up {
-  color: #ffffff;
+  color: var(--lime);
   font-style: normal;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(163, 230, 53, 0.08);
+  border: 1px solid rgba(163, 230, 53, 0.22);
   padding: 1px 6px;
   border-radius: 4px;
 }
 
 .tick-dn {
-  color: #888888;
+  color: #ef4444;
   font-style: normal;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  padding: 1px 6px;
+  border-radius: 4px;
 }
 
 @keyframes mq {
@@ -987,7 +1018,7 @@ section h2 {
   gap: 5px;
 }
 
-/* PINE SCRIPT STRATEGIES: PINE EMERALD (Website Verified Accent) */
+/* PINE SCRIPT STRATEGIES: PINE EMERALD & CYBER LIME ACCENT */
 .card-pine {
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   background: linear-gradient(180deg, rgba(16, 16, 18, 0.9) 0%, rgba(8, 8, 10, 0.98) 100%) !important;
@@ -1000,26 +1031,26 @@ section h2 {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12), transparent);
+  background: linear-gradient(90deg, var(--lime), var(--lime-bright), transparent);
   opacity: 0.85;
   transition: opacity 0.3s ease;
 }
 
 .card-pine:hover {
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: var(--lime-border) !important;
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -15px rgba(255, 255, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 20px 40px -15px rgba(163, 230, 53, 0.18), inset 0 1px 0 rgba(163, 230, 53, 0.25) !important;
 }
 
 .card-pine:hover .card-top-accent {
   opacity: 1;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 12px var(--lime);
 }
 
 .badge-pine {
-  background: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(163, 230, 53, 0.08) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid var(--lime-border) !important;
   font-weight: 700 !important;
 }
 
@@ -1027,13 +1058,13 @@ section h2 {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 0 6px #ffffff;
+  background: var(--lime);
+  box-shadow: 0 0 6px var(--lime);
   display: inline-block;
 }
 
 .note-tag-pn {
-  color: #ffffff;
+  color: var(--lime);
   font-size: 12px;
   font-weight: 600;
   display: inline-flex;
@@ -1050,10 +1081,10 @@ section h2 {
 }
 
 .chip.chip-pn.on {
-  background: rgba(255, 255, 255, 0.12) !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 0 14px rgba(255, 255, 255, 0.12);
+  background: rgba(163, 230, 53, 0.12) !important;
+  color: var(--lime) !important;
+  border-color: var(--lime-border) !important;
+  box-shadow: 0 0 14px rgba(163, 230, 53, 0.25);
 }
 
 /* HOMEPAGE INDEX LIST MINI BADGES */
@@ -1074,9 +1105,9 @@ section h2 {
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(163, 230, 53, 0.1);
+  color: var(--lime);
+  border: 1px solid rgba(163, 230, 53, 0.25);
   margin-right: 8px;
   display: inline-block;
 }
@@ -1398,7 +1429,8 @@ footer p {
   left: 0;
   right: 0;
   height: 2px;
-  background: #fff;
+  background: linear-gradient(90deg, #a3e635, #bef264, #4ade80);
+  box-shadow: 0 0 10px rgba(163, 230, 53, 0.6);
   transform-origin: 0 50%;
   transform: scaleX(0);
   z-index: 60;
@@ -2969,20 +3001,21 @@ body:has(.chart-page-fullscreen) main {
   gap: 5px;
   font-size: 12px;
   font-weight: 700;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--lime);
+  background: var(--lime-bg);
+  border: 1px solid var(--lime-border);
   padding: 4px 10px;
   border-radius: 6px;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .card-chart-link:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: #ffffff;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
+  background: var(--lime);
+  color: #000000;
+  border-color: var(--lime);
+  box-shadow: 0 4px 16px -2px rgba(163, 230, 53, 0.45);
+  transform: translateY(-1.5px);
 }
 
 /* Toolbar Bars Badge & Toggle Pills */

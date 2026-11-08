@@ -314,7 +314,7 @@ export function PricingClient({
                     ? "All-Access Portfolio Active"
                     : `Single Strategy Active: ${activeSingleEntitlements.map((e) => e.strategyId).join(", ")}`}
                 </span>
-                <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 12, background: "rgba(255, 255, 255, 0.12)", color: "#ffffff", border: "1px solid rgba(255, 255, 255, 0.12)" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 12, background: "rgba(163, 230, 53, 0.12)", color: "#a3e635", border: "1px solid rgba(163, 230, 53, 0.3)" }}>
                   ● PRO ACTIVE
                 </span>
               </div>
@@ -597,14 +597,15 @@ export function PricingClient({
               transform: "translateX(-50%)",
               background: activeAllAccessEntitlement
                 ? "#ffffff"
-                : "#ffffff",
-              color: activeAllAccessEntitlement ? "#fff" : "#000",
+                : "linear-gradient(90deg, #a3e635, #bef264)",
+              color: "#000000",
               fontWeight: 800,
               fontSize: 11,
               letterSpacing: "0.08em",
               padding: "4px 16px",
               borderRadius: 20,
               textTransform: "uppercase",
+              boxShadow: activeAllAccessEntitlement ? "none" : "0 4px 14px rgba(163, 230, 53, 0.4)",
             }}
           >
             {activeAllAccessEntitlement
@@ -697,7 +698,7 @@ export function PricingClient({
                 const plan = plans.find((p) => p.slug === "all-access") || plans[1] || plans[0];
                 openCheckout(plan, undefined);
               }}
-              className="pill"
+              className="pill lime"
               style={{
                 width: "100%",
                 padding: "14px 20px",
@@ -706,10 +707,6 @@ export function PricingClient({
                 borderRadius: 10,
                 cursor: "pointer",
                 textAlign: "center",
-                background: "#ffffff",
-                color: "#000",
-                boxShadow: "0 4px 20px rgba(255, 255, 255, 0.12)",
-                border: "none",
                 touchAction: "manipulation",
               }}
             >

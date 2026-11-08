@@ -49,7 +49,7 @@ export function Footer() {
               .
             </p>
             <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}>
-              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
+              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#a3e635", boxShadow: "0 0 8px #a3e635", display: "inline-block" }} />
               <span>Parent Organization: </span>
               <a
                 href="https://elvariscapital.in"

@@ -252,7 +252,7 @@ export function StrategyReportView({ strategy }: Props) {
           {reportData.bigStats && reportData.bigStats.length > 0 ? (
             reportData.bigStats.map((st: any, idx: number) => (
               <div key={idx} className="hero-stat-card">
-                <b style={{ color: idx === 0 ? "#ffffff" : idx === 2 ? "#ffffff" : "#ffffff" }}>
+                <b style={{ color: idx === 0 ? "#a3e635" : "#ffffff" }}>
                   {st.val}
                 </b>
                 <span>{st.label}</span>
@@ -261,7 +261,7 @@ export function StrategyReportView({ strategy }: Props) {
           ) : (
             <>
               <div className="hero-stat-card">
-                <b style={{ color: "#ffffff" }}>
+                <b style={{ color: "#a3e635" }}>
                   +{strategy.metrics.netReturn}%
                 </b>
                 <span>Net Return</span>
@@ -382,19 +382,19 @@ export function StrategyReportView({ strategy }: Props) {
               Asymmetric risk-to-reward architecture: winning trades are massive multi-R runners that overwhelm controlled losses.
             </p>
           </div>
-          <span className="badge" style={{ background: "rgba(255, 255, 255, 0.08)", color: "#ffffff", padding: "6px 14px", borderRadius: "99px", fontSize: "13px", fontWeight: 700 }}>
+          <span className="badge" style={{ background: "rgba(163, 230, 53, 0.1)", color: "#a3e635", border: "1px solid rgba(163, 230, 53, 0.3)", padding: "6px 14px", borderRadius: "99px", fontSize: "13px", fontWeight: 700 }}>
             {payoff.payoffRatio} Asymmetric Payoff
           </span>
         </div>
 
         {/* 4 Clear Visual Payoff Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "16px", marginBottom: "20px" }}>
-          <div className="report-card" style={{ borderLeft: "3px solid #ffffff", padding: "18px 18px", overflow: "hidden", minWidth: 0 }}>
+          <div className="report-card" style={{ borderLeft: "3px solid #a3e635", padding: "18px 18px", overflow: "hidden", minWidth: 0 }}>
             <span style={{ fontSize: "13px", color: "var(--mut)", display: "block", marginBottom: "6px" }}>Average Winning Trade</span>
-            <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "clamp(19px, 2.1vw, 24px)", color: "#ffffff", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "clamp(19px, 2.1vw, 24px)", color: "#a3e635", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {payoff.avgWin}
             </b>
-            <span style={{ fontSize: "12px", color: "#ffffff", display: "block", marginTop: "4px" }}>
+            <span style={{ fontSize: "12px", color: "#a3e635", display: "block", marginTop: "4px" }}>
               {payoff.payoffRatio} larger than average loss
             </span>
           </div>
@@ -417,7 +417,7 @@ export function StrategyReportView({ strategy }: Props) {
               </b>
               <span style={{ fontSize: "13px", color: "var(--mut)" }}>vs {payoff.breakevenWinRate} needed</span>
             </div>
-            <span style={{ fontSize: "12px", color: "#ffffff", display: "block", marginTop: "4px" }}>
+            <span style={{ fontSize: "12px", color: "#a3e635", display: "block", marginTop: "4px" }}>
               +10.1% edge above breakeven
             </span>
           </div>
@@ -444,7 +444,7 @@ export function StrategyReportView({ strategy }: Props) {
                 <span style={{ color: "var(--mut)" }}>100% Full Reward Scale</span>
               </div>
               <div style={{ height: "20px", background: "rgba(255,255,255,0.04)", borderRadius: "6px", overflow: "hidden" }}>
-                <div style={{ width: "100%", height: "100%", background: "linear-gradient(90deg, #71717a, #ffffff)", borderRadius: "6px" }}></div>
+                <div style={{ width: "100%", height: "100%", background: "linear-gradient(90deg, #65a30d, #a3e635)", borderRadius: "6px" }}></div>
               </div>
             </div>
 
