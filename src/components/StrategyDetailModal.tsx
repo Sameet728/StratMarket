@@ -210,7 +210,7 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
         </p>
 
         {/* Interactive Mode Tabs */}
-        <div className="three" style={{ margin: "16px 0" }}>
+        <div className="three" style={{ margin: "16px 0", gridTemplateColumns: "1fr 1fr" }}>
           <button
             type="button"
             className={`fc ${activeTab === "chart" ? "border-gold" : ""}`}
@@ -228,15 +228,6 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
           >
             <h3>Email alerts</h3>
             <p>Configured trade signals</p>
-          </button>
-          <button
-            type="button"
-            className={`fc ${activeTab === "acct" ? "border-gold" : ""}`}
-            onClick={() => setActiveTab(activeTab === "acct" ? null : "acct")}
-            style={{ touchAction: "manipulation" }}
-          >
-            <h3>Connect account</h3>
-            <p>Broker routing preview</p>
           </button>
         </div>
 
@@ -272,18 +263,6 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
                 Alerts are delivered via Elvaris Transactional Queue to your verified email address.
               </span>
             </div>
-          </div>
-        )}
-
-        {activeTab === "acct" && (
-          <div className="ch" style={{ animation: "pg 0.3s ease" }}>
-            <b style={{ fontSize: "13px" }}>Broker Account Connection (Preview)</b>
-            <p className="note" style={{ marginTop: "6px" }}>
-              Available adapters: Alpaca, Binance, Interactive Brokers, Virtual Paper Simulator.
-            </p>
-            <p className="note" style={{ color: "#a1a1aa" }}>
-              Status: Ready for sandbox configuration in your User Dashboard. Live trading requires KYC compliance.
-            </p>
           </div>
         )}
 

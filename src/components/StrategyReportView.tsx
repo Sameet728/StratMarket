@@ -20,8 +20,6 @@ export function StrategyReportView({ strategy }: Props) {
     : (pineReportsData as any)[strategy.slug] || (pineReportsData as any)["ps-01"];
 
   const [emailModalOpen, setEmailModalOpen] = useState(false);
-  const [automationModalOpen, setAutomationModalOpen] = useState(false);
-  const [chartModalOpen, setChartModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("mech");
 
   // Synchronize active tab on scroll
@@ -58,14 +56,6 @@ export function StrategyReportView({ strategy }: Props) {
   const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
   const [emailLoading, setEmailLoading] = useState(false);
 
-  const [brokerPlatform, setBrokerPlatform] = useState("MetaTrader 5 (MT5)");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [serverName, setServerName] = useState("");
-  const [isPaperSimulator, setIsPaperSimulator] = useState(false);
-  const [automationSuccess, setAutomationSuccess] = useState<string | null>(null);
-  const [automationLoading, setAutomationLoading] = useState(false);
-
-  const [copiedCode, setCopiedCode] = useState(false);
 
   // Check user session
   useEffect(() => {
@@ -123,41 +113,6 @@ export function StrategyReportView({ strategy }: Props) {
     }
   };
 
-  const handleConnectAutomation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAutomationLoading(true);
-    setAutomationSuccess(null);
-
-    try {
-      const res = await fetch("/api/me/connections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brokerIdentifier: isPaperSimulator ? "PAPER_SIMULATOR" : brokerPlatform,
-          isLive: !isPaperSimulator,
-          grantedScopes: ["READ_ONLY", "TRADE_EXECUTION"],
-        }),
-      });
-
-      if (res.ok) {
-        setAutomationSuccess(
-          isPaperSimulator
-            ? `✓ Virtual Paper Trading Simulator deployed for ${strategy.id}! Real-time simulated execution active.`
-            : `✓ Full Account Automation established with ${brokerPlatform}! Orders for ${strategy.id} will execute automatically.`
-        );
-      } else {
-        setAutomationSuccess(
-          `✓ Full account automation initialized for ${strategy.id}! Execution bridge verified.`
-        );
-      }
-    } catch {
-      setAutomationSuccess(
-        `✓ Full account automation initialized for ${strategy.id}! Execution bridge verified.`
-      );
-    } finally {
-      setAutomationLoading(false);
-    }
-  };
 
   const payoff = reportData.payoff || {
     payoffRatio: "1.29:1",
@@ -714,97 +669,34 @@ export function StrategyReportView({ strategy }: Props) {
           </h2>
           <p style={{ fontSize: "16px", color: "var(--mut)", lineHeight: 1.6, marginBottom: "36px" }}>
             {isPython
-              ? "Deploy this quantitative ensemble directly to your trading workflow. Choose real-time signal dispatch via email or activate full algorithmic broker automation."
-              : "Codified for modern multi-asset trading. Explore on TradingView, subscribe to real-time signal emails, or connect automated execution."}
+              ? "Deploy this quantitative ensemble directly to your trading workflow. Stream real-time candlestick charts or subscribe to verified signal emails."
+              : "Codified for modern multi-asset trading. Launch the interactive live chart terminal or subscribe to real-time signal alerts via email."}
           </p>
 
-          {/* EXACT BUTTON SPECIFICATIONS:
-              Python: Exactly 2 buttons: "Email Trades" and "Full account automation"
-              Pine Script: Exactly 3 buttons: "View on TradingView", "Email Trades", and "Connect Account" */}
           <div className="action-zone-buttons" style={{ display: "flex", flexWrap: "wrap", gap: "16px", justifyContent: "center" }}>
-            {isPython ? (
-              <>
-                <Link
-                  href={`/chart/${strategy.slug}`}
-                  className="pill g action-btn"
-                  style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px", textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                  </svg>
-                  Open Live Chart
-                </Link>
-                <button
-                  type="button"
-                  id="btn-email-trades"
-                  className="pill action-btn"
-                  onClick={() => setEmailModalOpen(true)}
-                  style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px" }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                  Email Trades
-                </button>
-                <button
-                  type="button"
-                  id="btn-full-automation"
-                  className="pill action-btn action-btn-accent"
-                  onClick={() => setAutomationModalOpen(true)}
-                  style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px" }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                  </svg>
-                  Full account automation
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href={`/chart/${strategy.slug}`}
-                  className="pill g action-btn"
-                  style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px", textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                  </svg>
-                  Open Live Chart
-                </Link>
-                <button
-                  type="button"
-                  id="btn-email-trades"
-                  className="pill action-btn"
-                  onClick={() => setEmailModalOpen(true)}
-                  style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px" }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                  Email Trades
-                </button>
-                <button
-                  type="button"
-                  id="btn-tradingview"
-                  className="pill action-btn"
-                  onClick={() => setChartModalOpen(true)}
-                  style={{ minWidth: "180px", padding: "15px 24px", fontSize: "15px" }}
-                >
-                  TradingView Code
-                </button>
-                <button
-                  type="button"
-                  id="btn-connect-account"
-                  className="pill action-btn action-btn-accent"
-                  onClick={() => setAutomationModalOpen(true)}
-                  style={{ minWidth: "180px", padding: "15px 24px", fontSize: "15px" }}
-                >
-                  Connect Account
-                </button>
-              </>
-            )}
+            <Link
+              href={`/chart/${strategy.slug}`}
+              className="pill g action-btn"
+              style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px", textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              Open Live Chart
+            </Link>
+            <button
+              type="button"
+              id="btn-email-trades"
+              className="pill action-btn"
+              onClick={() => setEmailModalOpen(true)}
+              style={{ minWidth: "200px", padding: "15px 30px", fontSize: "16px" }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              Email Trades
+            </button>
           </div>
         </div>
       </div>
@@ -875,193 +767,6 @@ export function StrategyReportView({ strategy }: Props) {
                 </div>
               </form>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 2: FULL ACCOUNT AUTOMATION */}
-      {automationModalOpen && (
-        <div className="ov on" role="dialog" aria-modal="true" onClick={() => setAutomationModalOpen(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="x" aria-label="Close" onClick={() => setAutomationModalOpen(false)}>
-              ×
-            </button>
-
-            <span className={`badge ${isPython ? "py" : "pn"}`}>
-              {isPython ? "Python MT5 Automation" : "Broker Bridge"}
-            </span>{" "}
-            <span className="note">{strategy.id} · Full Account Automation</span>
-
-            <h2 style={{ marginTop: "12px" }}>Automate {strategy.name}</h2>
-            <p className="note" style={{ fontSize: "14px", marginTop: "4px" }}>
-              Link your MetaTrader 5 account or Paper Simulator to execute {strategy.name} orders with institutional low latency.
-            </p>
-
-            {automationSuccess ? (
-              <div className="ok" style={{ marginTop: "20px" }}>
-                {automationSuccess}
-              </div>
-            ) : (
-              <form onSubmit={handleConnectAutomation} style={{ marginTop: "20px", display: "grid", gap: "16px" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "13px", color: "var(--mut)", marginBottom: "6px" }}>
-                    Execution Environment
-                  </label>
-                  <select
-                    value={brokerPlatform}
-                    onChange={(e) => setBrokerPlatform(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "11px 14px",
-                      background: "var(--bg2)",
-                      border: "1px solid var(--line)",
-                      borderRadius: "8px",
-                      color: "var(--tx)",
-                      font: "inherit",
-                    }}
-                  >
-                    <option value="MetaTrader 5 (MT5) Desktop / VPS">MetaTrader 5 (MT5) Desktop / VPS Relay</option>
-                    <option value="IC Markets MT5">IC Markets MT5 Server</option>
-                    <option value="Pepperstone MT5">Pepperstone MT5 Server</option>
-                    <option value="FTMO Proprietary MT5">FTMO Proprietary MT5 Server</option>
-                    <option value="Interactive Brokers">Interactive Brokers (TWS / FIX API)</option>
-                    <option value="cTrader FIX Gateway">cTrader Open API Gateway</option>
-                  </select>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "13px", color: "var(--mut)", marginBottom: "6px" }}>
-                      Account Login ID
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 5092144"
-                      value={accountNumber}
-                      onChange={(e) => setAccountNumber(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        background: "var(--bg2)",
-                        border: "1px solid var(--line)",
-                        borderRadius: "8px",
-                        color: "var(--tx)",
-                        font: "inherit",
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "13px", color: "var(--mut)", marginBottom: "6px" }}>
-                      Broker Server
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. ICMarketsSC-Live"
-                      value={serverName}
-                      onChange={(e) => setServerName(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        background: "var(--bg2)",
-                        border: "1px solid var(--line)",
-                        borderRadius: "8px",
-                        color: "var(--tx)",
-                        font: "inherit",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ padding: "12px", background: "rgba(255,255,255,0.03)", borderRadius: "8px", border: "1px solid var(--line)" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "13.5px" }}>
-                    <input
-                      type="checkbox"
-                      checked={isPaperSimulator}
-                      onChange={(e) => setIsPaperSimulator(e.target.checked)}
-                    />
-                    <b>Deploy in Zero-Risk Virtual Paper Simulator</b>
-                  </label>
-                  <p className="note" style={{ margin: "4px 0 0 24px", fontSize: "12px" }}>
-                    Runs 100% real tick execution against live market quotes with zero real money risk.
-                  </p>
-                </div>
-
-                <div style={{ display: "flex", gap: "12px", alignItems: "center", marginTop: "8px" }}>
-                  <button type="submit" className="pill" disabled={automationLoading}>
-                    {automationLoading ? "Connecting..." : isPaperSimulator ? "Launch Paper Simulator" : "Deploy Live Automation"}
-                  </button>
-                  <span className="note">Includes automatic weekend embargo risk guard</span>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 3: VIEW ON TRADINGVIEW (For Pine Script) */}
-      {chartModalOpen && (
-        <div className="ov on" role="dialog" aria-modal="true" onClick={() => setChartModalOpen(false)}>
-          <div className="modal" style={{ maxWidth: "740px" }} onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="x" aria-label="Close" onClick={() => setChartModalOpen(false)}>
-              ×
-            </button>
-
-            <span className="badge pn">Pine Script v5</span>{" "}
-            <span className="note">{strategy.id} · Private TradingView Access</span>
-
-            <h2 style={{ marginTop: "12px" }}>{strategy.name} on TradingView</h2>
-            <p className="note" style={{ fontSize: "14px", marginTop: "4px" }}>
-              TradingView Private Indicator Access & Webhook Signal Automation
-            </p>
-
-            <div
-              style={{
-                position: "relative",
-                marginTop: "16px",
-                background: "rgba(255, 255, 255, 0.02)",
-                border: "1px solid var(--line)",
-                borderRadius: "12px",
-                padding: "20px",
-                color: "#e4e4e7",
-                fontSize: "13.5px",
-                lineHeight: 1.6,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.85 }}>
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                <strong style={{ color: "#ffffff", fontSize: "14px" }}>
-                  Proprietary Institutional Script Delivery
-                </strong>
-              </div>
-              <p style={{ margin: "0 0 12px", color: "var(--mut)" }}>
-                To safeguard Elvaris Capital quantitative IP and ensure zero reverse-engineering, execution logic is delivered through secure channels:
-              </p>
-              <ul style={{ margin: "0 0 16px", paddingLeft: "20px", display: "grid", gap: "8px", color: "#d4d4d8" }}>
-                <li><b>Private TradingView Invite-Only Script:</b> Activated directly on your TradingView account handle.</li>
-                <li><b>Institutional Webhook Signals:</b> Direct real-time execution alerts with verified HMAC signatures.</li>
-                <li><b>LuxAlgo Vela Live Terminal:</b> Real-time candlestick charting with automated Long/Short trade brackets.</li>
-              </ul>
-              <div style={{ padding: "10px 14px", background: "rgba(255, 255, 255, 0.05)", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.08)", fontSize: "12px", color: "#a1a1aa" }}>
-                Your registered trader account includes instantaneous live chart and execution access to this strategy.
-              </div>
-            </div>
-
-            <div style={{ marginTop: "20px", display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
-              <Link href={`/chart/${strategy.id}`} className="pill sm">
-                Open Live Chart Workspace ↗
-              </Link>
-              <a
-                href="https://www.tradingview.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="pill g sm"
-              >
-                TradingView Terminal ↗
-              </a>
-            </div>
           </div>
         </div>
       )}

@@ -31,12 +31,12 @@ export function ThreeWaysSection() {
   return (
     <section className="b" style={{ paddingTop: 0 }}>
       <div className="wrap">
-        <h2>Three ways to use a strategy.</h2>
+        <h2>Two core ways to use a strategy.</h2>
         <p className="lede">
-          Visual demonstrations of StratMarket integration modes. No emails are sent, no accounts connected, and no live trades placed without your explicit authorization.
+          Visual demonstrations of StratMarket strategy modes: interactive live candlestick charts and automated real-time email signal alerts.
         </p>
 
-        <div className="three">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
           {/* 1. View on chart */}
           <button
             type="button"
@@ -68,7 +68,7 @@ export function ThreeWaysSection() {
                 />
               </path>
             </svg>
-            <h3>View on chart</h3>
+            <h3>View on live chart</h3>
             <p>See entries and exits plotted on price.</p>
           </button>
 
@@ -93,34 +93,6 @@ export function ThreeWaysSection() {
             </div>
             <h3>Receive email alerts</h3>
             <p>Get each signal as it is generated.</p>
-          </button>
-
-          {/* 3. Connect a trading account */}
-          <button
-            type="button"
-            className="fc"
-            style={{ touchAction: "manipulation" }}
-            onClick={() =>
-              setDemoMessage(
-                "Connect a Trading Account: Link your supported broker (Alpaca, Interactive Brokers, Binance) or use the zero-risk Virtual Paper Simulator to route signals automatically."
-              )
-            }
-          >
-            <svg viewBox="0 0 200 60">
-              <circle cx="30" cy="30" r="10" fill="none" stroke="var(--tx)" />
-              <circle cx="170" cy="30" r="10" fill="none" stroke="var(--tx)" />
-              <line x1="40" y1="30" x2="160" y2="30" stroke="var(--line)" />
-              <circle r="4" fill="var(--lime, #a3e635)" cy="30" style={{ filter: "drop-shadow(0 0 6px #a3e635)" }}>
-                <animate
-                  attributeName="cx"
-                  values="40;160;40"
-                  dur="3s"
-                  repeatCount="indefinite"
-                />
-              </circle>
-            </svg>
-            <h3>Connect a trading account</h3>
-            <p>Preview how execution would be linked.</p>
           </button>
         </div>
       </div>

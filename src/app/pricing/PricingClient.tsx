@@ -643,7 +643,7 @@ export function PricingClient({
               <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5 }}>
                 • 4 Champion TradingView systems (PS-01 Grandmaster, PS-02 Apex, PS-03 Trend, PS-04 Titan)<br />
                 • Interactive LuxAlgo live charting terminal and execution overlays<br />
-                • Real-time signal webhooks and broker connection preview
+                • Real-time email signal delivery and automated trade brackets
               </div>
             </div>
 
