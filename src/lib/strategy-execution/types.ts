@@ -29,6 +29,7 @@ export interface StrategyPriceLevel {
   price: number;
   color: string;
   style: "solid" | "dashed" | "dotted";
+  isActiveTrade?: boolean;
 }
 
 export interface StrategyHudMetric {

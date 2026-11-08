@@ -209,36 +209,45 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
                 </div>
               );
             })}
-            {contract.priceLevels.map((lvl) => {
-              const displayLvl = lvl.name.includes("Target Payoff")
-                ? "Target Payoff Level"
-                : lvl.name.includes("Max Risk Stop")
-                ? "Max Risk Stop Level"
-                : lvl.name.includes("Active Entry")
-                ? "Active Position Entry"
-                : lvl.name.includes("Active Take Profit")
-                ? "Active Target Payoff"
-                : lvl.name.includes("Active Stop Loss")
-                ? "Active Risk Stop"
-                : lvl.name.includes("Market Price")
-                ? "Market Price"
-                : lvl.name;
-              return (
-                <div key={lvl.name} className="overlay-item">
-                  <span
-                    className="overlay-color-chip"
-                    style={{
-                      backgroundColor: lvl.color,
-                      borderStyle: lvl.style,
-                      borderWidth: 1,
-                    }}
-                  />
-                  <span className="overlay-name">
-                    {displayLvl}: ${lvl.price.toFixed(2)}
-                  </span>
-                </div>
-              );
-            })}
+            {contract.priceLevels
+              .filter((lvl) => {
+                const hasActiveTrade = contract.priceLevels.some((l) => l.name.startsWith("Active "));
+                if (hasActiveTrade) {
+                  return lvl.name.startsWith("Active ");
+                }
+                // When flat / monitoring, only show Market Price reference level
+                return lvl.name.includes("Market Price");
+              })
+              .map((lvl) => {
+                const displayLvl = lvl.name.includes("Target Payoff")
+                  ? "Target Payoff Level"
+                  : lvl.name.includes("Max Risk Stop")
+                  ? "Max Risk Stop Level"
+                  : lvl.name.includes("Active Entry")
+                  ? "Active Position Entry"
+                  : lvl.name.includes("Active Take Profit")
+                  ? "Active Target Payoff"
+                  : lvl.name.includes("Active Stop Loss")
+                  ? "Active Risk Stop"
+                  : lvl.name.includes("Market Price")
+                  ? "Live Market Price"
+                  : lvl.name;
+                return (
+                  <div key={lvl.name} className="overlay-item">
+                    <span
+                      className="overlay-color-chip"
+                      style={{
+                        backgroundColor: lvl.color,
+                        borderStyle: lvl.style,
+                        borderWidth: 1,
+                      }}
+                    />
+                    <span className="overlay-name">
+                      {displayLvl}: ${lvl.price.toFixed(2)}
+                    </span>
+                  </div>
+                );
+              })}
           </div>
         </div>
 

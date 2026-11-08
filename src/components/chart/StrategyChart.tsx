@@ -370,10 +370,12 @@ export function StrategyChart({
                   { time: tb.exitTime, price: tb.exitPrice || (tb.isWin ? tb.tpPrice : tb.slPrice) },
                 ],
                 text: {
-                  value: tb.isWin
+                  value: tb.id === "tb-active"
+                    ? `● ACTIVE ${tb.type}`
+                    : tb.isWin
                     ? `✓ TP HIT (+${((Math.abs(tb.tpPrice - tb.entryPrice)) / (Math.abs(tb.slPrice - tb.entryPrice))).toFixed(2)}R)`
                     : `✕ SL HIT (-1.00R)`,
-                  color: tb.isWin ? "#10b981" : "#ef4444",
+                  color: tb.id === "tb-active" ? "#ffffff" : tb.isWin ? "#10b981" : "#ef4444",
                   size: "small",
                   hAlign: "left",
                   vAlign: "center",
@@ -385,19 +387,24 @@ export function StrategyChart({
           }
         }
 
-        // 8. Plot Live Prospective Price Levels (Target TP, Market Price, Max SL)
+        // 8. Plot Live Trade Price Levels ONLY when a trade is actively open
         if (data.contract?.priceLevels && ws.chart?.drawings && (data.candles || []).length > 0) {
           const candles = data.candles;
           const lastCandle = candles[candles.length - 1];
           const futureTime = lastCandle.time + 15 * 60 * 1000 * 8; // 8 bars forward
 
-          for (const lvl of data.contract.priceLevels) {
+          // Only plot active execution brackets when a live trade is actually running
+          const activeTradeLevels = data.contract.priceLevels.filter(
+            (lvl: any) => Boolean(lvl.isActiveTrade) || lvl.name.toLowerCase().startsWith("active ")
+          );
+
+          for (const lvl of activeTradeLevels) {
             try {
-              const isTP = lvl.name.toLowerCase().includes("target") || lvl.name.toLowerCase().includes("take profit");
-              const isSL = lvl.name.toLowerCase().includes("risk") || lvl.name.toLowerCase().includes("stop");
+              const isTP = lvl.name.toLowerCase().includes("take profit") || lvl.name.toLowerCase().includes("tp");
+              const isSL = lvl.name.toLowerCase().includes("stop loss") || lvl.name.toLowerCase().includes("sl");
               const isEntry = lvl.name.toLowerCase().includes("entry");
               const color = isTP ? "#10b981" : isSL ? "#ef4444" : isEntry ? "#ffffff" : "#a1a1aa";
-              const labelPrefix = isTP ? "Target TP" : isSL ? "Max SL" : isEntry ? "Active Entry" : "Market";
+              const labelPrefix = isTP ? "Active TP" : isSL ? "Active SL" : isEntry ? "Active Entry" : "Market";
 
               const line = ws.chart.drawings.add("trendline", {
                 anchors: [

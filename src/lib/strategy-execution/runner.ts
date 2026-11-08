@@ -554,9 +554,15 @@ export class PrivateStrategyExecutionRunner {
         }
       }
 
+      // Confirm candle completion:
+      // A signal can ONLY be generated once the candle has finished forming (barstate.isconfirmed).
+      // The last bar (i === candles.length - 1) is currently forming in real-time and has not closed yet.
+      const isCandleFinishedForming = i < candles.length - 1;
+
       // If flat, check entry signals on confirmed candle close
       if (
         position === 0 &&
+        isCandleFinishedForming &&
         e50 !== null &&
         e200 !== null &&
         bUpper !== null &&
@@ -591,12 +597,13 @@ export class PrivateStrategyExecutionRunner {
         if (longSig) {
           position = 1;
           entryPrice = c.close;
-          entryTime = c.time;
+          // The trade begins once the first candle has finished forming:
+          entryTime = candles[i + 1]?.time || (c.time + 15 * 60 * 1000);
           currTP = Number((entryPrice + config.tpDist).toFixed(2));
           currSL = Number((entryPrice - config.slDist).toFixed(2));
           activeTradeSignal = {
             direction: "BUY",
-            timestamp: c.time,
+            timestamp: entryTime,
             price: entryPrice,
             label: `LONG Reversal @ $${entryPrice.toFixed(2)} (TP: $${currTP.toFixed(2)} | SL: $${currSL.toFixed(2)})`,
           };
@@ -610,12 +617,13 @@ export class PrivateStrategyExecutionRunner {
         } else if (shortSig) {
           position = -1;
           entryPrice = c.close;
-          entryTime = c.time;
+          // The trade begins once the first candle has finished forming:
+          entryTime = candles[i + 1]?.time || (c.time + 15 * 60 * 1000);
           currTP = Number((entryPrice - config.tpDist).toFixed(2));
           currSL = Number((entryPrice + config.slDist).toFixed(2));
           activeTradeSignal = {
             direction: "SELL",
-            timestamp: c.time,
+            timestamp: entryTime,
             price: entryPrice,
             label: `SHORT Reversal @ $${entryPrice.toFixed(2)} (TP: $${currTP.toFixed(2)} | SL: $${currSL.toFixed(2)})`,
           };
@@ -632,24 +640,27 @@ export class PrivateStrategyExecutionRunner {
 
     // 3. Dynamic Price Levels (Target Payoff, Current/Entry Price, Stop Loss)
     if (position !== 0) {
-      // In-Position Price Bracket
+      // In-Position Price Bracket: Live active trade in progress
       priceLevels.push({
         name: "Active Take Profit",
         price: currTP,
         color: "#10b981",
         style: "dashed",
+        isActiveTrade: true,
       });
       priceLevels.push({
         name: "Active Entry Price",
         price: entryPrice,
         color: "#ffffff",
         style: "solid",
+        isActiveTrade: true,
       });
       priceLevels.push({
         name: "Active Stop Loss",
         price: currSL,
         color: "#ef4444",
         style: "dashed",
+        isActiveTrade: true,
       });
 
       if (candles.length > 0) {
@@ -658,7 +669,7 @@ export class PrivateStrategyExecutionRunner {
           id: `tb-active`,
           type: position === 1 ? "LONG" : "SHORT",
           entryTime,
-          exitTime: lastCandle.time + 15 * 60 * 1000 * 4,
+          exitTime: lastCandle.time + 15 * 60 * 1000 * 2,
           entryPrice,
           exitPrice: latestClose,
           tpPrice: currTP,
@@ -670,24 +681,27 @@ export class PrivateStrategyExecutionRunner {
         });
       }
     } else if (latestClose > 0) {
-      // Prospective Bracket from Current Market Close
-      priceLevels.push({
-        name: `Target Payoff (+${config.tpDist.toFixed(2)})`,
-        price: Number((latestClose + config.tpDist).toFixed(2)),
-        color: "#10b981",
-        style: "dashed",
-      });
+      // Strategy is Flat / Monitoring - Reference Market Price
       priceLevels.push({
         name: `Market Price (${latestClose.toFixed(2)})`,
         price: latestClose,
         color: "#a1a1aa",
         style: "solid",
+        isActiveTrade: false,
+      });
+      priceLevels.push({
+        name: `Target Payoff (+${config.tpDist.toFixed(2)})`,
+        price: Number((latestClose + config.tpDist).toFixed(2)),
+        color: "#10b981",
+        style: "dashed",
+        isActiveTrade: false,
       });
       priceLevels.push({
         name: `Max Risk Stop (-${config.slDist.toFixed(2)})`,
         price: Number((latestClose - config.slDist).toFixed(2)),
         color: "#ef4444",
         style: "dashed",
+        isActiveTrade: false,
       });
     }
 
