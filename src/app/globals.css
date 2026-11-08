@@ -1528,7 +1528,7 @@ footer p {
   z-index: 9999;
   background: #ffffff;
   color: #000000;
-  display: flex;
+  display: none !important;
   align-items: center;
   justify-content: center;
   gap: 16px;
@@ -1542,8 +1542,13 @@ footer p {
   pointer-events: none !important;
 }
 
+#wp * {
+  pointer-events: none !important;
+}
+
 #wp.go {
-  animation: wp 0.68s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  display: flex !important;
+  animation: wp 0.58s cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
 @keyframes wp {
@@ -3342,6 +3347,55 @@ button, a, input, select, textarea, .chip, .card {
 }
 
 @media (max-width: 768px) {
+  /* Stop ambient radial gradient infinite rotation to free up 50%+ mobile GPU power */
+  .fx i {
+    animation: none !important;
+    opacity: 0.35 !important;
+  }
+
+  /* Soften heavy backdrop blurs on mobile devices to prevent GPU compositing lag */
+  #nav.s, #dock, .sb, .modal, .chart-side-panel {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+
+  /* Mobile Touch Target Expansion & Immediate 0ms Touch Responsiveness */
+  button,
+  .pill,
+  .chip,
+  .card-chart-link,
+  .chart-btn-clean,
+  .chart-back-btn,
+  .chart-strategy-select-clean,
+  .chart-feed-status {
+    min-height: 40px !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .card-chart-link {
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+  }
+
+  .chart-btn-clean {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+  }
+
+  .chart-strategy-select-clean {
+    padding: 8px 10px !important;
+    font-size: 14px !important;
+    min-height: 40px !important;
+  }
+
+  .chart-back-btn {
+    padding: 8px 10px !important;
+    font-size: 14px !important;
+  }
+
   /* Prevent iOS auto-zoom on input focus */
   input, select, textarea {
     font-size: 16px !important;

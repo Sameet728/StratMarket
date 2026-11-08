@@ -4,6 +4,10 @@ import { useEffect } from "react";
 
 export function SpotlightCursor() {
   useEffect(() => {
+    // Completely disable on touchscreens & mobile devices to eliminate layout thrashing
+    const isTouch = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 768;
+    if (isTouch) return;
+
     const handlePointerMove = (e: PointerEvent) => {
       const targetCard = (e.target as HTMLElement | null)?.closest(
         ".card, .fc, .plan, .st, .stage, .report-card, .metric-card"

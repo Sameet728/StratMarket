@@ -14,7 +14,7 @@ export function DockNav() {
   }
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dockRef.current) return;
+    if (e.pointerType === "touch" || !dockRef.current) return;
     const mouseX = e.clientX;
     if (rafRef.current) return;
     rafRef.current = requestAnimationFrame(() => {

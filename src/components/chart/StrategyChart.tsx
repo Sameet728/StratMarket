@@ -165,8 +165,11 @@ export function StrategyChart({
         setLoading(true);
         setError(null);
 
-        // Fetch 1,500 high-fidelity bars and strategy execution contract
-        const res = await fetch(`/api/chart/${strategyId}/series?count=1500&timeframe=${timeframe}`, {
+        const isMobile = typeof window !== "undefined" && (window.innerWidth < 768 || window.matchMedia("(pointer: coarse)").matches);
+        const candleCount = isMobile ? 350 : 1500;
+
+        // Fetch high-fidelity bars and strategy execution contract (optimized count on mobile for 60fps)
+        const res = await fetch(`/api/chart/${strategyId}/series?count=${candleCount}&timeframe=${timeframe}`, {
           signal: abortCtrl.signal,
         });
         
@@ -222,7 +225,7 @@ export function StrategyChart({
           timeframe: "15",
           live: false,
           volume: false,
-          drawingToolbar: true,
+          drawingToolbar: !isMobile,
           indicatorPicker: false,
           cells: {
             c1: {
@@ -265,13 +268,15 @@ export function StrategyChart({
         };
 
         if (data.contract?.tradeBoxes && ws.chart?.drawings) {
-          const boxesToPlot = (data.contract.tradeBoxes || []).slice(-25);
+          const maxBoxes = isMobile ? 6 : 25;
+          const boxesToPlot = (data.contract.tradeBoxes || []).slice(-maxBoxes);
 
           for (const tb of boxesToPlot) {
             try {
               const rMultiple = ((Math.abs(tb.tpPrice - tb.entryPrice)) / (Math.abs(tb.slPrice - tb.entryPrice))).toFixed(2);
               const tpPts = Math.abs(tb.tpPrice - tb.entryPrice).toFixed(1);
               const slPts = Math.abs(tb.slPrice - tb.entryPrice).toFixed(1);
+              const shouldAddText = !isMobile || tb.id === "tb-active" || tb === boxesToPlot[boxesToPlot.length - 1];
 
               // 1. Reward Zone Box (Take Profit - Electric Cyber Lime)
               const d1 = ws.chart.drawings.add("box", {
@@ -317,69 +322,71 @@ export function StrategyChart({
               });
               lockDrawing(d3);
 
-              // 4. Take Profit (TP) Explicit Price Pin (Electric Cyber Lime)
-              const tpLabel = tb.id === "tb-active"
-                ? `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts})`
-                : tb.isWin
-                ? `TP: $${tb.tpPrice.toFixed(2)} · ✓ HIT (+${rMultiple}R)`
-                : `TP: $${tb.tpPrice.toFixed(2)}`;
+              // 4. Take Profit, Entry, Stop Loss Text Labels (Optimized for Mobile & Clutter Prevention)
+              if (shouldAddText) {
+                const tpLabel = tb.id === "tb-active"
+                  ? `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts})`
+                  : tb.isWin
+                  ? `TP: $${tb.tpPrice.toFixed(2)} · ✓ HIT (+${rMultiple}R)`
+                  : `TP: $${tb.tpPrice.toFixed(2)}`;
 
-              const dTP = ws.chart.drawings.add("text", {
-                anchors: [
-                  { time: tb.entryTime, price: tb.tpPrice },
-                ],
-                text: {
-                  value: tpLabel,
-                  color: "#a3e635",
-                  size: "small",
-                  hAlign: "left",
-                  vAlign: tb.type === "LONG" ? "bottom" : "top",
-                  bold: true,
-                },
-              });
-              lockDrawing(dTP);
+                const dTP = ws.chart.drawings.add("text", {
+                  anchors: [
+                    { time: tb.entryTime, price: tb.tpPrice },
+                  ],
+                  text: {
+                    value: tpLabel,
+                    color: "#a3e635",
+                    size: "small",
+                    hAlign: "left",
+                    vAlign: tb.type === "LONG" ? "bottom" : "top",
+                    bold: true,
+                  },
+                });
+                lockDrawing(dTP);
 
-              // 5. Entry Explicit Price Pin (Crisp White)
-              const entryLabel = tb.id === "tb-active"
-                ? `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} $${tb.entryPrice.toFixed(2)} · LIVE`
-                : `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} $${tb.entryPrice.toFixed(2)}`;
+                // 5. Entry Explicit Price Pin (Crisp White)
+                const entryLabel = tb.id === "tb-active"
+                  ? `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} $${tb.entryPrice.toFixed(2)} · LIVE`
+                  : `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} $${tb.entryPrice.toFixed(2)}`;
 
-              const dEntry = ws.chart.drawings.add("text", {
-                anchors: [
-                  { time: tb.entryTime, price: tb.entryPrice },
-                ],
-                text: {
-                  value: entryLabel,
-                  color: "#ffffff",
-                  size: "small",
-                  hAlign: "left",
-                  vAlign: "center",
-                  bold: true,
-                },
-              });
-              lockDrawing(dEntry);
+                const dEntry = ws.chart.drawings.add("text", {
+                  anchors: [
+                    { time: tb.entryTime, price: tb.entryPrice },
+                  ],
+                  text: {
+                    value: entryLabel,
+                    color: "#ffffff",
+                    size: "small",
+                    hAlign: "left",
+                    vAlign: "center",
+                    bold: true,
+                  },
+                });
+                lockDrawing(dEntry);
 
-              // 6. Stop Loss (SL) Explicit Price Pin (Crimson)
-              const slLabel = tb.id === "tb-active"
-                ? `SL: $${tb.slPrice.toFixed(2)} (-${slPts})`
-                : !tb.isWin
-                ? `SL: $${tb.slPrice.toFixed(2)} · ✕ HIT (-1.0R)`
-                : `SL: $${tb.slPrice.toFixed(2)}`;
+                // 6. Stop Loss (SL) Explicit Price Pin (Crimson)
+                const slLabel = tb.id === "tb-active"
+                  ? `SL: $${tb.slPrice.toFixed(2)} (-${slPts})`
+                  : !tb.isWin
+                  ? `SL: $${tb.slPrice.toFixed(2)} · ✕ HIT (-1.0R)`
+                  : `SL: $${tb.slPrice.toFixed(2)}`;
 
-              const dSL = ws.chart.drawings.add("text", {
-                anchors: [
-                  { time: tb.entryTime, price: tb.slPrice },
-                ],
-                text: {
-                  value: slLabel,
-                  color: "#ef4444",
-                  size: "small",
-                  hAlign: "left",
-                  vAlign: tb.type === "LONG" ? "top" : "bottom",
-                  bold: true,
-                },
-              });
-              lockDrawing(dSL);
+                const dSL = ws.chart.drawings.add("text", {
+                  anchors: [
+                    { time: tb.entryTime, price: tb.slPrice },
+                  ],
+                  text: {
+                    value: slLabel,
+                    color: "#ef4444",
+                    size: "small",
+                    hAlign: "left",
+                    vAlign: tb.type === "LONG" ? "top" : "bottom",
+                    bold: true,
+                  },
+                });
+                lockDrawing(dSL);
+              }
             } catch (_) {}
           }
         }

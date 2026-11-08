@@ -72,12 +72,6 @@ export function TerrainCanvas() {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(rs, 100);
     };
-    window.addEventListener("resize", onResize, { passive: true });
-
-    const onPointerMove = (e: PointerEvent) => {
-      mx = (e.clientX / (window.innerWidth || 1) - 0.5) * 2;
-    };
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -152,6 +146,27 @@ export function TerrainCanvas() {
       }
     };
 
+    const isMobile = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 768;
+
+    if (isMobile) {
+      // On mobile devices, render a single high-fidelity snapshot to preserve 100% of CPU/battery for touch responsiveness
+      rs();
+      render();
+      window.addEventListener("resize", onResize, { passive: true });
+      return () => {
+        clearTimeout(resizeTimer);
+        window.removeEventListener("resize", onResize);
+        observer.disconnect();
+      };
+    }
+
+    window.addEventListener("resize", onResize, { passive: true });
+
+    const onPointerMove = (e: PointerEvent) => {
+      mx = (e.clientX / (window.innerWidth || 1) - 0.5) * 2;
+    };
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+
     const handleVisibility = () => {
       if (!document.hidden) {
         lastRenderTime = performance.now();
@@ -185,6 +200,7 @@ export function TerrainCanvas() {
 
     return () => {
       cancelAnimationFrame(animId);
+      clearTimeout(resizeTimer);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("pointermove", onPointerMove);
       document.removeEventListener("visibilitychange", handleVisibility);

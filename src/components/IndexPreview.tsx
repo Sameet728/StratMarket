@@ -21,6 +21,10 @@ export function IndexPreview({ initialStrategies }: IndexPreviewProps) {
   }, [hoveredStrategy]);
 
   useEffect(() => {
+    // Disable hover preview animation loop completely on touchscreens / mobile
+    const isTouch = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 768;
+    if (isTouch) return;
+
     let animId: number;
     let targetX = window.innerWidth / 2;
     let targetY = window.innerHeight / 2;
