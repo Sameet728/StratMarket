@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { TopProgressBar } from "@/components/TopProgressBar";
@@ -8,6 +8,14 @@ import { DockNav } from "@/components/DockNav";
 import { Footer } from "@/components/Footer";
 import { PageTransitionWipe } from "@/components/PageTransitionWipe";
 import { SpotlightCursor } from "@/components/SpotlightCursor";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#000000",
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://stratmarket.elvariscapital.in"),

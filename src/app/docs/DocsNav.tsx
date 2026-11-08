@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { StratMarketLogo } from "@/components/StratMarketLogo";
@@ -39,43 +40,53 @@ export const DOCS_PAGES = [
 
 export function DocsNav() {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <aside
-      style={{
-        width: "280px",
-        flexShrink: 0,
-        borderRight: "1px solid rgba(255, 255, 255, 0.08)",
-        padding: "32px 24px 80px",
-      }}
-    >
-      <div style={{ marginBottom: "28px" }}>
-        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none", color: "#fff", marginBottom: "14px" }}>
-          <StratMarketLogo size={20} color="#ffffff" />
-          <span style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "-0.02em" }}>StratMarket</span>
-        </Link>
-        <span
-          style={{
-            fontSize: "10.5px",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            color: "#ffffff",
-            fontWeight: 700,
-            display: "block",
-            marginBottom: "6px",
-          }}
+    <aside className="docs-aside">
+      <div className="docs-mobile-bar">
+        <button
+          type="button"
+          className="docs-mobile-btn"
+          onClick={() => setMobileOpen((prev) => !prev)}
+          aria-expanded={mobileOpen}
         >
-          Quantitative Library
-        </span>
-        <h3 style={{ fontSize: "18px", margin: 0, fontWeight: 700, color: "#fff" }}>
-          Documentation
-        </h3>
-        <p style={{ fontSize: "12px", color: "#9ca3af", margin: "4px 0 0", lineHeight: "1.5" }}>
-          By <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff", textDecoration: "underline" }}>Elvaris Capital</a>
-        </p>
+          <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <StratMarketLogo size={16} color="#ffffff" />
+            <span>Documentation Topics</span>
+          </span>
+          <span className="docs-mobile-btn-arrow">{mobileOpen ? "Close ▲" : "Browse Topics ▼"}</span>
+        </button>
       </div>
 
-      <nav style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div className={`docs-aside-inner ${mobileOpen ? "open" : ""}`}>
+        <div className="docs-aside-header">
+          <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none", color: "#fff", marginBottom: "14px" }}>
+            <StratMarketLogo size={20} color="#ffffff" />
+            <span style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "-0.02em" }}>StratMarket</span>
+          </Link>
+          <span
+            style={{
+              fontSize: "10.5px",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "#ffffff",
+              fontWeight: 700,
+              display: "block",
+              marginBottom: "6px",
+            }}
+          >
+            Quantitative Library
+          </span>
+          <h3 style={{ fontSize: "18px", margin: 0, fontWeight: 700, color: "#fff" }}>
+            Documentation
+          </h3>
+          <p style={{ fontSize: "12px", color: "#9ca3af", margin: "4px 0 0", lineHeight: "1.5" }}>
+            By <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff", textDecoration: "underline" }}>Elvaris Capital</a>
+          </p>
+        </div>
+
+        <nav style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         {DOCS_PAGES.map((sec, idx) => (
           <div key={idx}>
             <span
@@ -204,6 +215,7 @@ export function DocsNav() {
           <span>elvariscapital.in</span>
           <span>↗</span>
         </a>
+      </div>
       </div>
     </aside>
   );

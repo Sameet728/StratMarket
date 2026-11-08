@@ -117,7 +117,7 @@ export default async function HomePage() {
       {/* Elvaris Capital Parent Organization Authority Section */}
       <section className="b" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", background: "rgba(18, 18, 22, 0.5)", padding: "80px 0" }}>
         <div className="wrap">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "48px", alignItems: "center" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: "48px", alignItems: "center" }}>
             <div>
               <span
                 style={{

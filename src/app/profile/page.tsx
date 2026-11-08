@@ -410,7 +410,7 @@ export default function ProfilePage() {
               </div>
 
               {activePaidSubs.length > 0 ? (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))", gap: 16, marginTop: 18 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))", gap: 16, marginTop: 18 }}>
                   {activePaidSubs.map((sub) => {
                     const expiry = sub.expiryTime ? new Date(sub.expiryTime) : null;
                     const expiryDateStr = expiry
@@ -704,7 +704,7 @@ export default function ProfilePage() {
 
               {/* Active Trials */}
               {activeTrials.length > 0 ? (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))", gap: 16, marginTop: 18 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))", gap: 16, marginTop: 18 }}>
                   {activeTrials.map((t) => {
                     const expiry = new Date(t.expiryTime);
                     const expiryDateStr = expiry.toLocaleDateString("en-IN", {
@@ -1144,7 +1144,7 @@ export default function ProfilePage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
                 gap: 20,
               }}
             >

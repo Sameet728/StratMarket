@@ -92,10 +92,12 @@ export function IndexPreview({ initialStrategies }: IndexPreviewProps) {
               onPointerLeave={() => setHoveredStrategy(null)}
               style={{ textDecoration: "none", color: "inherit" }}
             >
-              <span className="n">{s.id}</span>
-              <span className={isPython ? "badge-mini-py" : "badge-mini-pn"}>
-                {isPython ? "Python" : "Pine"}
-              </span>
+              <div className="ir-meta">
+                <span className="n">{s.id}</span>
+                <span className={isPython ? "badge-mini-py" : "badge-mini-pn"}>
+                  {isPython ? "Python" : "Pine"}
+                </span>
+              </div>
               <span className="t">{s.name}</span>
               <span className="m">
                 {s.instrument} · {s.timeframe}

@@ -46,33 +46,20 @@ export function HeaderNav() {
 
   return (
     <header id="nav" className={scrolled ? "s" : ""}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <div className="nav-left">
         <Link href="/" className="logo">
           <StratMarketLogo size={22} className="mk" color="#ffffff" />
-          StratMarket
+          <span className="logo-text">StratMarket</span>
         </Link>
         <a
           href="https://elvariscapital.in"
           target="_blank"
           rel="noopener noreferrer"
           title="Parent Organization: Elvaris Capital (elvariscapital.in)"
-          style={{
-            fontSize: "11px",
-            fontFamily: "var(--font-mono, monospace)",
-            color: "#e4e4e7",
-            background: "rgba(255, 255, 255, 0.06)",
-            border: "1px solid rgba(163, 230, 53, 0.25)",
-            padding: "3px 9px",
-            borderRadius: "999px",
-            letterSpacing: "0.02em",
-            textDecoration: "none",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "5px",
-          }}
+          className="nav-parent-badge"
         >
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#a3e635", boxShadow: "0 0 6px #a3e635", display: "inline-block" }} />
-          <span>by Elvaris Capital</span>
+          <span className="nav-parent-dot" />
+          <span className="nav-parent-label">by Elvaris Capital</span>
           <span style={{ opacity: 0.7 }}>↗</span>
         </a>
       </div>
@@ -83,28 +70,28 @@ export function HeaderNav() {
       </span>
 
       <div className="r">
-        <Link href="/docs" className="pill g sm">
+        <Link href="/docs" className="pill g sm nav-docs-link">
           Docs
         </Link>
         {!loading && (
           <>
             {user ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div className="nav-user-group">
                 <Link href="/dashboard" className="pill g sm">
                   Dashboard
                 </Link>
-                <Link href="/profile" className="pill g sm">
+                <Link href="/profile" className="pill g sm nav-desktop-only">
                   Profile
                 </Link>
                 {user.role === "ADMIN" && (
-                  <Link href="/admin" className="pill g sm" style={{ borderColor: "rgba(255, 255, 255, 0.2)" }}>
+                  <Link href="/admin" className="pill g sm nav-desktop-only" style={{ borderColor: "rgba(255, 255, 255, 0.2)" }}>
                     Admin
                   </Link>
                 )}
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="pill g sm"
+                  className="pill g sm nav-desktop-only"
                   style={{ color: "var(--mut)", border: "none", padding: "7px 10px", touchAction: "manipulation" }}
                 >
                   Sign out
@@ -117,8 +104,9 @@ export function HeaderNav() {
             )}
           </>
         )}
-        <Link href="/market" className="pill sm">
-          Explore strategies
+        <Link href="/market" className="pill sm nav-explore-btn">
+          <span className="nav-explore-full">Explore strategies</span>
+          <span className="nav-explore-compact">Explore</span>
         </Link>
       </div>
     </header>
