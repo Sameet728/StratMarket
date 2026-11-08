@@ -268,15 +268,25 @@ export function StrategyChart({
         };
 
         if (data.contract?.tradeBoxes && ws.chart?.drawings) {
-          const maxBoxes = isMobile ? 6 : 25;
-          const boxesToPlot = (data.contract.tradeBoxes || []).slice(-maxBoxes);
+          const rawBoxes = data.contract.tradeBoxes || [];
+          // Deduplicate by entryTime to prevent any overlapping drawings at the same timestamp
+          const seenEntries = new Set<number>();
+          const uniqueBoxes: any[] = [];
+          for (let i = rawBoxes.length - 1; i >= 0; i--) {
+            const b = rawBoxes[i];
+            if (!seenEntries.has(b.entryTime)) {
+              seenEntries.add(b.entryTime);
+              uniqueBoxes.unshift(b);
+            }
+          }
+          const maxBoxes = isMobile ? 10 : 25;
+          const boxesToPlot = uniqueBoxes.slice(-maxBoxes);
 
           for (const tb of boxesToPlot) {
             try {
               const rMultiple = ((Math.abs(tb.tpPrice - tb.entryPrice)) / (Math.abs(tb.slPrice - tb.entryPrice))).toFixed(2);
               const tpPts = Math.abs(tb.tpPrice - tb.entryPrice).toFixed(1);
               const slPts = Math.abs(tb.slPrice - tb.entryPrice).toFixed(1);
-              const shouldAddText = tb.id === "tb-active" || tb === boxesToPlot[boxesToPlot.length - 1];
 
               // 1. Reward Zone Box (Take Profit - Electric Cyber Lime)
               const d1 = ws.chart.drawings.add("box", {
@@ -322,77 +332,76 @@ export function StrategyChart({
               });
               lockDrawing(d3);
 
-              // 4. Take Profit, Entry, Stop Loss Text Labels (Optimized for Mobile & Clutter Prevention)
-              if (shouldAddText) {
-                const tpLabel = tb.id === "tb-active"
-                  ? `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts})`
-                  : tb.isWin
-                  ? `TP: $${tb.tpPrice.toFixed(2)} · ✓ HIT (+${rMultiple}R)`
-                  : `TP: $${tb.tpPrice.toFixed(2)}`;
+              // 4. Take Profit Explicit Price Pin (Given to all trades taken)
+              const tpLabel = tb.id === "tb-active"
+                ? `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts})`
+                : tb.isWin
+                ? `TP: $${tb.tpPrice.toFixed(2)} · ✓ HIT (+${rMultiple}R)`
+                : `TP: $${tb.tpPrice.toFixed(2)}`;
 
-                const dTP = ws.chart.drawings.add("text", {
-                  anchors: [
-                    { time: tb.entryTime, price: tb.tpPrice },
-                  ],
-                  text: {
-                    value: tpLabel,
-                    color: "#a3e635",
-                    size: "small",
-                    hAlign: "left",
-                    vAlign: tb.type === "LONG" ? "bottom" : "top",
-                    bold: true,
-                  },
-                });
-                lockDrawing(dTP);
+              const dTP = ws.chart.drawings.add("text", {
+                anchors: [
+                  { time: tb.entryTime, price: tb.tpPrice },
+                ],
+                text: {
+                  value: tpLabel,
+                  color: "#a3e635",
+                  size: "small",
+                  hAlign: "left",
+                  vAlign: tb.type === "LONG" ? "bottom" : "top",
+                  bold: true,
+                },
+              });
+              lockDrawing(dTP);
 
-                // 5. Entry Explicit Price Pin (Crisp White)
-                const entryLabel = tb.id === "tb-active"
-                  ? `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} $${tb.entryPrice.toFixed(2)} · LIVE`
-                  : `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} $${tb.entryPrice.toFixed(2)}`;
+              // 5. Entry Explicit Price Pin (Given to all trades taken)
+              const entryLabel = tb.id === "tb-active"
+                ? `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} $${tb.entryPrice.toFixed(2)} · LIVE`
+                : `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} $${tb.entryPrice.toFixed(2)}`;
 
-                const dEntry = ws.chart.drawings.add("text", {
-                  anchors: [
-                    { time: tb.entryTime, price: tb.entryPrice },
-                  ],
-                  text: {
-                    value: entryLabel,
-                    color: "#ffffff",
-                    size: "small",
-                    hAlign: "left",
-                    vAlign: "center",
-                    bold: true,
-                  },
-                });
-                lockDrawing(dEntry);
+              const dEntry = ws.chart.drawings.add("text", {
+                anchors: [
+                  { time: tb.entryTime, price: tb.entryPrice },
+                ],
+                text: {
+                  value: entryLabel,
+                  color: "#ffffff",
+                  size: "small",
+                  hAlign: "left",
+                  vAlign: "center",
+                  bold: true,
+                },
+              });
+              lockDrawing(dEntry);
 
-                // 6. Stop Loss (SL) Explicit Price Pin (Crimson)
-                const slLabel = tb.id === "tb-active"
-                  ? `SL: $${tb.slPrice.toFixed(2)} (-${slPts})`
-                  : !tb.isWin
-                  ? `SL: $${tb.slPrice.toFixed(2)} · ✕ HIT (-1.0R)`
-                  : `SL: $${tb.slPrice.toFixed(2)}`;
+              // 6. Stop Loss Explicit Price Pin (Given to all trades taken)
+              const slLabel = tb.id === "tb-active"
+                ? `SL: $${tb.slPrice.toFixed(2)} (-${slPts})`
+                : !tb.isWin
+                ? `SL: $${tb.slPrice.toFixed(2)} · ✕ HIT (-1.0R)`
+                : `SL: $${tb.slPrice.toFixed(2)}`;
 
-                const dSL = ws.chart.drawings.add("text", {
-                  anchors: [
-                    { time: tb.entryTime, price: tb.slPrice },
-                  ],
-                  text: {
-                    value: slLabel,
-                    color: "#ef4444",
-                    size: "small",
-                    hAlign: "left",
-                    vAlign: tb.type === "LONG" ? "top" : "bottom",
-                    bold: true,
-                  },
-                });
-                lockDrawing(dSL);
-              }
+              const dSL = ws.chart.drawings.add("text", {
+                anchors: [
+                  { time: tb.entryTime, price: tb.slPrice },
+                ],
+                text: {
+                  value: slLabel,
+                  color: "#ef4444",
+                  size: "small",
+                  hAlign: "left",
+                  vAlign: tb.type === "LONG" ? "top" : "bottom",
+                  bold: true,
+                },
+              });
+              lockDrawing(dSL);
             } catch (_) {}
           }
         }
 
-        // 8. Plot Live Trade Price Levels ONLY when a trade is actively open
-        if (data.contract?.priceLevels && ws.chart?.drawings && (data.candles || []).length > 0) {
+        // 8. Plot Live Trade Price Levels ONLY when a trade is actively open and tb-active is not already drawn
+        const hasActiveBox = (data.contract?.tradeBoxes || []).some((b: any) => b.id === "tb-active");
+        if (!hasActiveBox && data.contract?.priceLevels && ws.chart?.drawings && (data.candles || []).length > 0) {
           const candles = data.candles;
           const lastCandle = candles[candles.length - 1];
           const futureTime = lastCandle.time + 15 * 60 * 1000 * 8; // 8 bars forward
