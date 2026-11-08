@@ -121,6 +121,17 @@ export interface SubscriptionRecord {
   updatedAt: Date;
 }
 
+export interface PasswordResetRecord {
+  id: string;
+  email: string;
+  otp: string;
+  expiresAt: Date;
+  attempts: number;
+  used: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // In-Memory store for fast, reliable local execution & tests
 class RepositoryStore {
   users: Map<string, UserRecord> = new Map();
@@ -134,6 +145,7 @@ class RepositoryStore {
   auditEvents: AuditEventRecord[] = [];
   subscriptions: Map<string, SubscriptionRecord> = new Map();
   orders: Map<string, any> = new Map();
+  passwordResets: Map<string, PasswordResetRecord> = new Map();
 
   private initialized = false;
 
@@ -242,6 +254,7 @@ class RepositoryStore {
 // Global singleton to prevent hot-reload wipes
 const globalStore = (global as any).__stratMarketStore || new RepositoryStore();
 if (!globalStore.orders) globalStore.orders = new Map();
+if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
 if (!globalStore.subscriptions) globalStore.subscriptions = new Map();
 if (!globalStore.entitlements) globalStore.entitlements = new Map();
 if (!globalStore.trials) globalStore.trials = new Map();
@@ -382,6 +395,179 @@ export const db = {
     }
     const list = Array.from(globalStore.users.values()) as UserRecord[];
     return list.map((u) => ({ ...u }));
+  },
+
+  // PASSWORD RESET OTP OPERATIONS
+  async createPasswordResetOtp(email: string): Promise<{ otp: string; expiresAt: Date; user: UserRecord }> {
+    const normalized = email.toLowerCase().trim();
+    const user = await this.getUserByEmail(normalized);
+    if (!user) {
+      throw new Error("USER_NOT_FOUND");
+    }
+
+    // Invalidate prior unused OTPs for this email
+    const mdb = await getMongoDb();
+    if (mdb) {
+      await mdb.collection("password_resets").updateMany(
+        { email: normalized, used: false },
+        { $set: { used: true, updatedAt: new Date() } }
+      );
+    }
+    const allResets = Array.from(globalStore.passwordResets.values()) as PasswordResetRecord[];
+    for (const r of allResets) {
+      if (r.email === normalized && !r.used) {
+        r.used = true;
+        r.updatedAt = new Date();
+      }
+    }
+
+    // Generate secure 6-digit numeric OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    const record: PasswordResetRecord = {
+      id: "otp_" + Math.random().toString(36).substring(2, 11),
+      email: normalized,
+      otp,
+      expiresAt,
+      attempts: 0,
+      used: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    if (mdb) {
+      await mdb.collection("password_resets").insertOne({ ...record });
+    }
+    globalStore.passwordResets.set(record.id, record);
+
+    await this.createAuditEvent({
+      userId: user.id,
+      action: "AUTH_FORGOT_PASSWORD_REQUESTED",
+      entityType: "USER",
+      entityId: user.id,
+      details: JSON.stringify({ email: normalized }),
+    });
+
+    return { otp, expiresAt, user };
+  },
+
+  async verifyPasswordResetOtp(email: string, otp: string): Promise<{ valid: boolean; error?: string; record?: PasswordResetRecord }> {
+    const normalized = email.toLowerCase().trim();
+    const cleanOtp = (otp || "").trim();
+
+    if (!cleanOtp) {
+      return { valid: false, error: "Verification code is required." };
+    }
+
+    const mdb = await getMongoDb();
+    let record: PasswordResetRecord | null = null;
+
+    if (mdb) {
+      const doc = await mdb.collection("password_resets").find({
+        email: normalized,
+        used: false,
+      }).sort({ createdAt: -1 }).limit(1).toArray();
+      if (doc.length > 0) {
+        record = {
+          id: doc[0].id || doc[0]._id?.toString(),
+          email: doc[0].email,
+          otp: doc[0].otp,
+          expiresAt: new Date(doc[0].expiresAt),
+          attempts: doc[0].attempts || 0,
+          used: Boolean(doc[0].used),
+          createdAt: new Date(doc[0].createdAt),
+          updatedAt: new Date(doc[0].updatedAt),
+        };
+      }
+    }
+
+    if (!record) {
+      const allResets = Array.from(globalStore.passwordResets.values()) as PasswordResetRecord[];
+      const matches = allResets
+        .filter((r) => r.email === normalized && !r.used)
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      if (matches.length > 0) {
+        record = matches[0];
+      }
+    }
+
+    if (!record) {
+      return { valid: false, error: "No active password reset request found. Please request a new verification code." };
+    }
+
+    if (new Date() > new Date(record.expiresAt)) {
+      return { valid: false, error: "The verification code has expired. Please request a new one." };
+    }
+
+    if (record.attempts >= 5) {
+      return { valid: false, error: "Maximum verification attempts exceeded. Please request a new code." };
+    }
+
+    if (record.otp !== cleanOtp) {
+      record.attempts += 1;
+      record.updatedAt = new Date();
+      if (mdb) {
+        await mdb.collection("password_resets").updateOne(
+          { id: record.id },
+          { $set: { attempts: record.attempts, updatedAt: new Date() } }
+        );
+      }
+      globalStore.passwordResets.set(record.id, record);
+      const remaining = 5 - record.attempts;
+      return {
+        valid: false,
+        error: `Invalid verification code. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`,
+      };
+    }
+
+    return { valid: true, record };
+  },
+
+  async resetPasswordWithOtp(email: string, otp: string, newPasswordHash: string): Promise<{ success: boolean; error?: string; user?: UserRecord }> {
+    const normalized = email.toLowerCase().trim();
+    const verification = await this.verifyPasswordResetOtp(normalized, otp);
+    if (!verification.valid || !verification.record) {
+      return { success: false, error: verification.error || "Failed to verify OTP." };
+    }
+
+    const record = verification.record;
+    record.used = true;
+    record.updatedAt = new Date();
+
+    const mdb = await getMongoDb();
+    if (mdb) {
+      await mdb.collection("password_resets").updateOne(
+        { id: record.id },
+        { $set: { used: true, updatedAt: new Date() } }
+      );
+    }
+    globalStore.passwordResets.set(record.id, record);
+
+    const user = await this.getUserByEmail(normalized);
+    if (!user) {
+      return { success: false, error: "User profile could not be located." };
+    }
+
+    if (mdb) {
+      await mdb.collection("users").updateOne(
+        { email: normalized },
+        { $set: { passwordHash: newPasswordHash, updatedAt: new Date() } }
+      );
+    }
+    user.passwordHash = newPasswordHash;
+    user.updatedAt = new Date();
+    globalStore.users.set(user.id, user);
+
+    await this.createAuditEvent({
+      userId: user.id,
+      action: "AUTH_PASSWORD_RESET_SUCCESS",
+      entityType: "USER",
+      entityId: user.id,
+      details: JSON.stringify({ email: normalized }),
+    });
+
+    return { success: true, user };
   },
 
   // STRATEGY OPERATIONS
@@ -837,6 +1023,7 @@ export const db = {
     };
 
     if (!globalStore.orders) globalStore.orders = new Map();
+if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
     globalStore.orders.set(orderId, order);
 
     const mdb = await getMongoDb();

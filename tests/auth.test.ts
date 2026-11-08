@@ -55,4 +55,46 @@ describe("Authentication & Session Security", () => {
       })
     ).rejects.toThrow("USER_EXISTS");
   });
+
+  it("handles forgot password OTP generation, verification, and reset", async () => {
+    const email = `reset_${Date.now()}@elvariscapital.in`;
+    const initialHash = await hashPassword("InitialPass123!");
+
+    await db.createUser({
+      name: "Reset User",
+      email,
+      passwordHash: initialHash,
+    });
+
+    // 1. Generate OTP
+    const { otp, expiresAt } = await db.createPasswordResetOtp(email);
+    expect(otp).toBeDefined();
+    expect(otp).toMatch(/^\d{6}$/);
+    expect(expiresAt.getTime()).toBeGreaterThan(Date.now());
+
+    // 2. Reject incorrect OTP
+    const wrongVerification = await db.verifyPasswordResetOtp(email, "000000");
+    expect(wrongVerification.valid).toBe(false);
+    expect(wrongVerification.error).toContain("Invalid verification code");
+
+    // 3. Accept valid OTP
+    const validVerification = await db.verifyPasswordResetOtp(email, otp);
+    expect(validVerification.valid).toBe(true);
+
+    // 4. Reset password with OTP
+    const newPass = "NewSecurePass2026!";
+    const newHash = await hashPassword(newPass);
+    const resetResult = await db.resetPasswordWithOtp(email, otp, newHash);
+    expect(resetResult.success).toBe(true);
+
+    // 5. Verify user can now authenticate with new password
+    const updatedUser = await db.getUserByEmail(email);
+    expect(updatedUser).not.toBeNull();
+    expect(await verifyPassword(newPass, updatedUser!.passwordHash)).toBe(true);
+    expect(await verifyPassword("InitialPass123!", updatedUser!.passwordHash)).toBe(false);
+
+    // 6. Verify consumed OTP cannot be reused
+    const reuseAttempt = await db.verifyPasswordResetOtp(email, otp);
+    expect(reuseAttempt.valid).toBe(false);
+  });
 });

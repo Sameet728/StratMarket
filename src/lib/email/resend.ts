@@ -495,6 +495,117 @@ export async function sendLoginSecurityEmail(params: {
 }
 
 /**
+ * 2b. Password Reset Verification OTP Email
+ */
+export async function sendPasswordResetOtpEmail(params: {
+  to: string;
+  name?: string;
+  otp: string;
+  expiresInMinutes?: number;
+}): Promise<EmailResult> {
+  const { to, name = "Trader", otp, expiresInMinutes = 10 } = params;
+  const firstName = name.split(" ")[0] || "Trader";
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  ${getEmailHead("Reset Your Password — StratMarket Security Verification")}
+</head>
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 36px 12px;">
+    <tr>
+      <td align="center">
+        <!-- Main Card Container -->
+        <table role="presentation" width="100%" class="container-table" style="max-width: 600px; background-color: #0a0a0d; border: 1px solid #22222c; border-radius: 18px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);">
+          ${getEmailHeader("SECURITY AUTHENTICATION", "gold")}
+
+          <!-- Hero Section -->
+          <tr>
+            <td class="header-cell" style="background: linear-gradient(180deg, #101016 0%, #0a0a0d 100%); padding: 36px 32px; text-align: left; border-bottom: 1px solid #1a1a24;">
+              <div style="display: inline-block; padding: 5px 12px; background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; font-size: 11px; font-weight: 700; color: #f5d77f; letter-spacing: 0.06em; text-transform: uppercase; font-family: 'SF Mono', Menlo, monospace; margin-bottom: 14px;">
+                Account Recovery Protocol
+              </div>
+              <h1 class="mobile-title" style="margin: 0; font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.03em; line-height: 1.2;">
+                Reset Your Password
+              </h1>
+              <p class="mobile-subtitle" style="margin: 10px 0 0 0; color: #9c9ca8; font-size: 14.5px; line-height: 1.5;">
+                We received an authorized request to reset your StratMarket account credentials.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Content Body -->
+          <tr>
+            <td class="content-cell" style="padding: 32px 32px;">
+              <p style="margin: 0 0 16px 0; font-size: 15px; color: #eaeaf2; line-height: 1.6;">
+                Hello <strong style="color: #ffffff;">${firstName}</strong>,
+              </p>
+              <p style="margin: 0 0 24px 0; font-size: 14.5px; line-height: 1.65; color: #a4a4b2;">
+                Please use the following single-use One-Time Password (OTP) to verify your identity and set a new password for your account:
+              </p>
+
+              <!-- OTP Display Box -->
+              <div style="background-color: #0d0d12; border: 2px solid #d4af37; border-radius: 14px; padding: 26px 20px; text-align: center; margin: 26px 0; box-shadow: 0 0 25px rgba(212, 175, 55, 0.15);">
+                <div style="font-size: 11px; font-weight: 700; color: #f5d77f; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px; font-family: 'SF Mono', Menlo, monospace;">
+                  One-Time Verification Code
+                </div>
+                <div style="font-family: 'SF Mono', Menlo, Consolas, Monaco, monospace; font-size: 40px; font-weight: 800; letter-spacing: 12px; color: #ffffff; text-indent: 12px; text-shadow: 0 0 16px rgba(255, 255, 255, 0.35);">
+                  ${otp}
+                </div>
+                <div style="margin-top: 14px; font-size: 12px; color: #8e8e9c; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                  Valid for <strong style="color: #ffffff;">${expiresInMinutes} minutes</strong> • Single use only
+                </div>
+              </div>
+
+              <!-- Security Information Note -->
+              <div style="background-color: #111117; border: 1px solid #20202c; border-radius: 12px; padding: 16px 18px; margin-bottom: 24px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td style="vertical-align: top;">
+                      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #f5d77f; margin-right: 6px;"></span>
+                        <strong style="color: #ffffff; font-size: 13.5px; font-weight: 700;">Security Safeguards</strong>
+                      </div>
+                      <div style="font-size: 13px; color: #8e8e9c; line-height: 1.55;">
+                        • Never disclose this OTP to anyone. StratMarket administrators will never ask for your code or password.<br>
+                        • If you did not request this reset, your account credentials remain safe. No action is required.
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- Action Link -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 20px 0 8px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${BASE_URL}/forgot-password?email=${encodeURIComponent(to)}&code=${otp}" class="mobile-btn" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #b89728 100%); color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 800; font-size: 14px; padding: 13px 32px; text-decoration: none; border-radius: 30px; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.35); letter-spacing: -0.01em;">
+                      Continue on StratMarket →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          ${getEmailFooter("Elvaris Capital Institutional Security • Node: AP-NORTHEAST-1")}
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  return sendResendMail({
+    to,
+    subject: `StratMarket Security: ${otp} is your verification code`,
+    html,
+  });
+}
+
+/**
  * 3. Real-Time Signal Alert Email (High-Impact Quantitative Tear Card)
  */
 export async function sendSignalAlertEmail(params: {
