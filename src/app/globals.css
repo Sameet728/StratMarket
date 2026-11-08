@@ -1521,6 +1521,43 @@ footer p {
   100% { transform: translate(-20vw, -6vh) scale(1); }
 }
 
+/* High-Performance GPU-Accelerated Tab & Page Transition Wipe */
+#wp {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #ffffff;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: clamp(32px, 5.5vw, 68px);
+  letter-spacing: -0.04em;
+  transform: translate3d(0, 100%, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+  pointer-events: none !important;
+}
+
+#wp.go {
+  animation: wp 0.68s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+@keyframes wp {
+  0% {
+    transform: translate3d(0, 100%, 0);
+  }
+  38%, 56% {
+    transform: translate3d(0, 0%, 0);
+  }
+  100% {
+    transform: translate3d(0, -100%, 0);
+  }
+}
+
 /* Responsive Media Queries */
 @media (max-width: 860px) {
   .split, .three, .plans {
