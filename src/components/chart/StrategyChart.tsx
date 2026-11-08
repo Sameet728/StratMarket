@@ -269,6 +269,7 @@ export function StrategyChart({
 
           for (const tb of boxesToPlot) {
             try {
+              const rMultiple = ((Math.abs(tb.tpPrice - tb.entryPrice)) / (Math.abs(tb.slPrice - tb.entryPrice))).toFixed(2);
               const tpPts = Math.abs(tb.tpPrice - tb.entryPrice).toFixed(1);
               const slPts = Math.abs(tb.slPrice - tb.entryPrice).toFixed(1);
 
@@ -317,12 +318,18 @@ export function StrategyChart({
               lockDrawing(d3);
 
               // 4. Take Profit (TP) Explicit Price Pin (Emerald)
+              const tpLabel = tb.id === "tb-active"
+                ? `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts} pts)`
+                : tb.isWin
+                ? `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts} pts) · ✓ HIT (+${rMultiple}R)`
+                : `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts} pts)`;
+
               const dTP = ws.chart.drawings.add("text", {
                 anchors: [
                   { time: tb.entryTime, price: tb.tpPrice },
                 ],
                 text: {
-                  value: `TP: $${tb.tpPrice.toFixed(2)} (+${tpPts} pts)`,
+                  value: tpLabel,
                   color: "#10b981",
                   size: "small",
                   hAlign: "left",
@@ -333,12 +340,16 @@ export function StrategyChart({
               lockDrawing(dTP);
 
               // 5. Entry Explicit Price Pin (Crisp White)
+              const entryLabel = tb.id === "tb-active"
+                ? `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} Entry: $${tb.entryPrice.toFixed(2)} · ACTIVE`
+                : `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} Entry: $${tb.entryPrice.toFixed(2)}`;
+
               const dEntry = ws.chart.drawings.add("text", {
                 anchors: [
                   { time: tb.entryTime, price: tb.entryPrice },
                 ],
                 text: {
-                  value: `${tb.type === "SHORT" ? "▼ SHORT" : "▲ LONG"} Entry: $${tb.entryPrice.toFixed(2)}`,
+                  value: entryLabel,
                   color: "#ffffff",
                   size: "small",
                   hAlign: "left",
@@ -349,12 +360,18 @@ export function StrategyChart({
               lockDrawing(dEntry);
 
               // 6. Stop Loss (SL) Explicit Price Pin (Crimson)
+              const slLabel = tb.id === "tb-active"
+                ? `SL: $${tb.slPrice.toFixed(2)} (-${slPts} pts)`
+                : !tb.isWin
+                ? `SL: $${tb.slPrice.toFixed(2)} (-${slPts} pts) · ✕ HIT (-1.00R)`
+                : `SL: $${tb.slPrice.toFixed(2)} (-${slPts} pts)`;
+
               const dSL = ws.chart.drawings.add("text", {
                 anchors: [
                   { time: tb.entryTime, price: tb.slPrice },
                 ],
                 text: {
-                  value: `SL: $${tb.slPrice.toFixed(2)} (-${slPts} pts)`,
+                  value: slLabel,
                   color: "#ef4444",
                   size: "small",
                   hAlign: "left",
@@ -363,26 +380,6 @@ export function StrategyChart({
                 },
               });
               lockDrawing(dSL);
-
-              // 7. Trade Exit Outcome Badge
-              const dExit = ws.chart.drawings.add("text", {
-                anchors: [
-                  { time: tb.exitTime, price: tb.exitPrice || (tb.isWin ? tb.tpPrice : tb.slPrice) },
-                ],
-                text: {
-                  value: tb.id === "tb-active"
-                    ? `● ACTIVE ${tb.type}`
-                    : tb.isWin
-                    ? `✓ TP HIT (+${((Math.abs(tb.tpPrice - tb.entryPrice)) / (Math.abs(tb.slPrice - tb.entryPrice))).toFixed(2)}R)`
-                    : `✕ SL HIT (-1.00R)`,
-                  color: tb.id === "tb-active" ? "#ffffff" : tb.isWin ? "#10b981" : "#ef4444",
-                  size: "small",
-                  hAlign: "left",
-                  vAlign: "center",
-                  bold: true,
-                },
-              });
-              lockDrawing(dExit);
             } catch (_) {}
           }
         }
