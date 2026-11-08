@@ -24,7 +24,7 @@ export default function BrokerIntegrationPage() {
           fontSize: "11px",
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          color: "#e2b342",
+          color: "#ffffff",
           fontWeight: 700,
           display: "inline-block",
           marginBottom: "8px",
@@ -39,7 +39,7 @@ export default function BrokerIntegrationPage() {
 
       <p style={{ fontSize: "17px", lineHeight: "1.7", color: "#d1d5db", margin: "0 0 32px" }}>
         StratMarket by <strong>Elvaris Capital</strong> (
-        <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#e2b342", textDecoration: "underline" }}>
+        <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff", textDecoration: "underline" }}>
           elvariscapital.in
         </a>
         ) allows traders to receive automated real-time trade signals and route them directly to retail, prop firm, and institutional brokerage accounts.

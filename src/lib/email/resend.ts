@@ -122,7 +122,7 @@ function getEmailHead(title: string): string {
   html,body{margin:0!important;padding:0!important;width:100%!important;background:#f3f5f7;color:#202a36;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;}
   table{border-collapse:collapse!important;border-spacing:0!important;}
   img{border:0;outline:none;text-decoration:none;}
-  a{color:#8a6b2d;}
+  a{color:#182331;}
   .page{width:100%;background:#f3f5f7;}
   .outer{padding:38px 14px;}
   .shell{width:600px;max-width:600px;background:#fff;border:1px solid #e1e5e9;}
@@ -131,7 +131,7 @@ function getEmailHead(title: string): string {
   .eyebrow{font-size:9px;line-height:14px;letter-spacing:1.5px;text-transform:uppercase;color:#7c8490;font-weight:700;}
   .company{font-size:9px;line-height:14px;letter-spacing:1.4px;color:#7c8490;text-transform:uppercase;margin-top:4px;}
   .site{font-size:11px;line-height:16px;margin-top:3px;}
-  .site a{text-decoration:none;color:#8a6b2d;}
+  .site a{text-decoration:none;color:#182331;}
   .headline{font-size:28px;line-height:34px;letter-spacing:-.7px;color:#182331;margin:10px 0 12px;font-weight:700;}
   .bodycopy{font-size:14px;line-height:23px;color:#5e6976;margin:0;}
   .muted{font-size:12px;line-height:19px;color:#77818d;}
@@ -216,7 +216,7 @@ ${getEmailHead("StratMarket | Welcome")}
 ${getEmailHeader("ACCOUNT NOTIFICATION")}
 
 <tr><td class="pad" style="padding-top:34px;padding-bottom:12px;">
-  <div class="eyebrow" style="color:#8a6b2d;">Account confirmation</div>
+  <div class="eyebrow" style="color:#7c8490;">Account confirmation</div>
   <h1 class="headline">Your account is ready.</h1>
   <p class="bodycopy">Hello ${firstName}, your StratMarket account has been successfully created. You can now sign in and explore the platform.</p>
 </td></tr>
@@ -274,7 +274,7 @@ ${getEmailHead("StratMarket | Verify your account")}
 ${getEmailHeader("ACCOUNT SECURITY")}
 
 <tr><td class="pad" style="padding-top:34px;padding-bottom:10px;">
-  <div class="eyebrow" style="color:#8a6b2d;">Identity verification</div>
+  <div class="eyebrow" style="color:#7c8490;">Identity verification</div>
   <h1 class="headline">Confirm it’s you</h1>
   <p class="bodycopy">Hello ${firstName}, enter the one-time verification code below to securely continue with your StratMarket account.</p>
 </td></tr>
@@ -375,7 +375,7 @@ ${getEmailHead(`StratMarket | Trade alert — ${instrument}`)}
 ${getEmailHeader("TRADING NOTIFICATION")}
 
 <tr><td class="pad" style="padding-top:32px;padding-bottom:18px;">
-  <div class="eyebrow" style="color:#8a6b2d;">Strategy alert · ${alertTime}</div>
+  <div class="eyebrow" style="color:#7c8490;">Strategy alert · ${alertTime}</div>
   <h1 class="headline" style="margin-bottom:7px;">${instrument} <span style="font-size:15px;letter-spacing:0;color:#6f7a87;font-weight:400;">· ${timeframe}</span></h1>
   <p class="bodycopy">${strategyName} (${strategyId}) has generated a new ${direction} signal.</p>
 </td></tr>
@@ -447,7 +447,7 @@ ${getEmailHead("StratMarket | Security Alert")}
 ${getEmailHeader("SECURITY AUDIT")}
 
 <tr><td class="pad" style="padding-top:34px;padding-bottom:12px;">
-  <div class="eyebrow" style="color:#8a6b2d;">Session authentication</div>
+  <div class="eyebrow" style="color:#7c8490;">Session authentication</div>
   <h1 class="headline">New sign-in detected</h1>
   <p class="bodycopy">Hello ${firstName}, a successful sign-in was recorded for your StratMarket trader account.</p>
 </td></tr>

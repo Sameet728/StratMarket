@@ -77,7 +77,7 @@ export default function DocsIndexPage() {
             fontSize: "11px",
             textTransform: "uppercase",
             letterSpacing: "0.08em",
-            color: "#e2b342",
+            color: "#ffffff",
             fontWeight: 700,
             display: "inline-block",
             marginBottom: "8px",
@@ -94,7 +94,7 @@ export default function DocsIndexPage() {
             href="https://elvariscapital.in"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "#e2b342", textDecoration: "underline" }}
+            style={{ color: "#ffffff", textDecoration: "underline" }}
           >
             Elvaris Capital (elvariscapital.in)
           </a>
@@ -105,8 +105,8 @@ export default function DocsIndexPage() {
       {/* Parent Organization Callout Banner */}
       <div
         style={{
-          background: "linear-gradient(135deg, rgba(226, 179, 66, 0.08) 0%, rgba(20, 20, 25, 0.6) 100%)",
-          border: "1px solid rgba(226, 179, 66, 0.25)",
+          background: "linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(20, 20, 25, 0.6) 100%)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
           borderRadius: "14px",
           padding: "24px",
           marginBottom: "40px",
@@ -118,7 +118,7 @@ export default function DocsIndexPage() {
         }}
       >
         <div>
-          <span style={{ fontSize: "11px", color: "#e2b342", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <span style={{ fontSize: "11px", color: "#ffffff", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Parent Organization Notice
           </span>
           <h3 style={{ fontSize: "18px", margin: "6px 0 8px", color: "#fff", fontWeight: 600 }}>
@@ -165,8 +165,8 @@ export default function DocsIndexPage() {
                   fontSize: "10px",
                   padding: "2px 8px",
                   borderRadius: "999px",
-                  background: "rgba(226, 179, 66, 0.12)",
-                  color: "#e2b342",
+                  background: "rgba(255, 255, 255, 0.1)",
+                  color: "#ffffff",
                   fontWeight: 600,
                   whiteSpace: "nowrap",
                 }}
@@ -184,7 +184,7 @@ export default function DocsIndexPage() {
                 gap: "4px",
                 fontSize: "12px",
                 fontWeight: 600,
-                color: "#e2b342",
+                color: "#ffffff",
                 marginTop: "16px",
               }}
             >

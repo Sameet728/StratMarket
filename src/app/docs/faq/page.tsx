@@ -73,7 +73,7 @@ export default function FAQPage() {
           fontSize: "11px",
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          color: "#e2b342",
+          color: "#ffffff",
           fontWeight: 700,
           display: "inline-block",
           marginBottom: "8px",
@@ -88,7 +88,7 @@ export default function FAQPage() {
 
       <p style={{ fontSize: "17px", lineHeight: "1.7", color: "#d1d5db", margin: "0 0 32px" }}>
         Everything you need to know about StratMarket and our parent organization, <strong>Elvaris Capital</strong> (
-        <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#e2b342", textDecoration: "underline" }}>
+        <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff", textDecoration: "underline" }}>
           elvariscapital.in
         </a>
         ).
@@ -119,8 +119,8 @@ export default function FAQPage() {
       {/* Parent Organization Link */}
       <div
         style={{
-          background: "rgba(226, 179, 66, 0.05)",
-          border: "1px solid rgba(226, 179, 66, 0.2)",
+          background: "rgba(255, 255, 255, 0.02)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
           borderRadius: "12px",
           padding: "20px",
           marginBottom: "40px",

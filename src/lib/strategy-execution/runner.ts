@@ -213,7 +213,7 @@ export class PrivateStrategyExecutionRunner {
           { label: "Monthly Consistency", value: "Aug: 16.3R | Sep: 16.3R | Oct: 8.3R", color: "#4ade80" },
           { label: "Max Closed Drawdown", value: "2.3% (2.34R)", color: "#f87171" },
           { label: "Calmar Ratio", value: "17.45 (Institutional Ultra-Grade)", color: "#38bdf8" },
-          { label: "Walk-Forward OOS/IS", value: "0.88 Efficiency Ratio", color: "#fbbf24" },
+          { label: "Walk-Forward OOS/IS", value: "0.88 Efficiency Ratio", color: "#ffffff" },
         ],
       };
     }
@@ -240,7 +240,7 @@ export class PrivateStrategyExecutionRunner {
           { label: "Total Net Return", value: "+24.9% (+24.93R)", color: "#4ade80" },
           { label: "Max Closed Drawdown", value: "1.4% (1.40R)", color: "#f87171" },
           { label: "Calmar Ratio", value: "17.85 (Institutional Ultra)", color: "#38bdf8" },
-          { label: "Rejection Wick Gate", value: "Confirmed Liquidity Absorption", color: "#fbbf24" },
+          { label: "Rejection Wick Gate", value: "Confirmed Liquidity Absorption", color: "#ffffff" },
         ],
       };
     }
@@ -265,7 +265,7 @@ export class PrivateStrategyExecutionRunner {
           { label: "Payoff Ratio", value: "1 : 2.00 (2.00R TP / 1.00R SL)", color: "#38bdf8" },
           { label: "Profit Factor", value: "5.71", color: "#4ade80" },
           { label: "Total Net Return", value: "+33.0% (+33.00R)", color: "#4ade80" },
-          { label: "Breakeven Requirement", value: "33.33% (Edge: +40.7%)", color: "#fbbf24" },
+          { label: "Breakeven Requirement", value: "33.33% (Edge: +40.7%)", color: "#ffffff" },
           { label: "Max Closed Drawdown", value: "2.7% (2.71R)", color: "#f87171" },
           { label: "Rejection Wick Gate", value: "Confirmed Liquidity Absorption", color: "#38bdf8" },
         ],
@@ -707,8 +707,8 @@ export class PrivateStrategyExecutionRunner {
 
     // Native indicator configuration to pass to chart component
     const nativeIndicators = [
-      { type: "ema", inputs: { length: config.emaFastLen, color: "#f59e0b" } },
-      { type: "ema", inputs: { length: config.emaSlowLen, color: "#38bdf8" } },
+      { type: "ema", inputs: { length: config.emaFastLen, color: "#ffffff" } },
+      { type: "ema", inputs: { length: config.emaSlowLen, color: "#a1a1aa" } },
       { type: "bollinger-bands", inputs: { length: config.bandLen, mult: config.bandMult } },
     ];
 

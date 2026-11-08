@@ -23,9 +23,9 @@ export function Footer() {
               <span
                 style={{
                   fontSize: "11px",
-                  color: "#e2b342",
-                  background: "rgba(226, 179, 66, 0.1)",
-                  border: "1px solid rgba(226, 179, 66, 0.3)",
+                  color: "#e4e4e7",
+                  background: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
                   padding: "2px 7px",
                   borderRadius: "999px",
                   fontFamily: "var(--font-mono, monospace)",
@@ -40,7 +40,7 @@ export function Footer() {
                 href="https://elvariscapital.in"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "#e2b342", textDecoration: "underline", textUnderlineOffset: "3px" }}
+                style={{ color: "#ffffff", textDecoration: "underline", textUnderlineOffset: "3px" }}
               >
                 Elvaris Capital (elvariscapital.in)
               </a>
@@ -139,7 +139,7 @@ export function Footer() {
                   href="https://elvariscapital.in"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: "#e2b342", fontWeight: 500, textDecoration: "none" }}
+                  style={{ color: "#ffffff", fontWeight: 500, textDecoration: "none" }}
                 >
                   Elvaris Capital Official Portal ↗
                 </a>
@@ -197,7 +197,7 @@ export function Footer() {
               <Link href="/docs/elvaris-capital" style={{ color: "#9ca3af" }}>
                 About Parent Org
               </Link>
-              <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#e2b342" }}>
+              <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff" }}>
                 elvariscapital.in ↗
               </a>
             </div>

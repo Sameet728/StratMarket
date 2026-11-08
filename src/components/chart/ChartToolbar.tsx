@@ -103,7 +103,7 @@ export function ChartToolbar({
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
           <span className="chart-brand">StratMarket</span>
-          <span style={{ fontSize: "10.5px", color: "#e2b342", fontWeight: 500, marginLeft: "4px", opacity: 0.9 }}>by Elvaris Capital</span>
+          <span style={{ fontSize: "10.5px", color: "#a1a1aa", fontWeight: 500, marginLeft: "4px", opacity: 0.9 }}>by Elvaris Capital</span>
         </Link>
 
         <div className="chart-divider" />

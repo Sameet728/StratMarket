@@ -54,7 +54,7 @@ export function DocsNav() {
             fontSize: "10.5px",
             textTransform: "uppercase",
             letterSpacing: "0.08em",
-            color: "#e2b342",
+            color: "#ffffff",
             fontWeight: 700,
             display: "block",
             marginBottom: "6px",
@@ -66,7 +66,7 @@ export function DocsNav() {
           Documentation
         </h3>
         <p style={{ fontSize: "12px", color: "#9ca3af", margin: "4px 0 0", lineHeight: "1.5" }}>
-          By <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#e2b342", textDecoration: "underline" }}>Elvaris Capital</a>
+          By <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff", textDecoration: "underline" }}>Elvaris Capital</a>
         </p>
       </div>
 
@@ -149,8 +149,8 @@ export function DocsNav() {
                               fontSize: "10px",
                               padding: "1px 6px",
                               borderRadius: "4px",
-                              background: isActive ? "rgba(226, 179, 66, 0.2)" : "rgba(255, 255, 255, 0.05)",
-                              color: isActive ? "#e2b342" : "#9ca3af",
+                              background: isActive ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.05)",
+                              color: isActive ? "#ffffff" : "#9ca3af",
                               fontWeight: 500,
                             }}
                           >
@@ -172,11 +172,11 @@ export function DocsNav() {
           marginTop: "36px",
           padding: "16px",
           borderRadius: "12px",
-          background: "rgba(226, 179, 66, 0.04)",
-          border: "1px solid rgba(226, 179, 66, 0.15)",
+          background: "rgba(255, 255, 255, 0.03)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
         }}
       >
-        <span style={{ fontSize: "11px", color: "#e2b342", fontWeight: 600, display: "block", marginBottom: "4px" }}>
+        <span style={{ fontSize: "11px", color: "#ffffff", fontWeight: 600, display: "block", marginBottom: "4px" }}>
           Parent Organization
         </span>
         <p style={{ fontSize: "12px", color: "#9ca3af", margin: "0 0 10px", lineHeight: "1.4" }}>
@@ -188,7 +188,7 @@ export function DocsNav() {
           rel="noopener noreferrer"
           style={{
             fontSize: "12px",
-            color: "#e2b342",
+            color: "#ffffff",
             fontWeight: 600,
             textDecoration: "none",
             display: "inline-flex",

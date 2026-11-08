@@ -47,7 +47,7 @@ export default function QuantMethodologyPage() {
           fontSize: "11px",
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          color: "#e2b342",
+          color: "#ffffff",
           fontWeight: 700,
           display: "inline-block",
           marginBottom: "8px",
@@ -62,7 +62,7 @@ export default function QuantMethodologyPage() {
 
       <p style={{ fontSize: "17px", lineHeight: "1.7", color: "#d1d5db", margin: "0 0 32px" }}>
         Every trading strategy listed on StratMarket by <strong>Elvaris Capital</strong> (
-        <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#e2b342", textDecoration: "underline" }}>
+        <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff", textDecoration: "underline" }}>
           elvariscapital.in
         </a>
         ) is subject to strict institutional mathematical protocols. We reject over-optimized curve fitting and enforce zero look-ahead bias, realistic broker execution drag, and multi-regime stress testing.
@@ -77,7 +77,7 @@ export default function QuantMethodologyPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "12px", padding: "20px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-              <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#e2b342", color: "#000", fontWeight: 700, fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>1</span>
+              <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#ffffff", color: "#000", fontWeight: 700, fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>1</span>
               <h3 style={{ fontSize: "16px", color: "#fff", margin: 0 }}>Generate: AI-Assisted Hypothesis Codification</h3>
             </div>
             <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#9ca3af", margin: 0 }}>
@@ -87,7 +87,7 @@ export default function QuantMethodologyPage() {
 
           <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "12px", padding: "20px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-              <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#e2b342", color: "#000", fontWeight: 700, fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>2</span>
+              <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#ffffff", color: "#000", fontWeight: 700, fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>2</span>
               <h3 style={{ fontSize: "16px", color: "#fff", margin: 0 }}>Backtest: High-Fidelity Tick Historical Simulation</h3>
             </div>
             <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#9ca3af", margin: 0 }}>
@@ -97,7 +97,7 @@ export default function QuantMethodologyPage() {
 
           <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "12px", padding: "20px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-              <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#e2b342", color: "#000", fontWeight: 700, fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>3</span>
+              <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#ffffff", color: "#000", fontWeight: 700, fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>3</span>
               <h3 style={{ fontSize: "16px", color: "#fff", margin: 0 }}>Improve: Walk-Forward Optimization &amp; Versioning</h3>
             </div>
             <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#9ca3af", margin: 0 }}>
@@ -107,7 +107,7 @@ export default function QuantMethodologyPage() {
 
           <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "12px", padding: "20px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-              <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#e2b342", color: "#000", fontWeight: 700, fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>4</span>
+              <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#ffffff", color: "#000", fontWeight: 700, fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>4</span>
               <h3 style={{ fontSize: "16px", color: "#fff", margin: 0 }}>Validate: Blind Out-of-Sample &amp; Monte Carlo Stress Testing</h3>
             </div>
             <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#9ca3af", margin: 0 }}>
@@ -124,7 +124,7 @@ export default function QuantMethodologyPage() {
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
           <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "12px", padding: "20px" }}>
-            <span style={{ fontSize: "11px", color: "#e2b342", fontWeight: 700 }}>RISK-ADJUSTED RETURN</span>
+            <span style={{ fontSize: "11px", color: "#ffffff", fontWeight: 700 }}>RISK-ADJUSTED RETURN</span>
             <h3 style={{ fontSize: "18px", color: "#fff", margin: "4px 0 8px" }}>Sharpe Ratio</h3>
             <code style={{ display: "block", background: "rgba(0,0,0,0.4)", padding: "8px", borderRadius: "6px", fontSize: "12px", color: "#e5e7eb", marginBottom: "8px" }}>
               SR = (E[Rp] - Rf) / σp
@@ -135,7 +135,7 @@ export default function QuantMethodologyPage() {
           </div>
 
           <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "12px", padding: "20px" }}>
-            <span style={{ fontSize: "11px", color: "#e2b342", fontWeight: 700 }}>DRAWDOWN RECOVERY</span>
+            <span style={{ fontSize: "11px", color: "#ffffff", fontWeight: 700 }}>DRAWDOWN RECOVERY</span>
             <h3 style={{ fontSize: "18px", color: "#fff", margin: "4px 0 8px" }}>Calmar Ratio</h3>
             <code style={{ display: "block", background: "rgba(0,0,0,0.4)", padding: "8px", borderRadius: "6px", fontSize: "12px", color: "#e5e7eb", marginBottom: "8px" }}>
               CR = Annualized Return / |Max Drawdown|
@@ -146,7 +146,7 @@ export default function QuantMethodologyPage() {
           </div>
 
           <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "12px", padding: "20px" }}>
-            <span style={{ fontSize: "11px", color: "#e2b342", fontWeight: 700 }}>GROSS EXPECTANCY</span>
+            <span style={{ fontSize: "11px", color: "#ffffff", fontWeight: 700 }}>GROSS EXPECTANCY</span>
             <h3 style={{ fontSize: "18px", color: "#fff", margin: "4px 0 8px" }}>Profit Factor</h3>
             <code style={{ display: "block", background: "rgba(0,0,0,0.4)", padding: "8px", borderRadius: "6px", fontSize: "12px", color: "#e5e7eb", marginBottom: "8px" }}>
               PF = Gross Profits / Gross Losses
@@ -157,7 +157,7 @@ export default function QuantMethodologyPage() {
           </div>
 
           <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "12px", padding: "20px" }}>
-            <span style={{ fontSize: "11px", color: "#e2b342", fontWeight: 700 }}>WORST-CASE DROP</span>
+            <span style={{ fontSize: "11px", color: "#ffffff", fontWeight: 700 }}>WORST-CASE DROP</span>
             <h3 style={{ fontSize: "18px", color: "#fff", margin: "4px 0 8px" }}>Maximum Drawdown</h3>
             <code style={{ display: "block", background: "rgba(0,0,0,0.4)", padding: "8px", borderRadius: "6px", fontSize: "12px", color: "#e5e7eb", marginBottom: "8px" }}>
               MDD = (Peak - Trough) / Peak

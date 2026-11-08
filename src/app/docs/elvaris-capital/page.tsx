@@ -47,7 +47,7 @@ export default function AboutElvarisCapitalPage() {
           fontSize: "11px",
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          color: "#e2b342",
+          color: "#ffffff",
           fontWeight: 700,
           display: "inline-block",
           marginBottom: "8px",
@@ -67,8 +67,8 @@ export default function AboutElvarisCapitalPage() {
       {/* Official Parent Org Highlight Card */}
       <div
         style={{
-          background: "linear-gradient(135deg, rgba(226, 179, 66, 0.08) 0%, rgba(20, 20, 25, 0.6) 100%)",
-          border: "1px solid rgba(226, 179, 66, 0.25)",
+          background: "linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(20, 20, 25, 0.6) 100%)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
           borderRadius: "14px",
           padding: "24px",
           marginBottom: "40px",
@@ -90,7 +90,7 @@ export default function AboutElvarisCapitalPage() {
                   href="https://elvariscapital.in"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: "#e2b342", textDecoration: "underline" }}
+                  style={{ color: "#ffffff", textDecoration: "underline" }}
                 >
                   https://elvariscapital.in ↗
                 </a>

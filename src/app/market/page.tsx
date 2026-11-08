@@ -20,9 +20,9 @@ export default async function MarketPage() {
               style={{
                 fontSize: "11px",
                 fontFamily: "var(--font-mono, monospace)",
-                color: "#e2b342",
-                background: "rgba(226, 179, 66, 0.1)",
-                border: "1px solid rgba(226, 179, 66, 0.3)",
+                color: "#e4e4e7",
+                background: "rgba(255, 255, 255, 0.06)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
                 padding: "2px 8px",
                 borderRadius: "999px",
               }}

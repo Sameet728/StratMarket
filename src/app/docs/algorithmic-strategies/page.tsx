@@ -100,7 +100,7 @@ export default function AlgorithmicStrategiesPage() {
           fontSize: "11px",
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          color: "#e2b342",
+          color: "#ffffff",
           fontWeight: 700,
           display: "inline-block",
           marginBottom: "8px",
@@ -115,7 +115,7 @@ export default function AlgorithmicStrategiesPage() {
 
       <p style={{ fontSize: "17px", lineHeight: "1.7", color: "#d1d5db", margin: "0 0 32px" }}>
         StratMarket by <strong>Elvaris Capital</strong> (
-        <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#e2b342", textDecoration: "underline" }}>
+        <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff", textDecoration: "underline" }}>
           elvariscapital.in
         </a>
         ) features 14 verified quantitative strategies: 4 specialized Pine Script mean-reversion engines optimized for spot Gold (XAUUSD), and 10 institutional Python MT5 multi-engine fleets with guaranteed single-digit maximum drawdown (&lt; 10%).
@@ -127,7 +127,7 @@ export default function AlgorithmicStrategiesPage() {
           <h2 style={{ fontSize: "22px", color: "#fff", margin: 0 }}>
             Pine Script Gold Strategies (PS-01 – PS-04)
           </h2>
-          <span style={{ fontSize: "12px", color: "#e2b342", background: "rgba(226, 179, 66, 0.1)", padding: "3px 10px", borderRadius: "999px" }}>
+          <span style={{ fontSize: "12px", color: "#ffffff", background: "rgba(255, 255, 255, 0.08)", padding: "3px 10px", borderRadius: "999px" }}>
             XAUUSD · M15 Timeframe
           </span>
         </div>
@@ -145,7 +145,7 @@ export default function AlgorithmicStrategiesPage() {
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", marginBottom: "12px" }}>
                 <div>
-                  <span style={{ fontSize: "12px", fontFamily: "var(--font-mono, monospace)", color: "#e2b342", fontWeight: 700 }}>
+                  <span style={{ fontSize: "12px", fontFamily: "var(--font-mono, monospace)", color: "#ffffff", fontWeight: 700 }}>
                     {s.id}
                   </span>
                   <h3 style={{ fontSize: "19px", color: "#fff", margin: "2px 0 0" }}>
@@ -187,7 +187,7 @@ export default function AlgorithmicStrategiesPage() {
                 </div>
                 <div>
                   <span style={{ fontSize: "10px", color: "#6b7280", textTransform: "uppercase", display: "block" }}>Profit Factor</span>
-                  <strong style={{ fontSize: "14px", color: "#e2b342" }}>{s.pf}</strong>
+                  <strong style={{ fontSize: "14px", color: "#ffffff" }}>{s.pf}</strong>
                 </div>
                 <div>
                   <span style={{ fontSize: "10px", color: "#6b7280", textTransform: "uppercase", display: "block" }}>Win Rate</span>
@@ -234,12 +234,12 @@ export default function AlgorithmicStrategiesPage() {
               {pythonEnsembles.map((py) => (
                 <tr key={py.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
                   <td style={{ padding: "12px 8px", fontWeight: 600, color: "#fff" }}>
-                    <span style={{ color: "#e2b342", marginRight: "6px" }}>{py.id}</span>
+                    <span style={{ color: "#ffffff", marginRight: "6px" }}>{py.id}</span>
                     {py.name}
                   </td>
                   <td style={{ padding: "12px 8px", color: "#10b981", fontWeight: 600 }}>{py.profit}</td>
                   <td style={{ padding: "12px 8px" }}>{py.dd}</td>
-                  <td style={{ padding: "12px 8px", color: "#e2b342" }}>{py.pf}</td>
+                  <td style={{ padding: "12px 8px", color: "#ffffff" }}>{py.pf}</td>
                   <td style={{ padding: "12px 8px" }}>{py.sharpe}</td>
                   <td style={{ padding: "12px 8px", color: "#9ca3af", fontSize: "12px", maxWidth: "280px" }}>{py.desc}</td>
                 </tr>

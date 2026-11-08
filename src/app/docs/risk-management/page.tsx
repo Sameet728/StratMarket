@@ -24,7 +24,7 @@ export default function RiskManagementPage() {
           fontSize: "11px",
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          color: "#e2b342",
+          color: "#ffffff",
           fontWeight: 700,
           display: "inline-block",
           marginBottom: "8px",
@@ -39,7 +39,7 @@ export default function RiskManagementPage() {
 
       <p style={{ fontSize: "17px", lineHeight: "1.7", color: "#d1d5db", margin: "0 0 32px" }}>
         In systematic trading, offensive alpha is useless without uncompromising defensive risk management. The <strong>Elvaris Capital</strong> (
-        <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#e2b342", textDecoration: "underline" }}>
+        <a href="https://elvariscapital.in" target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff", textDecoration: "underline" }}>
           elvariscapital.in
         </a>
         ) Sovereign Risk Governance framework ensures our strategies protect trader capital across all market regimes.
@@ -95,7 +95,7 @@ export default function RiskManagementPage() {
           Mathematical Position Sizing Formula
         </h2>
         <div style={{ background: "rgba(0, 0, 0, 0.4)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "10px", padding: "20px" }}>
-          <code style={{ fontSize: "15px", color: "#e2b342", display: "block", marginBottom: "12px", fontFamily: "var(--font-mono, monospace)" }}>
+          <code style={{ fontSize: "15px", color: "#ffffff", display: "block", marginBottom: "12px", fontFamily: "var(--font-mono, monospace)" }}>
             Position Size (Lots) = (Account Equity × Risk %) / (|Entry Price - Stop Loss| × Point Value)
           </code>
           <p style={{ fontSize: "13px", lineHeight: "1.6", color: "#9ca3af", margin: 0 }}>

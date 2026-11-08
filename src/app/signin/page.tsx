@@ -262,9 +262,9 @@ function SignInContent() {
                     fontWeight: 700,
                     letterSpacing: "0.05em",
                     textTransform: "uppercase",
-                    background: "rgba(212, 175, 55, 0.12)",
-                    border: "1px solid rgba(212, 175, 55, 0.35)",
-                    color: "#f5d77f",
+                    background: "rgba(255, 255, 255, 0.08)",
+                    border: "1px solid rgba(255, 255, 255, 0.18)",
+                    color: "#ffffff",
                     fontFamily: "'SF Mono', Menlo, monospace",
                   }}
                 >
@@ -348,7 +348,7 @@ function SignInContent() {
                           style={{
                             background: "none",
                             border: "none",
-                            color: "#f5d77f",
+                            color: "#ffffff",
                             fontSize: 12,
                             fontWeight: 600,
                             cursor: "pointer",

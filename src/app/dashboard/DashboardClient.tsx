@@ -507,7 +507,7 @@ export function DashboardClient() {
             background: "rgba(255,255,255,0.02)",
           }}
         >
-          <div style={{ fontSize: 26, fontWeight: 800, color: "#fbbf24", fontFamily: "'JetBrains Mono', monospace" }}>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#ffffff", fontFamily: "'JetBrains Mono', monospace" }}>
             {deliveries.length}
           </div>
           <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>Signals Delivered</div>

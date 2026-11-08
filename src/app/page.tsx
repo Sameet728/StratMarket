@@ -121,7 +121,7 @@ export default async function HomePage() {
                   fontSize: "12px",
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
-                  color: "#e2b342",
+                  color: "#ffffff",
                   fontWeight: 600,
                   display: "inline-block",
                   marginBottom: "12px",
@@ -138,7 +138,7 @@ export default async function HomePage() {
                   href="https://elvariscapital.in"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: "#e2b342", textDecoration: "underline" }}
+                  style={{ color: "#ffffff", textDecoration: "underline" }}
                 >
                   elvariscapital.in
                 </a>
@@ -174,28 +174,28 @@ export default async function HomePage() {
               </h3>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "18px" }}>
                 <li style={{ display: "flex", gap: "14px" }}>
-                  <span style={{ color: "#e2b342", fontWeight: "700" }}>01.</span>
+                  <span style={{ color: "#ffffff", fontWeight: "700" }}>01.</span>
                   <div>
                     <strong style={{ color: "#e5e7eb", display: "block" }}>Zero Curve-Fitting Guarantee</strong>
                     <span style={{ color: "#9ca3af", fontSize: "13px" }}>All models validated across out-of-sample datasets (30%) and 1,000+ Monte Carlo reshufflings.</span>
                   </div>
                 </li>
                 <li style={{ display: "flex", gap: "14px" }}>
-                  <span style={{ color: "#e2b342", fontWeight: "700" }}>02.</span>
+                  <span style={{ color: "#ffffff", fontWeight: "700" }}>02.</span>
                   <div>
                     <strong style={{ color: "#e5e7eb", display: "block" }}>Realistic Transaction Drag</strong>
                     <span style={{ color: "#9ca3af", fontSize: "13px" }}>Backtests account for $2.50/lot commission, live spreads, and 1.0+ pip slippage drag on execution.</span>
                   </div>
                 </li>
                 <li style={{ display: "flex", gap: "14px" }}>
-                  <span style={{ color: "#e2b342", fontWeight: "700" }}>03.</span>
+                  <span style={{ color: "#ffffff", fontWeight: "700" }}>03.</span>
                   <div>
                     <strong style={{ color: "#e5e7eb", display: "block" }}>Dedicated 24/7 VPS Relay</strong>
                     <span style={{ color: "#9ca3af", fontSize: "13px" }}>Sub-50ms signal dispatch to TradingView webhooks, MetaTrader 5, and institutional FIX endpoints.</span>
                   </div>
                 </li>
                 <li style={{ display: "flex", gap: "14px" }}>
-                  <span style={{ color: "#e2b342", fontWeight: "700" }}>04.</span>
+                  <span style={{ color: "#ffffff", fontWeight: "700" }}>04.</span>
                   <div>
                     <strong style={{ color: "#e5e7eb", display: "block" }}>100% Free Open Access</strong>
                     <span style={{ color: "#9ca3af", fontSize: "13px" }}>Free registration grants full interactive charts and real-time execution signals without paywalls or trial limits.</span>

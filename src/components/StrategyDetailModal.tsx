@@ -281,7 +281,7 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
             <p className="note" style={{ marginTop: "6px" }}>
               Available adapters: Alpaca, Binance, Interactive Brokers, Virtual Paper Simulator.
             </p>
-            <p className="note" style={{ color: "var(--gold)" }}>
+            <p className="note" style={{ color: "#a1a1aa" }}>
               Status: Ready for sandbox configuration in your User Dashboard. Live trading requires KYC compliance.
             </p>
           </div>

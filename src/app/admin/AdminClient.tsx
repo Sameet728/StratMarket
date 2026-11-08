@@ -149,7 +149,7 @@ export function AdminClient() {
         }}
       >
         <div>
-          <span className="badge pn" style={{ borderColor: "var(--gold)", color: "var(--gold)" }}>
+          <span className="badge pn" style={{ borderColor: "rgba(255, 255, 255, 0.15)", color: "#ffffff" }}>
             Elvaris Capital Core System
           </span>
           <h1 style={{ fontSize: "36px", marginTop: "8px" }}>StratMarket Administration</h1>
@@ -286,7 +286,7 @@ export function AdminClient() {
               </div>
               <div style={{ border: "1px solid var(--line)", borderRadius: "10px", padding: "14px", background: "var(--bg)" }}>
                 <span className="note">Connection State</span>
-                <b style={{ display: "block", fontSize: "14px", marginTop: "4px", color: "var(--gold)" }}>
+                <b style={{ display: "block", fontSize: "14px", marginTop: "4px", color: "#ffffff" }}>
                   {vpsHealth.status}
                 </b>
               </div>

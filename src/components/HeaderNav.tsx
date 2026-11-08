@@ -69,9 +69,9 @@ export function HeaderNav() {
           style={{
             fontSize: "11px",
             fontFamily: "var(--font-mono, monospace)",
-            color: "#e2b342",
-            background: "rgba(226, 179, 66, 0.08)",
-            border: "1px solid rgba(226, 179, 66, 0.25)",
+            color: "#e4e4e7",
+            background: "rgba(255, 255, 255, 0.06)",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
             padding: "3px 9px",
             borderRadius: "999px",
             letterSpacing: "0.02em",
@@ -106,7 +106,7 @@ export function HeaderNav() {
                   Profile
                 </Link>
                 {user.role === "ADMIN" && (
-                  <Link href="/admin" className="pill g sm" style={{ borderColor: "var(--gold)" }}>
+                  <Link href="/admin" className="pill g sm" style={{ borderColor: "rgba(255, 255, 255, 0.2)" }}>
                     Admin
                   </Link>
                 )}
