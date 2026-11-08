@@ -42,8 +42,18 @@ export function TerrainCanvas() {
       const t = r / (N - 1);
       rowT[r] = t;
       rowSc[r] = 0.25 + t * 1.05;
-      rowStroke[r] = `rgba(255, 255, 255, ${(0.1 + t * 0.82).toFixed(2)})`;
-      rowLineWidth[r] = 0.6 + t * 1.1;
+      const alpha = 0.12 + t * 0.82;
+      // Front rolling ridges blend into high-tech cyber lime green (#a3e635)
+      if (t > 0.55) {
+        const factor = (t - 0.55) / 0.45;
+        const red = Math.round(255 * (1 - factor) + 163 * factor);
+        const green = Math.round(255 * (1 - factor) + 230 * factor);
+        const blue = Math.round(255 * (1 - factor) + 53 * factor);
+        rowStroke[r] = `rgba(${red}, ${green}, ${blue}, ${alpha.toFixed(2)})`;
+      } else {
+        rowStroke[r] = `rgba(255, 255, 255, ${alpha.toFixed(2)})`;
+      }
+      rowLineWidth[r] = 0.6 + t * 1.25;
     }
 
     const rs = () => {
@@ -83,6 +93,21 @@ export function TerrainCanvas() {
       ctx.fillStyle = "#000000";
       ctx.fillRect(0, 0, W, H);
       const hz = H * 0.1;
+
+      // Ambient Cyber-Lime Horizon Glow
+      const grad = ctx.createRadialGradient(
+        W / 2 + sm * 45,
+        hz + 35,
+        15,
+        W / 2 + sm * 45,
+        hz + 35,
+        W * 0.55
+      );
+      grad.addColorStop(0, "rgba(163, 230, 53, 0.14)");
+      grad.addColorStop(0.4, "rgba(163, 230, 53, 0.03)");
+      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
 
       for (let r = 0; r < N; r++) {
         const t = rowT[r];

@@ -62,8 +62,8 @@ export function LiveExecutionStage() {
 
     const elements = candles.map((c, i) => {
       const isUp = c.close >= c.open;
-      const color = isUp ? "#ffffff" : "#666666";
-      const fill = isUp ? "#ffffff" : "#0a0a0a";
+      const color = isUp ? "#a3e635" : "#52525b";
+      const fill = isUp ? "rgba(163, 230, 53, 0.22)" : "#0a0a0a";
       const x = i * w + 2;
       const bodyTop = y(Math.max(c.open, c.close));
       const bodyHeight = Math.max(2, Math.abs(y(c.open) - y(c.close)));

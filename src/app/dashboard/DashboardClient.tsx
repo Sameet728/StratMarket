@@ -426,8 +426,8 @@ export function DashboardClient() {
                 borderRadius: 20,
                 fontSize: 12,
                 fontWeight: 700,
-                background: "rgba(255, 255, 255, 0.1)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
+                background: "rgba(163, 230, 53, 0.06)",
+                border: "1px solid rgba(163, 230, 53, 0.3)",
                 color: "#ffffff",
               }}
             >
@@ -436,8 +436,8 @@ export function DashboardClient() {
                   width: 7,
                   height: 7,
                   borderRadius: "50%",
-                  background: "#ffffff",
-                  boxShadow: "0 0 8px #ffffff",
+                  background: "#a3e635",
+                  boxShadow: "0 0 8px #a3e635",
                 }}
               />
               Live Quant Signals Active · VPS Connected
@@ -450,7 +450,7 @@ export function DashboardClient() {
           </h1>
           <p className="note" style={{ fontSize: 13, marginTop: 4 }}>
             Logged in as <b>{user?.name}</b> ({user?.email}) ·{" "}
-            <span style={{ color: "#38bdf8" }}>Institutional Execution Feed</span>
+            <span style={{ color: "#a3e635" }}>Institutional Execution Feed</span>
           </p>
         </div>
 
@@ -458,7 +458,7 @@ export function DashboardClient() {
           <Link href="/profile" className="pill g sm" style={{ fontSize: 13 }}>
             Profile &amp; Settings
           </Link>
-          <Link href="/market" className="pill sm" style={{ fontSize: 13 }}>
+          <Link href="/market" className="pill lime sm" style={{ fontSize: 13 }}>
             Explore All Strategies →
           </Link>
         </div>
@@ -495,7 +495,7 @@ export function DashboardClient() {
             background: "rgba(255,255,255,0.02)",
           }}
         >
-          <div style={{ fontSize: 26, fontWeight: 800, color: "#38bdf8", fontFamily: "'JetBrains Mono', monospace" }}>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "var(--lime, #a3e635)", fontFamily: "'JetBrains Mono', monospace" }}>
             {activeAlertsCount} / {strategies.length}
           </div>
           <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>Signal Alerts Enabled</div>
@@ -900,7 +900,7 @@ function StrategyDashboardCard({
         >
           <div>
             <div style={{ fontSize: 11, color: "var(--mut)" }}>Win Rate</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", fontFamily: "'JetBrains Mono', monospace" }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--lime, #a3e635)", fontFamily: "'JetBrains Mono', monospace" }}>
               {strategy.winRate}%
             </div>
           </div>

@@ -52,11 +52,12 @@ export function ThreeWaysSection() {
               <path
                 d="M0,50 C30,40 40,20 70,30 S120,50 150,20 S190,10 200,8"
                 fill="none"
-                stroke="#fff"
-                strokeWidth="2"
+                stroke="var(--lime, #a3e635)"
+                strokeWidth="2.2"
                 pathLength="1"
                 strokeDasharray="1"
                 strokeDashoffset="1"
+                style={{ filter: "drop-shadow(0 0 4px rgba(163, 230, 53, 0.4))" }}
               >
                 <animate
                   attributeName="stroke-dashoffset"
@@ -84,8 +85,9 @@ export function ThreeWaysSection() {
           >
             <div id="al" style={{ minHeight: "68px" }}>
               {currentAlerts.map((a, i) => (
-                <div key={i} className="alert">
-                  {a}
+                <div key={i} className="alert" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a3e635", boxShadow: "0 0 6px #a3e635", flexShrink: 0 }} />
+                  <span>{a}</span>
                 </div>
               ))}
             </div>
@@ -108,7 +110,7 @@ export function ThreeWaysSection() {
               <circle cx="30" cy="30" r="10" fill="none" stroke="var(--tx)" />
               <circle cx="170" cy="30" r="10" fill="none" stroke="var(--tx)" />
               <line x1="40" y1="30" x2="160" y2="30" stroke="var(--line)" />
-              <circle r="4" fill="var(--gold)" cy="30">
+              <circle r="4" fill="var(--lime, #a3e635)" cy="30" style={{ filter: "drop-shadow(0 0 6px #a3e635)" }}>
                 <animate
                   attributeName="cx"
                   values="40;160;40"

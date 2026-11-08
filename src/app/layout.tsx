@@ -158,6 +158,7 @@ export default function RootLayout({
         </Suspense>
         <div className="fx" aria-hidden="true">
           <i className="a1" />
+          <i className="a2" />
         </div>
         <TopProgressBar />
         <Suspense fallback={null}>

@@ -20,6 +20,14 @@ export function SpotlightCursor() {
     const handlePointerMove = (e: PointerEvent) => {
       targetX = e.clientX;
       targetY = e.clientY;
+      const targetCard = (e.target as HTMLElement | null)?.closest(
+        ".card, .fc, .plan, .st, .stage, .report-card, .metric-card"
+      ) as HTMLElement | null;
+      if (targetCard) {
+        const rect = targetCard.getBoundingClientRect();
+        targetCard.style.setProperty("--cx", `${Math.round(e.clientX - rect.left)}px`);
+        targetCard.style.setProperty("--cy", `${Math.round(e.clientY - rect.top)}px`);
+      }
     };
 
     const handlePointerOver = (e: PointerEvent) => {

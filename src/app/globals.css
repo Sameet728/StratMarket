@@ -328,7 +328,21 @@ a {
 }
 
 @keyframes bl {
-  50% { opacity: 0.25; }
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(163, 230, 53, 0.75);
+    opacity: 1;
+  }
+  65% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 7px rgba(163, 230, 53, 0);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(163, 230, 53, 0);
+    opacity: 1;
+  }
 }
 
 /* Floating Dock Navigation */
@@ -653,9 +667,9 @@ section h2 {
   left: 0;
   top: 34px;
   height: 2px;
-  background: linear-gradient(90deg, var(--gold), transparent);
+  background: linear-gradient(90deg, var(--lime), var(--lime-bright), transparent);
   width: 100%;
-  opacity: 0.6;
+  opacity: 0.75;
 }
 
 .st {
@@ -665,19 +679,21 @@ section h2 {
   padding: 22px;
   position: relative;
   text-align: left;
-  transition: border-color 0.3s, transform 0.3s;
+  transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .st:hover {
-  border-color: var(--gold);
+  border-color: var(--lime);
   transform: translateY(-2px);
+  box-shadow: 0 12px 32px -8px rgba(163, 230, 53, 0.22);
 }
 
 .st .n {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--gold);
+  background: var(--lime);
+  box-shadow: 0 0 10px rgba(163, 230, 53, 0.5);
   color: #000;
   font-size: 12px;
   font-weight: 700;
@@ -914,23 +930,23 @@ section h2 {
 }
 
 .card:hover {
-  border-color: rgba(255, 255, 255, 0.35);
+  border-color: rgba(163, 230, 53, 0.35);
   transform: translateY(-4px);
-  box-shadow: 0 24px 48px -15px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  box-shadow: 0 24px 48px -15px rgba(0, 0, 0, 0.95), 0 0 24px -6px rgba(163, 230, 53, 0.18), inset 0 1px 0 rgba(163, 230, 53, 0.22);
 }
 
 /* Spotlight Flashlight Effect on Cards */
-.card::before, .fc::before, .plan::before, .st::before, .stage::before {
+.card::before, .fc::before, .plan::before, .st::before, .stage::before, .report-card::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(320px circle at var(--cx, 50%) var(--cy, 50%), rgba(255, 255, 255, 0.08), transparent 70%);
+  background: radial-gradient(380px circle at var(--cx, 50%) var(--cy, 50%), rgba(163, 230, 53, 0.12), transparent 70%);
   opacity: 0;
   transition: opacity 0.35s ease;
   pointer-events: none;
 }
 
-.card:hover::before, .fc:hover::before, .plan:hover::before, .st:hover::before, .stage:hover::before {
+.card:hover::before, .fc:hover::before, .plan:hover::before, .st:hover::before, .stage:hover::before, .report-card:hover::before {
   opacity: 1;
 }
 
@@ -1437,7 +1453,7 @@ footer p {
   transition: transform 0.1s linear;
 }
 
-/* Ambient Radial FX */
+/* Ambient Radial FX with Cyber-Lime Atmospheric Depth */
 .fx {
   position: fixed;
   inset: 0;
@@ -1449,19 +1465,37 @@ footer p {
 .fx i {
   position: absolute;
   display: block;
+  border-radius: 50%;
 }
 
 .a1 {
   left: -10vw;
   top: -10vw;
-  width: 60vw;
-  height: 60vw;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.08), transparent 60%);
-  animation: d1 22s ease-in-out infinite alternate;
+  width: 55vw;
+  height: 55vw;
+  background: radial-gradient(circle, rgba(163, 230, 53, 0.08) 0%, rgba(163, 230, 53, 0.02) 40%, transparent 70%);
+  animation: d1 24s ease-in-out infinite alternate;
+}
+
+.a2 {
+  right: -12vw;
+  top: 30vh;
+  width: 50vw;
+  height: 50vw;
+  background: radial-gradient(circle, rgba(163, 230, 53, 0.06) 0%, rgba(255, 255, 255, 0.02) 45%, transparent 70%);
+  animation: d2 28s ease-in-out infinite alternate;
 }
 
 @keyframes d1 {
-  to { transform: translate(25vw, 12vw); }
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(15vw, 10vh) scale(1.15); }
+  100% { transform: translate(25vw, 4vh) scale(0.95); }
+}
+
+@keyframes d2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-12vw, 8vh) scale(1.1); }
+  100% { transform: translate(-20vw, -6vh) scale(1); }
 }
 
 /* Responsive Media Queries */

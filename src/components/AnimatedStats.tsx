@@ -56,7 +56,7 @@ export function AnimatedStats() {
       <div className="stats">
         {STATS.map((s, i) => (
           <div key={i}>
-            <b>{counts[i]}</b>
+            <b style={{ color: i === 2 ? "var(--lime, #a3e635)" : "#ffffff" }}>{counts[i]}</b>
             <span>{s.label}</span>
           </div>
         ))}
