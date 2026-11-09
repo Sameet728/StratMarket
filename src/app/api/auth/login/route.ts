@@ -129,6 +129,6 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error: any) {
     console.error("POST /api/auth/login error:", error);
-    return NextResponse.json({ error: "Failed to sign in." }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Failed to sign in." }, { status: 500 });
   }
 }
