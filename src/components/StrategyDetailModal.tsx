@@ -36,9 +36,7 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
             .then((res) => {
               if (res.data?.userAccess?.hasAccess) {
                 setTrialActive(true);
-                setTrialMessage(
-                  `Active ${res.data.userAccess.accessType} access: ${res.data.userAccess.daysRemaining} days remaining.`
-                );
+                setTrialMessage("Free unlimited access active.");
               }
             });
         }
@@ -85,8 +83,7 @@ export function StrategyDetailModal({ strategy: s, onClose }: ModalProps) {
 
       if ((res.ok && data.success) || data.alreadyActive || data.code === "TRIAL_ALREADY_USED") {
         setTrialActive(true);
-        const expStr = data.trial?.expiryTime ? new Date(data.trial.expiryTime).toLocaleDateString() : "7 days";
-        setTrialMessage(`Trial active: Full access granted until ${expStr}.`);
+        setTrialMessage("Strategy access active: Full unconstrained live access granted.");
         return;
       }
 
