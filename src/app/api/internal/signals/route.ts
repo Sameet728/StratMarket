@@ -23,8 +23,8 @@ function normalizeStrategyId(raw?: string): string {
   if (!raw) return "PS-01";
   const s = raw.trim().toUpperCase();
   if (s.includes("GRANDMASTER") || s === "PS01" || s === "PS-01" || s.includes("DUAL")) return "PS-01";
-  if (s.includes("APEX") || s === "PS02" || s === "PS-02") return "PS-02";
-  if (s.includes("STRICT") || s === "PS03" || s === "PS-03") return "PS-03";
+  if (s.includes("APEX") || s.includes("AFTERNOON") || s.includes("MOMENTUM") || s === "PS02" || s === "PS-02") return "PS-02";
+  if (s.includes("STRICT") || s.includes("LONDON") || s.includes("EXPANSION") || s === "PS03" || s === "PS-03") return "PS-03";
   if (s.includes("ELITE") || s === "PS04" || s === "PS-04") return "PS-04";
   if (s.includes("PEAK") || s === "PY01" || s === "PY-01") return "PY-01";
   if (s.includes("SHIELD") || s.includes("HIGH-ALPHA") || s === "PY02" || s === "PY-02") return "PY-02";

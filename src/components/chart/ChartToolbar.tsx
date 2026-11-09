@@ -24,10 +24,9 @@ interface Props {
 }
 
 const PINE_STRATEGIES = [
-  { id: "PS-01", name: "Grandmaster", badge: "82.6% WR" },
-  { id: "PS-02", name: "Apex", badge: "88.5% WR" },
-  { id: "PS-03", name: "Strict 1:2 R:R", badge: "74.1% WR" },
-  { id: "PS-04", name: "Elite", badge: "80.7% WR" },
+  { id: "PS-01", name: "Grandmaster Dual 10R / 8R", badge: "80.0% WR" },
+  { id: "PS-02", name: "US Afternoon Reversal", badge: "83.3% WR" },
+  { id: "PS-03", name: "London Core Expansion", badge: "80.0% WR" },
 ];
 
 function formatCountdown(targetMs: number): string {
