@@ -2,7 +2,7 @@
 // Supports MongoDB (via native driver/Prisma) with self-contained fallback repository for seamless development and testing.
 
 import { INITIAL_STRATEGIES, INITIAL_PLANS, StrategySeedItem, getStrategySortOrder } from "./seed-data";
-import { getMongoDb, isMongoActive } from "./mongodb";
+import { getMongoDb, isMongoActive, getMongoDiagnostics } from "./mongodb";
 import { ObjectId } from "mongodb";
 import bcrypt from "bcryptjs";
 
@@ -1789,6 +1789,8 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
 
   // VPS RUNTIME HEALTH
   async getVpsHealthStatus() {
+    const mdb = await getMongoDb();
+    const diag = getMongoDiagnostics();
     const latestSignal = (await this.getSignals(undefined, 1))[0];
     const now = new Date();
     const lastSignalAgeMs = latestSignal ? now.getTime() - latestSignal.timestamp.getTime() : null;
@@ -1796,8 +1798,11 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
     return {
       vpsEndpoint: process.env.VPS_API_ENDPOINT || "https://vps.elvariscapital.in/api/v1",
       status: "CONFIGURED_AWAITING_VPS_HEARTBEAT",
-      databaseProvider: isMongoActive() ? "MongoDB (Active)" : "MongoDB (Resilient In-Memory Fallback)",
-      isMockMode: true,
+      databaseProvider: mdb ? "MongoDB Atlas (Active)" : "MongoDB (Resilient In-Memory Fallback)",
+      dbTarget: diag.targetHost,
+      dbConnected: diag.isConnected,
+      lastDbError: diag.lastError,
+      isMockMode: !mdb,
       lastSignalReceived: latestSignal ? latestSignal.timestamp : null,
       lastSignalAgeMinutes: lastSignalAgeMs ? Math.round(lastSignalAgeMs / (1000 * 60)) : null,
       registeredStrategiesCount: globalStore.strategies.size,
