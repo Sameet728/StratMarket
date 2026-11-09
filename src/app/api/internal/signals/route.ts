@@ -157,25 +157,28 @@ export async function POST(request: NextRequest) {
     try {
       const result = await db.ingestVpsSignal(parsed.data);
 
-      // 4. Trigger Resend Email Alerts to subscribers & operators asynchronously
+      // 4. Trigger Resend Email Alerts to subscribers & operators (fully awaited for serverless execution)
       const strategy = await db.getStrategyBySlug(parsed.data.strategyId);
       const strategyName = strategy ? strategy.name : parsed.data.strategyId;
 
-      dispatchSignalAlertEmails({
-        strategyName,
-        strategyId: parsed.data.strategyId,
-        instrument: parsed.data.instrument,
-        timeframe: parsed.data.timeframe,
-        signalType: parsed.data.signalType,
-        direction: parsed.data.direction,
-        entryPrice: parsed.data.entryPrice,
-        stopLoss: parsed.data.stopLoss,
-        targetPrice: parsed.data.targetPrice,
-        sourceEventId: parsed.data.sourceEventId,
-        extraRecipients: result.subscriberEmails,
-      }).catch((err) => {
+      let emailResult: { dispatchedCount: number; errors: string[] } = { dispatchedCount: 0, errors: [] };
+      try {
+        emailResult = await dispatchSignalAlertEmails({
+          strategyName,
+          strategyId: parsed.data.strategyId,
+          instrument: parsed.data.instrument,
+          timeframe: parsed.data.timeframe,
+          signalType: parsed.data.signalType,
+          direction: parsed.data.direction,
+          entryPrice: parsed.data.entryPrice,
+          stopLoss: parsed.data.stopLoss,
+          targetPrice: parsed.data.targetPrice,
+          sourceEventId: parsed.data.sourceEventId,
+          extraRecipients: result.subscriberEmails,
+        });
+      } catch (err) {
         console.error("[Signal Email Dispatch Failed]:", err);
-      });
+      }
 
       return NextResponse.json({
         success: true,
@@ -184,6 +187,7 @@ export async function POST(request: NextRequest) {
         sourceEventId: result.signal.sourceEventId,
         notifiedUsersCount: result.notifiedUsersCount,
         subscriberEmails: result.subscriberEmails,
+        emailDispatchedCount: emailResult.dispatchedCount,
         authMode: authResult.authType,
       });
     } catch (err: any) {
