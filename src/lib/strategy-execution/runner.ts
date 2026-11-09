@@ -194,8 +194,8 @@ export class PrivateStrategyExecutionRunner {
     if (id === "PS-01") {
       // Champion_15M_Grandmaster_Dual10R_Oct8R_STRATEGY
       return {
-        tpDist: 18.0,
-        slDist: 14.0,
+        tpDist: 14.0,
+        slDist: 13.75,
         bandLen: 28,
         bandMult: 2.1,
         rsiFilter: 52,
@@ -207,94 +207,67 @@ export class PrivateStrategyExecutionRunner {
         sessionEnd: 20,
         excludeH12: true,
         hudMetrics: [
-          { label: "Win Rate", value: "82.61% (38W / 8L)", color: "#4ade80" },
-          { label: "Realized R:R Ratio", value: "1 : 1.29 (1.29R realized)", color: "#38bdf8" },
-          { label: "Total Net Return", value: "+40.9% (+40.86R)", color: "#4ade80" },
-          { label: "Monthly Consistency", value: "Aug: 16.3R | Sep: 16.3R | Oct: 8.3R", color: "#4ade80" },
-          { label: "Max Closed Drawdown", value: "2.3% (2.34R)", color: "#f87171" },
-          { label: "Calmar Ratio", value: "17.45 (Institutional Ultra-Grade)", color: "#38bdf8" },
-          { label: "Walk-Forward OOS/IS", value: "0.88 Efficiency Ratio", color: "#ffffff" },
+          { label: "Win Rate", value: "80.00% (36W / 9L)", color: "#4ade80" },
+          { label: "Realized R:R Ratio", value: "1 : 1.02 ($14.00 TP / $13.75 SL)", color: "#38bdf8" },
+          { label: "Total Net Return", value: "+27.65R (+$6,912.50)", color: "#4ade80" },
+          { label: "Monthly Consistency", value: "Aug: 9.2R | Sep: 9.2R | Oct: 7.2R | Nov: 2.05R", color: "#4ade80" },
+          { label: "Max Closed Drawdown", value: "2.00R ($27.50)", color: "#f87171" },
+          { label: "Calmar Ratio", value: "13.83 (52.57 Annualized)", color: "#38bdf8" },
+          { label: "Flash Crash Protective Filter", value: "ATR 1.25 Shield Active", color: "#ffffff" },
         ],
       };
     }
 
     if (id === "PS-02") {
-      // Champion_15M_Apex_88WR_STRATEGY
+      // Champion_15M_US_Momentum_STRATEGY (US Afternoon Reversal)
       return {
-        tpDist: 17.0,
-        slDist: 14.0,
-        bandLen: 28,
-        bandMult: 2.1,
-        rsiFilter: 54,
-        wickMinRatio: 0.25,
+        tpDist: 18.0,
+        slDist: 13.75,
+        bandLen: 30,
+        bandMult: 2.0,
+        rsiFilter: 52,
+        wickMinRatio: 0.0,
         emaFastLen: 50,
         emaSlowLen: 200,
-        emaOffset: 0.0,
-        sessionStart: 6,
-        sessionEnd: 20,
+        emaOffset: 2.0,
+        sessionStart: 14,
+        sessionEnd: 22,
         excludeH12: false,
         hudMetrics: [
-          { label: "Win Rate", value: "88.46% (23W / 3L)", color: "#4ade80" },
-          { label: "Profit Factor", value: "9.31", color: "#4ade80" },
-          { label: "Realized R:R Ratio", value: "1 : 1.21 (1.21R realized)", color: "#38bdf8" },
-          { label: "Total Net Return", value: "+24.9% (+24.93R)", color: "#4ade80" },
-          { label: "Max Closed Drawdown", value: "1.4% (1.40R)", color: "#f87171" },
-          { label: "Calmar Ratio", value: "17.85 (Institutional Ultra)", color: "#38bdf8" },
-          { label: "Rejection Wick Gate", value: "Confirmed Liquidity Absorption", color: "#ffffff" },
+          { label: "Win Rate", value: "83.33% (15W / 3L)", color: "#4ade80" },
+          { label: "Profit Factor", value: "6.55", color: "#4ade80" },
+          { label: "Realized R:R Ratio", value: "1 : 1.31 ($18.00 TP / $13.75 SL)", color: "#38bdf8" },
+          { label: "Total Net Return", value: "+22.18R (+$5,545.00)", color: "#4ade80" },
+          { label: "Max Closed Drawdown", value: "1.00R ($13.75)", color: "#f87171" },
+          { label: "Calmar Ratio", value: "22.18 (84.34 Annualized)", color: "#38bdf8" },
+          { label: "Session Window", value: "US Afternoon (14:00 - 22:00 UTC)", color: "#ffffff" },
         ],
       };
     }
 
     if (id === "PS-03") {
-      // Champion_15M_1to2RR_75WR_STRATEGY
+      // Champion_15M_London_Core_STRATEGY (London Core Expansion)
       return {
-        tpDist: 20.0,
-        slDist: 10.0,
-        bandLen: 26,
-        bandMult: 2.35,
+        tpDist: 16.0,
+        slDist: 13.75,
+        bandLen: 28,
+        bandMult: 2.1,
         rsiFilter: 52,
-        wickMinRatio: 0.10,
-        emaFastLen: 50,
-        emaSlowLen: 200,
-        emaOffset: 0.0,
-        sessionStart: 1,
-        sessionEnd: 19,
-        excludeH12: false,
-        hudMetrics: [
-          { label: "Win Rate", value: "74.07% (20W / 7L)", color: "#4ade80" },
-          { label: "Payoff Ratio", value: "1 : 2.00 (2.00R TP / 1.00R SL)", color: "#38bdf8" },
-          { label: "Profit Factor", value: "5.71", color: "#4ade80" },
-          { label: "Total Net Return", value: "+33.0% (+33.00R)", color: "#4ade80" },
-          { label: "Breakeven Requirement", value: "33.33% (Edge: +40.7%)", color: "#ffffff" },
-          { label: "Max Closed Drawdown", value: "2.7% (2.71R)", color: "#f87171" },
-          { label: "Rejection Wick Gate", value: "Confirmed Liquidity Absorption", color: "#38bdf8" },
-        ],
-      };
-    }
-
-    if (id === "PS-04") {
-      // Champion_15M_80WR_Elite_STRATEGY
-      return {
-        tpDist: 17.0,
-        slDist: 14.0,
-        bandLen: 30,
-        bandMult: 2.2,
-        rsiFilter: 50,
         wickMinRatio: 0.0,
         emaFastLen: 50,
         emaSlowLen: 200,
-        emaOffset: 0.0,
-        sessionStart: 6,
+        emaOffset: 3.0,
+        sessionStart: 4,
         sessionEnd: 20,
-        excludeH12: false,
+        excludeH12: true,
         hudMetrics: [
-          { label: "Win Rate", value: "80.65% (25W / 6L)", color: "#4ade80" },
-          { label: "Realized R:R Ratio", value: "1 : 1.21 (1.21R realized)", color: "#38bdf8" },
-          { label: "Total Net Return", value: "+24.4% (+24.36R)", color: "#4ade80" },
-          { label: "Monthly Consistency", value: "100% Green (Aug: 10.4R | Sep: 9.1R)", color: "#4ade80" },
-          { label: "Max Closed Drawdown", value: "1.7% (1.68R)", color: "#94a3b8" },
-          { label: "Calmar Ratio", value: "14.52 (Institutional Grade)", color: "#38bdf8" },
-          { label: "Trade Density", value: "31 Trades (~13/month)", color: "#f8fafc" },
+          { label: "Win Rate", value: "80.00% (20W / 5L)", color: "#4ade80" },
+          { label: "Profit Factor", value: "4.65", color: "#4ade80" },
+          { label: "Realized R:R Ratio", value: "1 : 1.16 ($16.00 TP / $13.75 SL)", color: "#38bdf8" },
+          { label: "Total Net Return", value: "+25.58R (+$6,395.00)", color: "#4ade80" },
+          { label: "Max Closed Drawdown", value: "1.00R ($13.75)", color: "#f87171" },
+          { label: "Calmar Ratio", value: "25.58 (97.26 Annualized)", color: "#38bdf8" },
+          { label: "Session Window", value: "London & Core EU (04:00 - 20:00 UTC excl 12)", color: "#ffffff" },
         ],
       };
     }
