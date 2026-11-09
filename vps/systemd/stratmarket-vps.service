@@ -10,7 +10,7 @@ ExecStart=/usr/bin/npx tsx vps/runner.ts
 Restart=always
 RestartSec=5
 Environment=NODE_ENV=production
-Environment=VPS_API_ENDPOINT=https://stratmarket.elvariscapital.in/api/internal/signals
+Environment=VPS_API_ENDPOINT=https://strat-market-chi.vercel.app/api/internal/signals
 Environment=VPS_SHARED_SECRET=stratmarket-dev-vps-hmac-shared-secret-key-2026
 
 [Install]

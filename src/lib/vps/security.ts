@@ -58,3 +58,58 @@ export function verifyVpsSignature(
 
   return { valid: true };
 }
+
+export interface WebhookAuthOptions {
+  rawBody: string;
+  signature?: string | null;
+  timestamp?: string | null;
+  authHeader?: string | null;
+  secretHeader?: string | null;
+  querySecret?: string | null;
+  bodySecret?: string | null;
+  secret?: string;
+}
+
+export function isAuthorizedVpsOrWebhookRequest(options: WebhookAuthOptions): {
+  valid: boolean;
+  reason?: string;
+  authType: "HMAC" | "TOKEN" | "UNAUTHORIZED";
+} {
+  const secret = options.secret || DEFAULT_SECRET;
+
+  // 1. If HMAC signature headers are present, run full HMAC SHA-256 verification
+  if (options.signature && options.timestamp) {
+    const hmacRes = verifyVpsSignature(options.rawBody, options.signature, options.timestamp, secret);
+    if (hmacRes.valid) {
+      return { valid: true, authType: "HMAC" };
+    }
+  }
+
+  // 2. Check for token-based authentication (TradingView webhook alerts, Pine Script, API gateway, curl)
+  const candidateTokens: (string | null | undefined)[] = [
+    options.secretHeader,
+    options.querySecret,
+    options.bodySecret,
+  ];
+
+  if (options.authHeader) {
+    const trimmed = options.authHeader.trim();
+    if (trimmed.toLowerCase().startsWith("bearer ")) {
+      candidateTokens.push(trimmed.slice(7).trim());
+    } else {
+      candidateTokens.push(trimmed);
+    }
+  }
+
+  for (const token of candidateTokens) {
+    if (token && typeof token === "string" && token.trim() === secret) {
+      return { valid: true, authType: "TOKEN" };
+    }
+  }
+
+  return {
+    valid: false,
+    reason: options.signature ? "INVALID_HMAC_SIGNATURE" : "MISSING_OR_INVALID_AUTH_CREDENTIALS",
+    authType: "UNAUTHORIZED",
+  };
+}

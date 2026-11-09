@@ -92,7 +92,7 @@ npm install
 pip3 install -r vps/requirements.txt
 
 # 3. Configure production environment
-export VPS_API_ENDPOINT="https://stratmarket.elvariscapital.in/api/internal/signals"
+export VPS_API_ENDPOINT="https://strat-market-chi.vercel.app/api/internal/signals"
 export VPS_SHARED_SECRET="your-production-hmac-secret-key"
 
 # 4. Start 24x7 daemon with PM2

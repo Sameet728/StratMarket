@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { db } from "@/lib/db";
-import { generateVpsSignature, verifyVpsSignature } from "@/lib/vps/security";
+import { generateVpsSignature, verifyVpsSignature, isAuthorizedVpsOrWebhookRequest } from "@/lib/vps/security";
 import { hashPassword } from "@/lib/auth/session";
 
 describe("Python VPS Signal Integration & Email Delivery", () => {
@@ -94,5 +94,42 @@ describe("Python VPS Signal Integration & Email Delivery", () => {
 
     const deliveries = await db.getUserDeliveries(user.id);
     expect(deliveries.some((d) => d.signalId === res.signal.id)).toBe(true);
+  });
+
+  it("authorizes TradingView alerts using token/secret via body, header, or query without HMAC headers", () => {
+    // 1. Secret in JSON body
+    const bodyAuth = isAuthorizedVpsOrWebhookRequest({
+      rawBody: JSON.stringify({ action: "buy", secret: testSecret }),
+      bodySecret: testSecret,
+      secret: testSecret,
+    });
+    expect(bodyAuth.valid).toBe(true);
+    expect(bodyAuth.authType).toBe("TOKEN");
+
+    // 2. Secret in Bearer Authorization header
+    const headerAuth = isAuthorizedVpsOrWebhookRequest({
+      rawBody: JSON.stringify({ action: "buy" }),
+      authHeader: `Bearer ${testSecret}`,
+      secret: testSecret,
+    });
+    expect(headerAuth.valid).toBe(true);
+    expect(headerAuth.authType).toBe("TOKEN");
+
+    // 3. Secret in query parameter
+    const queryAuth = isAuthorizedVpsOrWebhookRequest({
+      rawBody: JSON.stringify({ action: "buy" }),
+      querySecret: testSecret,
+      secret: testSecret,
+    });
+    expect(queryAuth.valid).toBe(true);
+    expect(queryAuth.authType).toBe("TOKEN");
+
+    // 4. Missing or invalid secret rejected
+    const invalidAuth = isAuthorizedVpsOrWebhookRequest({
+      rawBody: JSON.stringify({ action: "buy" }),
+      querySecret: "wrong-secret",
+      secret: testSecret,
+    });
+    expect(invalidAuth.valid).toBe(false);
   });
 });

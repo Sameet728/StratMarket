@@ -51,38 +51,49 @@ export class VpsSignalDispatcher {
     const timestamp = Date.now().toString();
     const signature = this.generateSignature(rawBody, timestamp);
 
-    try {
-      const response = await fetch(this.apiEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-vps-timestamp": timestamp,
-          "x-vps-signature": signature,
-        },
-        body: rawBody,
-      });
-
-      const responseData = (await response.json().catch(() => ({}))) as any;
-
-      if (!response.ok) {
-        return {
-          success: false,
-          statusCode: response.status,
-          error: responseData.error || responseData.reason || `HTTP ${response.status}`,
-        };
-      }
-
-      return {
-        success: true,
-        statusCode: response.status,
-        signalId: responseData.signalId,
-        notifiedUsersCount: responseData.notifiedUsersCount,
-      };
-    } catch (err: any) {
-      return {
-        success: false,
-        error: err.message || "Network dispatch failure",
-      };
+    const endpointsToTry = [this.apiEndpoint];
+    const liveFallback = "https://strat-market-chi.vercel.app/api/internal/signals";
+    if (this.apiEndpoint !== liveFallback) {
+      endpointsToTry.push(liveFallback);
     }
+
+    let lastError = "";
+    let lastStatusCode = 500;
+
+    for (const endpoint of endpointsToTry) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-vps-timestamp": timestamp,
+            "x-vps-signature": signature,
+          },
+          body: rawBody,
+        });
+
+        const responseData = (await response.json().catch(() => ({}))) as any;
+
+        if (response.ok) {
+          return {
+            success: true,
+            statusCode: response.status,
+            signalId: responseData.signalId,
+            notifiedUsersCount: responseData.notifiedUsersCount,
+          };
+        }
+
+        lastStatusCode = response.status;
+        lastError = responseData.error || responseData.reason || `HTTP ${response.status}`;
+      } catch (err: any) {
+        lastError = err.message || "Network dispatch failure";
+      }
+    }
+
+    return {
+      success: false,
+      statusCode: lastStatusCode,
+      error: lastError,
+    };
   }
 }

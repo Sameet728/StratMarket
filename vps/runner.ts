@@ -10,7 +10,11 @@ import { PineStrategyRunner } from "./pine_runner/pine_evaluator";
 const configPath = path.resolve(__dirname, "./config.json");
 const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 
-const API_ENDPOINT = process.env.VPS_API_ENDPOINT || config.apiEndpoint || "http://localhost:3000/api/internal/signals";
+let rawEndpoint = process.env.VPS_API_ENDPOINT || config.apiEndpoint || "https://strat-market-chi.vercel.app/api/internal/signals";
+if (rawEndpoint.includes("stratmarket.elvariscapital.in")) {
+  rawEndpoint = "https://strat-market-chi.vercel.app/api/internal/signals";
+}
+const API_ENDPOINT = rawEndpoint;
 const SHARED_SECRET = process.env.VPS_SHARED_SECRET || config.sharedSecret || "stratmarket-dev-vps-hmac-shared-secret-key-2026";
 const POLLING_INTERVAL_MS = config.pollingIntervalMs || 15000;
 
@@ -33,8 +37,9 @@ const pythonScriptPath = path.resolve(__dirname, "./python_runner/mt5_runner.py"
 let pythonProcess: any = null;
 
 function startPythonRunner() {
-  console.log(`[VPS Supervisor] Launching Python MT5 runner (${pythonScriptPath})...`);
-  pythonProcess = spawn("python", [pythonScriptPath], {
+  const pythonCmd = process.platform === "win32" ? "python" : "python3";
+  console.log(`[VPS Supervisor] Launching Python MT5 runner (${pythonScriptPath}) via ${pythonCmd}...`);
+  pythonProcess = spawn(pythonCmd, [pythonScriptPath], {
     stdio: "inherit",
     env: {
       ...process.env,

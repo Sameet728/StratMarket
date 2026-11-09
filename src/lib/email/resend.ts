@@ -513,18 +513,28 @@ export async function dispatchSignalAlertEmails(params: {
   maxDrawdown?: number | string;
 }): Promise<{ dispatchedCount: number; errors: string[] }> {
   const recipients = new Set<string>();
-  const defaultRecipient = process.env.SIGNAL_ALERT_RECIPIENT || "sameetpisal@gmail.com";
-  if (defaultRecipient) {
-    recipients.add(defaultRecipient);
+
+  // 1. Guaranteed operational / trader destination inboxes
+  const primaryInboxes = ["sameetpisal@gmail.com", "sameetpisal728@gmail.com"];
+  primaryInboxes.forEach((e) => recipients.add(e));
+
+  // 2. Configured environment recipient (excluding suppressed sender mailbox alerts@elvariscapital.in)
+  const defaultRecipient = process.env.SIGNAL_ALERT_RECIPIENT;
+  if (defaultRecipient && !defaultRecipient.toLowerCase().includes("alerts@elvariscapital.in")) {
+    recipients.add(defaultRecipient.trim());
   }
 
+  // 3. User subscribers from database preferences
   if (params.extraRecipients) {
     params.extraRecipients.forEach((email) => {
-      if (email && email.includes("@")) {
+      if (email && email.includes("@") && !email.toLowerCase().includes("alerts@elvariscapital.in")) {
         recipients.add(email.trim());
       }
     });
   }
+
+  // Ensure unrouteable sender mailbox is completely removed
+  recipients.delete("alerts@elvariscapital.in");
 
   const recipientList = Array.from(recipients);
   let dispatchedCount = 0;

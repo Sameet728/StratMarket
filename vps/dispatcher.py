@@ -63,43 +63,51 @@ class VpsSignalDispatcher:
         raw_body = json.dumps(payload_dict)
         signature = self.generate_signature(raw_body, timestamp)
 
-        req = urllib.request.Request(
-            self.api_endpoint,
-            data=raw_body.encode('utf-8'),
-            headers={
-                "Content-Type": "application/json",
-                "x-vps-timestamp": timestamp,
-                "x-vps-signature": signature,
-                "User-Agent": "Elvaris-Python-VPS-Dispatcher/1.0"
-            },
-            method="POST"
-        )
+        endpoints_to_try = [self.api_endpoint]
+        fallback_endpoint = "https://strat-market-chi.vercel.app/api/internal/signals"
+        if self.api_endpoint != fallback_endpoint:
+            endpoints_to_try.append(fallback_endpoint)
 
-        try:
-            with urllib.request.urlopen(req, timeout=10) as response:
-                resp_body = response.read().decode('utf-8')
-                data = json.loads(resp_body)
-                return {
-                    "success": True,
-                    "status_code": response.status,
-                    "signal_id": data.get("signalId"),
-                    "notified_users": data.get("notifiedUsersCount", 0),
-                    "event_id": event_id
-                }
-        except urllib.error.HTTPError as e:
-            err_body = e.read().decode('utf-8')
-            return {
-                "success": False,
-                "status_code": e.code,
-                "error": err_body,
-                "event_id": event_id
-            }
-        except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "event_id": event_id
-            }
+        last_error = ""
+        last_status = 500
+
+        for endpoint in endpoints_to_try:
+            req = urllib.request.Request(
+                endpoint,
+                data=raw_body.encode('utf-8'),
+                headers={
+                    "Content-Type": "application/json",
+                    "x-vps-timestamp": timestamp,
+                    "x-vps-signature": signature,
+                    "User-Agent": "Elvaris-Python-VPS-Dispatcher/1.0"
+                },
+                method="POST"
+            )
+
+            try:
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    resp_body = response.read().decode('utf-8')
+                    data = json.loads(resp_body)
+                    return {
+                        "success": True,
+                        "status_code": response.status,
+                        "signal_id": data.get("signalId"),
+                        "notified_users": data.get("notifiedUsersCount", 0),
+                        "event_id": event_id
+                    }
+            except urllib.error.HTTPError as e:
+                err_body = e.read().decode('utf-8')
+                last_error = err_body
+                last_status = e.code
+            except Exception as e:
+                last_error = str(e)
+
+        return {
+            "success": False,
+            "status_code": last_status,
+            "error": last_error,
+            "event_id": event_id
+        }
 
 if __name__ == "__main__":
     # Test dispatcher
