@@ -169,6 +169,28 @@ async function ensureIndexesAndSeed(db: Db): Promise<void> {
           createdAt: new Date("2026-02-01"),
           updatedAt: new Date("2026-02-01"),
         },
+        {
+          id: "usr_sam_01",
+          name: "sam",
+          email: "sameetpisal728@gmail.com",
+          passwordHash: defaultPassword,
+          role: "CUSTOMER",
+          accountStatus: "ACTIVE",
+          emailVerified: true,
+          createdAt: new Date("2026-01-01"),
+          updatedAt: new Date("2026-01-01"),
+        },
+        {
+          id: "usr_sam_02",
+          name: "Sameet Pisal",
+          email: "sameetpisal@gmail.com",
+          passwordHash: defaultPassword,
+          role: "CUSTOMER",
+          accountStatus: "ACTIVE",
+          emailVerified: true,
+          createdAt: new Date("2026-01-01"),
+          updatedAt: new Date("2026-01-01"),
+        },
       ]);
     }
 

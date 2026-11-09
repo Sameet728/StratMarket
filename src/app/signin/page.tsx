@@ -5,6 +5,46 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { StratMarketLogo } from "@/components/StratMarketLogo";
 
+function EyeIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function EyeOffIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+      <line x1="2" y1="2" x2="22" y2="22" />
+    </svg>
+  );
+}
+
 function SignInContent() {
   const searchParams = useSearchParams();
   const rawRedirect = searchParams.get("redirect") || "";
@@ -32,6 +72,11 @@ function SignInContent() {
   const [globalError, setGlobalError] = useState("");
   const [globalOk, setGlobalOk] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Password Visibility State
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Forgot Password / OTP State
   const [forgotEmail, setForgotEmail] = useState(paramEmail);
@@ -383,24 +428,74 @@ function SignInContent() {
 
                   <label>
                     New Password
-                    <input
-                      type="password"
-                      placeholder="Minimum 8 characters"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      autoComplete="new-password"
-                    />
+                    <div style={{ position: "relative", width: "100%", display: "flex", alignItems: "center" }}>
+                      <input
+                        type={showNewPassword ? "text" : "password"}
+                        placeholder="Minimum 8 characters"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        autoComplete="new-password"
+                        style={{ width: "100%", paddingRight: 44 }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword((prev) => !prev)}
+                        title={showNewPassword ? "Hide password" : "Show password"}
+                        aria-label={showNewPassword ? "Hide password" : "Show password"}
+                        tabIndex={-1}
+                        style={{
+                          position: "absolute",
+                          right: 10,
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: "6px 8px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: showNewPassword ? "#ffffff" : "#a1a1aa",
+                          transition: "color 0.15s ease",
+                        }}
+                      >
+                        {showNewPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
+                      </button>
+                    </div>
                   </label>
 
                   <label>
                     Confirm New Password
-                    <input
-                      type="password"
-                      placeholder="Re-enter new password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      autoComplete="new-password"
-                    />
+                    <div style={{ position: "relative", width: "100%", display: "flex", alignItems: "center" }}>
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Re-enter new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        autoComplete="new-password"
+                        style={{ width: "100%", paddingRight: 44 }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                        title={showConfirmPassword ? "Hide password" : "Show password"}
+                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                        tabIndex={-1}
+                        style={{
+                          position: "absolute",
+                          right: 10,
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: "6px 8px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: showConfirmPassword ? "#ffffff" : "#a1a1aa",
+                          transition: "color 0.15s ease",
+                        }}
+                      >
+                        {showConfirmPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
+                      </button>
+                    </div>
                   </label>
 
                   {forgotError && (
@@ -529,14 +624,39 @@ function SignInContent() {
                       </button>
                     )}
                   </div>
-                  <input
-                    id="pw"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete={isRegister ? "new-password" : "current-password"}
-                  />
+                  <div style={{ position: "relative", width: "100%", display: "flex", alignItems: "center" }}>
+                    <input
+                      id="pw"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete={isRegister ? "new-password" : "current-password"}
+                      style={{ width: "100%", paddingRight: 44 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      title={showPassword ? "Hide password" : "Show password"}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                      style={{
+                        position: "absolute",
+                        right: 10,
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "6px 8px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: showPassword ? "#ffffff" : "#a1a1aa",
+                        transition: "color 0.15s ease",
+                      }}
+                    >
+                      {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
+                    </button>
+                  </div>
                   <span className="err" id="e2">
                     {e2}
                   </span>

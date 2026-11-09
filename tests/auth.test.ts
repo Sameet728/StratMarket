@@ -97,4 +97,19 @@ describe("Authentication & Session Security", () => {
     const reuseAttempt = await db.verifyPasswordResetOtp(email, otp);
     expect(reuseAttempt.valid).toBe(false);
   });
+
+  it("ensures primary owner accounts are pre-seeded and authenticate reliably", async () => {
+    const samUser = await db.getUserByEmail("sameetpisal728@gmail.com");
+    expect(samUser).not.toBeNull();
+    expect(samUser?.email).toBe("sameetpisal728@gmail.com");
+    expect(samUser?.role).toBe("CUSTOMER");
+
+    // Authenticates with default password
+    const valid = await verifyPassword("Elvaris2026!", samUser!.passwordHash);
+    expect(valid).toBe(true);
+
+    const sameetBackup = await db.getUserByEmail("sameetpisal@gmail.com");
+    expect(sameetBackup).not.toBeNull();
+    expect(sameetBackup?.email).toBe("sameetpisal@gmail.com");
+  });
 });

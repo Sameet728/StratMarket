@@ -121,6 +121,7 @@ export function PricingClient({
   const [authMode, setAuthMode] = useState<"LOGIN" | "REGISTER">("LOGIN");
   const [authEmail, setAuthEmail] = useState<string>("");
   const [authPassword, setAuthPassword] = useState<string>("");
+  const [showAuthPassword, setShowAuthPassword] = useState<boolean>(false);
   const [authName, setAuthName] = useState<string>("");
   const [authLoading, setAuthLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -1213,23 +1214,60 @@ export function PricingClient({
 
                     <div>
                       <label style={{ display: "block", fontSize: 12, color: "var(--mut)", marginBottom: 4 }}>Password</label>
-                      <input
-                        type="password"
-                        required
-                        value={authPassword}
-                        onChange={(e) => setAuthPassword(e.target.value)}
-                        placeholder="••••••••••••"
-                        style={{
-                          width: "100%",
-                          padding: "10px 12px",
-                          borderRadius: 8,
-                          border: "1px solid var(--line)",
-                          background: "rgba(0,0,0,0.3)",
-                          color: "#fff",
-                          fontSize: 13,
-                          outline: "none",
-                        }}
-                      />
+                      <div style={{ position: "relative", width: "100%", display: "flex", alignItems: "center" }}>
+                        <input
+                          type={showAuthPassword ? "text" : "password"}
+                          required
+                          value={authPassword}
+                          onChange={(e) => setAuthPassword(e.target.value)}
+                          placeholder="••••••••••••"
+                          style={{
+                            width: "100%",
+                            padding: "10px 42px 10px 12px",
+                            borderRadius: 8,
+                            border: "1px solid var(--line)",
+                            background: "rgba(0,0,0,0.3)",
+                            color: "#fff",
+                            fontSize: 13,
+                            outline: "none",
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowAuthPassword((prev) => !prev)}
+                          title={showAuthPassword ? "Hide password" : "Show password"}
+                          aria-label={showAuthPassword ? "Hide password" : "Show password"}
+                          tabIndex={-1}
+                          style={{
+                            position: "absolute",
+                            right: 8,
+                            background: "transparent",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 4,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: showAuthPassword ? "#ffffff" : "#a1a1aa",
+                          }}
+                        >
+                          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            {showAuthPassword ? (
+                              <>
+                                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                                <line x1="2" y1="2" x2="22" y2="22" />
+                              </>
+                            ) : (
+                              <>
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </>
+                            )}
+                          </svg>
+                        </button>
+                      </div>
                     </div>
 
                     {authError && (
