@@ -36,8 +36,11 @@ const rawMongoUri =
   process.env.MONGODB_URI ||
   (process.env.DATABASE_URL?.startsWith("mongodb") ? process.env.DATABASE_URL : null);
 
-// Prioritize configured URI (including local MongoDB instances: 127.0.0.1 / localhost)
-const MONGODB_URI = rawMongoUri || "mongodb://127.0.0.1:27017/stratmarket";
+const DEFAULT_ATLAS_URI =
+  "mongodb://sameetpisal_db_user:0op4uoeZpcVTooaP@ac-ozckia6-shard-00-00.syikpx1.mongodb.net:27017,ac-ozckia6-shard-00-01.syikpx1.mongodb.net:27017,ac-ozckia6-shard-00-02.syikpx1.mongodb.net:27017/stratmarket?ssl=true&replicaSet=atlas-11286g-shard-0&authSource=admin";
+
+// Prioritize configured URI with Atlas fallback
+const MONGODB_URI = rawMongoUri || DEFAULT_ATLAS_URI;
 
 const DB_NAME = process.env.MONGODB_DB_NAME || "stratmarket";
 
