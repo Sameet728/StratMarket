@@ -130,7 +130,7 @@ export function MarketplaceCatalogue({ initialStrategies }: Props) {
           value={sort}
           onChange={(e) => setSort(e.target.value as any)}
         >
-          <option value="order">Strategy ID (PS-01 to PS-04)</option>
+          <option value="order">Strategy ID (PS-01 to PS-03)</option>
           <option value="win">Win rate (highest)</option>
           <option value="pf">Profit factor (highest)</option>
           <option value="calmar">Calmar ratio (highest)</option>
