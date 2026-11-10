@@ -540,33 +540,40 @@ export async function dispatchSignalAlertEmails(params: {
   let dispatchedCount = 0;
   const errors: string[] = [];
 
-  for (const recipient of recipientList) {
-    try {
-      const res = await sendSignalAlertEmail({
-        to: recipient,
-        strategyName: params.strategyName,
-        strategyId: params.strategyId,
-        instrument: params.instrument,
-        timeframe: params.timeframe,
-        signalType: params.signalType,
-        direction: params.direction,
-        entryPrice: params.entryPrice,
-        stopLoss: params.stopLoss,
-        targetPrice: params.targetPrice,
-        sourceEventId: params.sourceEventId,
-        winRate: params.winRate,
-        profitFactor: params.profitFactor,
-        maxDrawdown: params.maxDrawdown,
-      });
+  // Batch concurrent dispatch in chunks of 5 for optimal performance and rate-limit compliance
+  const CHUNK_SIZE = 5;
+  for (let i = 0; i < recipientList.length; i += CHUNK_SIZE) {
+    const chunk = recipientList.slice(i, i + CHUNK_SIZE);
+    await Promise.allSettled(
+      chunk.map(async (recipient) => {
+        try {
+          const res = await sendSignalAlertEmail({
+            to: recipient,
+            strategyName: params.strategyName,
+            strategyId: params.strategyId,
+            instrument: params.instrument,
+            timeframe: params.timeframe,
+            signalType: params.signalType,
+            direction: params.direction,
+            entryPrice: params.entryPrice,
+            stopLoss: params.stopLoss,
+            targetPrice: params.targetPrice,
+            sourceEventId: params.sourceEventId,
+            winRate: params.winRate,
+            profitFactor: params.profitFactor,
+            maxDrawdown: params.maxDrawdown,
+          });
 
-      if (res.success) {
-        dispatchedCount++;
-      } else if (res.error) {
-        errors.push(`${recipient}: ${res.error}`);
-      }
-    } catch (err: any) {
-      errors.push(`${recipient}: ${err.message}`);
-    }
+          if (res.success) {
+            dispatchedCount++;
+          } else if (res.error) {
+            errors.push(`${recipient}: ${res.error}`);
+          }
+        } catch (err: any) {
+          errors.push(`${recipient}: ${err.message}`);
+        }
+      })
+    );
   }
 
   return { dispatchedCount, errors };

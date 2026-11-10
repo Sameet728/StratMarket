@@ -160,11 +160,13 @@ async function ensureIndexesAndSeed(db: Db): Promise<void> {
     await db.collection("entitlements").createIndex({ userId: 1, strategyId: 1 });
     await db.collection("alert_preferences").createIndex({ userId: 1, strategyId: 1 }, { unique: true });
 
-    // 2. Seed Strategies if collection is empty
-    const stratCount = await db.collection("strategies").countDocuments();
-    if (stratCount === 0) {
-      console.log(`[MongoDB] Seeding initial ${INITIAL_STRATEGIES.length} strategies into collection...`);
-      await db.collection("strategies").insertMany(INITIAL_STRATEGIES.map((s) => ({ ...s })));
+    // 2. Ensure all canonical strategies are synchronized and up-to-date in MongoDB Atlas
+    for (const s of INITIAL_STRATEGIES) {
+      await db.collection("strategies").updateOne(
+        { id: s.id },
+        { $set: { ...s } },
+        { upsert: true }
+      );
     }
 
     // 3. Ensure evaluation and primary accounts exist

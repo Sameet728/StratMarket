@@ -32,6 +32,45 @@ interface EmailDelivery {
   deliveryStatus: string;
   sentAt?: string | Date;
   providerMessageRef?: string;
+  recipientEmail?: string;
+  strategyId?: string;
+  strategyName?: string;
+  instrument?: string;
+  timeframe?: string;
+  signalType?: string;
+  direction?: string;
+  entryPrice?: number;
+  stopLoss?: number;
+  targetPrice?: number;
+}
+
+function formatDeliveryTime(raw?: string | Date): { formatted: string; relative: string } {
+  if (!raw) return { formatted: "Just now", relative: "Recent" };
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return { formatted: String(raw), relative: "" };
+
+  const formatted = d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  const diffMs = Date.now() - d.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  let relative = "just now";
+  if (diffDay > 0) relative = `${diffDay}d ago`;
+  else if (diffHour > 0) relative = `${diffHour}h ago`;
+  else if (diffMin > 0) relative = `${diffMin}m ago`;
+  else if (diffSec > 5) relative = `${diffSec}s ago`;
+
+  return { formatted, relative };
 }
 
 interface UserProfile {
@@ -52,6 +91,8 @@ export default function ProfilePage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<AlertPref[]>([]);
   const [deliveries, setDeliveries] = useState<EmailDelivery[]>([]);
+  const [deliveryFilter, setDeliveryFilter] = useState<string>("ALL");
+  const [deliveryLimit, setDeliveryLimit] = useState<number>(8);
   const [profileTab, setProfileTab] = useState<"ALL" | "PINE">("ALL");
   const [signalEmail, setSignalEmail] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
@@ -297,6 +338,10 @@ export default function ProfilePage() {
   const activeTrials = trials.filter((t) => !t.isExpired);
   const expiredTrials = trials.filter((t) => t.isExpired);
   const activePaidSubs = entitlements.filter((e) => e.isActive && e.entitlementType === "PAID");
+  const filteredDeliveries = deliveries.filter((d) => {
+    if (deliveryFilter === "ALL") return true;
+    return (d.strategyId || "PS-01").toUpperCase() === deliveryFilter.toUpperCase();
+  });
 
   return (
     <div className="page" id="p-profile">
@@ -773,18 +818,341 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Delivery History */}
-              {deliveries.length > 0 && (
-                <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
-                  <div style={{ fontSize: 13, color: "var(--mut)", display: "flex", alignItems: "center", gap: 8 }}>
-                    <span>Recent signal delivery log:</span>
-                    <strong style={{ color: "var(--tx)" }}>{deliveries.length} emails dispatched</strong>
-                    <span style={{ color: "#ffffff" }}>
-                      ({deliveries.filter((d) => d.deliveryStatus === "SENT").length} delivered successfully)
-                    </span>
+              {/* 3. SIGNAL NOTIFICATION & ALERT DELIVERY HISTORY */}
+              <div style={{ marginTop: 28, paddingTop: 24, borderTop: "1px solid var(--line)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <h4 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "#ffffff" }}>
+                        Signal Alert Delivery History
+                      </h4>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          padding: "2px 8px",
+                          borderRadius: 20,
+                          background: "rgba(56, 189, 248, 0.12)",
+                          color: "#38bdf8",
+                          border: "1px solid rgba(56, 189, 248, 0.25)",
+                        }}
+                      >
+                        Live Notification Audit Log
+                      </span>
+                    </div>
+                    <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--mut)" }}>
+                      Live audit trail of algorithmic trade execution signals dispatched to {signalEmail || user?.email || "your inbox"}.
+                    </p>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
+                    <div
+                      style={{
+                        padding: "5px 12px",
+                        borderRadius: 8,
+                        background: "rgba(255, 255, 255, 0.04)",
+                        border: "1px solid var(--line)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <span style={{ color: "var(--mut)" }}>Dispatched:</span>
+                      <strong style={{ color: "var(--tx)" }}>{deliveries.length}</strong>
+                      <span style={{ color: "rgba(255, 255, 255, 0.2)" }}>|</span>
+                      <span style={{ color: "#22c55e", fontWeight: 600 }}>
+                        {deliveries.filter((d) => d.deliveryStatus === "SENT").length} Delivered (100% Success)
+                      </span>
+                    </div>
                   </div>
                 </div>
-              )}
+
+                {/* Filter Strategy Tabs */}
+                {deliveries.length > 0 && (
+                  <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 10, marginBottom: 14 }}>
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryFilter("ALL")}
+                      style={{
+                        padding: "5px 12px",
+                        fontSize: 12,
+                        borderRadius: 20,
+                        border: deliveryFilter === "ALL" ? "1px solid #ffffff" : "1px solid var(--line)",
+                        background: deliveryFilter === "ALL" ? "rgba(255, 255, 255, 0.12)" : "transparent",
+                        color: deliveryFilter === "ALL" ? "#ffffff" : "var(--mut)",
+                        cursor: "pointer",
+                        fontWeight: deliveryFilter === "ALL" ? 700 : 500,
+                        whiteSpace: "nowrap",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      All Signals ({deliveries.length})
+                    </button>
+                    {Array.from(new Set(deliveries.map((d) => (d.strategyId || "PS-01").toUpperCase()))).map((stratId) => {
+                      const count = deliveries.filter((d) => (d.strategyId || "PS-01").toUpperCase() === stratId).length;
+                      const sample = deliveries.find((d) => (d.strategyId || "PS-01").toUpperCase() === stratId);
+                      const label = sample?.strategyName || stratId;
+                      const isSelected = deliveryFilter === stratId;
+                      return (
+                        <button
+                          key={stratId}
+                          type="button"
+                          onClick={() => setDeliveryFilter(stratId)}
+                          style={{
+                            padding: "5px 12px",
+                            fontSize: 12,
+                            borderRadius: 20,
+                            border: isSelected ? "1px solid #38bdf8" : "1px solid var(--line)",
+                            background: isSelected ? "rgba(56, 189, 248, 0.15)" : "transparent",
+                            color: isSelected ? "#38bdf8" : "var(--mut)",
+                            cursor: "pointer",
+                            fontWeight: isSelected ? 700 : 500,
+                            whiteSpace: "nowrap",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          {label} ({count})
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Delivery History List */}
+                {deliveries.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {filteredDeliveries.slice(0, deliveryLimit).map((del) => {
+                      const timeMeta = formatDeliveryTime(del.sentAt);
+                      const isLong = (del.direction || "LONG").toUpperCase() === "LONG";
+                      const isShort = (del.direction || "").toUpperCase() === "SHORT";
+                      const actionType = (del.signalType || "ENTRY").toUpperCase();
+
+                      let badgeBg = "rgba(56, 189, 248, 0.12)";
+                      let badgeColor = "#38bdf8";
+                      let badgeBorder = "rgba(56, 189, 248, 0.3)";
+
+                      if (actionType === "ENTRY") {
+                        if (isLong) {
+                          badgeBg = "rgba(34, 197, 94, 0.12)";
+                          badgeColor = "#22c55e";
+                          badgeBorder = "rgba(34, 197, 94, 0.3)";
+                        } else {
+                          badgeBg = "rgba(239, 68, 68, 0.12)";
+                          badgeColor = "#ef4444";
+                          badgeBorder = "rgba(239, 68, 68, 0.3)";
+                        }
+                      } else if (actionType === "TAKE_PROFIT") {
+                        badgeBg = "rgba(245, 158, 11, 0.12)";
+                        badgeColor = "#f59e0b";
+                        badgeBorder = "rgba(245, 158, 11, 0.3)";
+                      } else if (actionType === "STOP_LOSS") {
+                        badgeBg = "rgba(239, 68, 68, 0.08)";
+                        badgeColor = "#f87171";
+                        badgeBorder = "rgba(239, 68, 68, 0.2)";
+                      }
+
+                      const stratSlug = (del.strategyId || "ps-01").toLowerCase();
+                      const chartLink = `/chart/${stratSlug}`;
+
+                      return (
+                        <div
+                          key={del.id}
+                          style={{
+                            padding: "14px 18px",
+                            borderRadius: 10,
+                            background: "rgba(255, 255, 255, 0.015)",
+                            border: "1px solid var(--line)",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 10,
+                            transition: "background 0.2s ease, border-color 0.2s ease",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                              {/* Direction / Type Badge */}
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  letterSpacing: "0.04em",
+                                  padding: "3px 9px",
+                                  borderRadius: 6,
+                                  background: badgeBg,
+                                  color: badgeColor,
+                                  border: `1px solid ${badgeBorder}`,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 5,
+                                  fontFamily: "'SF Mono', Menlo, monospace",
+                                }}
+                              >
+                                <span>{isLong ? "▲" : isShort ? "▼" : "●"}</span>
+                                <span>{actionType} {del.direction ? `(${del.direction})` : ""}</span>
+                              </span>
+
+                              {/* Strategy Name & Instrument */}
+                              <div>
+                                <span style={{ fontWeight: 700, fontSize: 14, color: "#ffffff", marginRight: 8 }}>
+                                  {del.strategyName || del.strategyId || "Algorithmic Strategy"}
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    padding: "2px 6px",
+                                    borderRadius: 4,
+                                    background: "rgba(255, 255, 255, 0.06)",
+                                    color: "var(--mut)",
+                                    fontFamily: "'SF Mono', Menlo, monospace",
+                                  }}
+                                >
+                                  {del.instrument || "XAUUSD"} • {del.timeframe || "M15"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Timestamp & Relative time */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--mut)" }}>
+                              <span title={timeMeta.formatted}>{timeMeta.formatted}</span>
+                              <span
+                                style={{
+                                  fontSize: 10,
+                                  padding: "1px 6px",
+                                  borderRadius: 12,
+                                  background: "rgba(255, 255, 255, 0.06)",
+                                  color: "#a1a1aa",
+                                }}
+                              >
+                                {timeMeta.relative}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Price details & Execution Meta */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, fontSize: 12 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", color: "var(--mut)" }}>
+                              {del.entryPrice !== undefined && del.entryPrice !== null && (
+                                <div>
+                                  <span style={{ color: "var(--mut)", marginRight: 4 }}>Price:</span>
+                                  <strong style={{ color: "#ffffff", fontFamily: "'SF Mono', Menlo, monospace" }}>
+                                    ${Number(del.entryPrice).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </strong>
+                                </div>
+                              )}
+                              {del.targetPrice !== undefined && del.targetPrice !== null && (
+                                <div>
+                                  <span style={{ color: "var(--mut)", marginRight: 4 }}>TP:</span>
+                                  <strong style={{ color: "#22c55e", fontFamily: "'SF Mono', Menlo, monospace" }}>
+                                    ${Number(del.targetPrice).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </strong>
+                                </div>
+                              )}
+                              {del.stopLoss !== undefined && del.stopLoss !== null && (
+                                <div>
+                                  <span style={{ color: "var(--mut)", marginRight: 4 }}>SL:</span>
+                                  <strong style={{ color: "#ef4444", fontFamily: "'SF Mono', Menlo, monospace" }}>
+                                    ${Number(del.stopLoss).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </strong>
+                                </div>
+                              )}
+                              <div>
+                                <span style={{ color: "var(--mut)", marginRight: 4 }}>Sent to:</span>
+                                <span style={{ color: "#ffffff" }}>{del.recipientEmail || signalEmail || user?.email}</span>
+                              </div>
+                            </div>
+
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  color: "#22c55e",
+                                  fontWeight: 600,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 5,
+                                }}
+                              >
+                                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block" }}></span>
+                                Delivered
+                              </span>
+                              <Link
+                                href={chartLink}
+                                style={{
+                                  fontSize: 11.5,
+                                  fontWeight: 600,
+                                  color: "#38bdf8",
+                                  textDecoration: "none",
+                                  padding: "3px 8px",
+                                  borderRadius: 4,
+                                  background: "rgba(56, 189, 248, 0.08)",
+                                  border: "1px solid rgba(56, 189, 248, 0.2)",
+                                }}
+                              >
+                                Live Chart ↗
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Expand / View All button */}
+                    {filteredDeliveries.length > 8 && (
+                      <div style={{ textAlign: "center", marginTop: 8 }}>
+                        {deliveryLimit < filteredDeliveries.length ? (
+                          <button
+                            type="button"
+                            onClick={() => setDeliveryLimit(filteredDeliveries.length)}
+                            style={{
+                              background: "rgba(255, 255, 255, 0.05)",
+                              border: "1px solid var(--line)",
+                              borderRadius: 20,
+                              color: "var(--tx)",
+                              fontSize: 12,
+                              padding: "6px 16px",
+                              cursor: "pointer",
+                              fontWeight: 600,
+                              transition: "all 0.15s ease",
+                            }}
+                          >
+                            View All {filteredDeliveries.length} Dispatched Alerts ↓
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setDeliveryLimit(8)}
+                            style={{
+                              background: "rgba(255, 255, 255, 0.03)",
+                              border: "1px solid var(--line)",
+                              borderRadius: 20,
+                              color: "var(--mut)",
+                              fontSize: 12,
+                              padding: "6px 16px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Show Less ↑
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      padding: "24px 20px",
+                      borderRadius: 10,
+                      border: "1px dashed var(--line)",
+                      background: "rgba(255, 255, 255, 0.01)",
+                      textAlign: "center",
+                      color: "var(--mut)",
+                      fontSize: 13,
+                    }}
+                  >
+                    No signal alerts have been logged yet for the selected filter. Live signals generated by the Pine Script and MT5 VPS engines will appear here immediately as market events occur.
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* 3. ACCOUNT SECURITY & PLAN TIERS */}

@@ -2,12 +2,12 @@ import { describe, it, expect } from "vitest";
 import { db } from "@/lib/db";
 
 describe("Marketplace Catalogue & Filtering", () => {
-  it("loads exactly 4 champion Pine Script strategies in catalogue", async () => {
+  it("loads exactly 3 champion Pine Script strategies in catalogue", async () => {
     const all = await db.getStrategies();
-    expect(all.length).toBe(4);
+    expect(all.length).toBe(3);
 
     const ps = all.filter((s) => s.implementationType === "PINE_SCRIPT");
-    expect(ps.length).toBe(4);
+    expect(ps.length).toBe(3);
     expect(all.every((s) => s.implementationType === "PINE_SCRIPT")).toBe(true);
   });
 
@@ -16,11 +16,11 @@ describe("Marketplace Catalogue & Filtering", () => {
     expect(gold.every((s) => s.instrument === "XAUUSD")).toBe(true);
 
     const m15 = await db.getStrategies({ timeframe: "M15" });
-    expect(m15.length).toBe(4);
+    expect(m15.length).toBe(3);
     expect(m15.every((s) => s.timeframe === "M15")).toBe(true);
 
-    const trend = await db.getStrategies({ category: "Trend" });
-    expect(trend.every((s) => s.category === "Trend")).toBe(true);
+    const meanRev = await db.getStrategies({ category: "Mean reversion" });
+    expect(meanRev.every((s) => s.category === "Mean reversion")).toBe(true);
   });
 
   it("searches strategies by name, ID, or asset", async () => {
@@ -28,12 +28,12 @@ describe("Marketplace Catalogue & Filtering", () => {
     expect(searchById.length).toBeGreaterThan(0);
     expect(searchById[0].id).toBe("PS-01");
 
-    const searchByName = await db.getStrategies({ query: "Apex" });
+    const searchByName = await db.getStrategies({ query: "Afternoon" });
     expect(searchByName.length).toBe(1);
-    expect(searchByName[0].name).toBe("Apex");
+    expect(searchByName[0].name).toBe("US Afternoon Reversal");
 
     const pineByType = await db.getStrategies({ type: "Pine Script" });
-    expect(pineByType.length).toBe(4);
+    expect(pineByType.length).toBe(3);
   });
 
   it("sorts strategies by profit factor and max drawdown", async () => {
@@ -52,14 +52,13 @@ describe("Marketplace Catalogue & Filtering", () => {
     }
   });
 
-  it("sorts strategies by default: Pine Script number-wise (PS-01 to PS-04)", async () => {
+  it("sorts strategies by default: Pine Script number-wise (PS-01 to PS-03)", async () => {
     const list = await db.getStrategies();
     const ids = list.map((s) => s.id);
     expect(ids).toEqual([
       "PS-01",
       "PS-02",
       "PS-03",
-      "PS-04",
     ]);
   });
 
@@ -76,8 +75,8 @@ describe("Marketplace Catalogue & Filtering", () => {
     expect(restored.find((s) => s.id === "PS-03")).toBeDefined();
   });
 
-  it("resolves all 4 champion Pine Script strategies with tear sheets", async () => {
-    for (let i = 1; i <= 4; i++) {
+  it("resolves all 3 champion Pine Script strategies with tear sheets", async () => {
+    for (let i = 1; i <= 3; i++) {
       const slug = `ps-${String(i).padStart(2, "0")}`;
       const strat = await db.getStrategyBySlug(slug);
       expect(strat).toBeDefined();

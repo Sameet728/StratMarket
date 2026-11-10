@@ -50,18 +50,18 @@ describe("7-Day Trial & Entitlement System", () => {
     const accessPs03 = await db.checkUserStrategyAccess(testUserId, "PS-03");
     expect(accessPs03.hasAccess).toBe(true);
 
-    const accessPs04 = await db.checkUserStrategyAccess(testUserId, "PS-04");
-    expect(accessPs04.hasAccess).toBe(false);
-    expect(accessPs04.accessType).toBe("NONE");
+    const accessPs01 = await db.checkUserStrategyAccess(testUserId, "PS-01");
+    expect(accessPs01.hasAccess).toBe(false);
+    expect(accessPs01.accessType).toBe("NONE");
   });
 
   it("revokes access immediately when an entitlement expires", async () => {
-    const result = await db.startTrial(testUserId, "ps-04");
+    const result = await db.startTrial(testUserId, "ps-03");
 
     // Manually simulate expired time
     result.entitlement.expiryTime = new Date(Date.now() - 1000); // 1 second in the past
 
-    const access = await db.checkUserStrategyAccess(testUserId, "PS-04");
+    const access = await db.checkUserStrategyAccess(testUserId, "PS-03");
     expect(access.hasAccess).toBe(false);
   });
 });

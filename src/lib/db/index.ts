@@ -74,6 +74,16 @@ export interface EmailDeliveryRecord {
   id: string;
   signalId: string;
   userId: string;
+  recipientEmail?: string;
+  strategyId?: string;
+  strategyName?: string;
+  instrument?: string;
+  timeframe?: string;
+  signalType?: "ENTRY" | "EXIT" | "STOP_LOSS" | "TAKE_PROFIT";
+  direction?: "LONG" | "SHORT";
+  entryPrice?: number;
+  stopLoss?: number;
+  targetPrice?: number;
   deliveryStatus: "PENDING" | "SENT" | "FAILED" | "RETRYING";
   attemptCount: number;
   providerMessageRef?: string;
@@ -1342,10 +1352,11 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
 
     globalStore.signals.set(newSignal.id, newSignal);
 
-    // 4. Find entitled users with active alert preference
+    // 4. Ingest signal and broadcast to ALL active users (100% Free Open Platform)
     let notifiedUsersCount = 0;
     const subscriberEmails: string[] = [];
     const now = new Date();
+    const deliveriesToInsert: EmailDeliveryRecord[] = [];
     const targetStrategyIds = [
       strategy.id,
       strategy.id.toUpperCase(),
@@ -1357,81 +1368,149 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
       "ALL"
     ];
 
+    // Collect all active users from MongoDB Atlas
+    const activeUsers: Array<{ id: string; email: string }> = [];
     if (mdb) {
       try {
-        const dbAlerts = await mdb.collection("alert_preferences").find({
-          strategyId: { $in: targetStrategyIds },
-          enabled: true
-        }).toArray();
+        const uDocs = await mdb.collection("users").find({
+          accountStatus: { $ne: "SUSPENDED" }
+        }, { projection: { id: 1, email: 1, _id: 1 } }).toArray();
 
-        for (const alert of dbAlerts) {
-          const dest = alert.verifiedDestination || alert.userEmail;
-          if (dest && dest.includes("@") && !subscriberEmails.includes(dest)) {
-            subscriberEmails.push(dest);
-            const delivery: EmailDeliveryRecord = {
-              id: "del_" + Math.random().toString(36).substring(2, 11),
-              signalId: newSignal.id,
-              userId: alert.userId,
-              deliveryStatus: "SENT",
-              attemptCount: 1,
-              providerMessageRef: "msg_" + Math.random().toString(36).substring(2, 14),
-              sentAt: now,
-            };
-            globalStore.deliveries.set(delivery.id, delivery);
-            await mdb.collection("deliveries").insertOne({ ...delivery }).catch(() => {});
-            notifiedUsersCount++;
+        uDocs.forEach((u: any) => {
+          if (u.email && u.email.includes("@")) {
+            activeUsers.push({
+              id: u.id || u._id?.toString(),
+              email: u.email.trim().toLowerCase(),
+            });
           }
-        }
+        });
       } catch (e) {
-        console.warn("[MongoDB] Ingest signal subscriber query fallback:", e);
+        console.warn("[MongoDB] Active users query note:", e);
       }
     }
 
-    for (const alert of globalStore.alerts.values()) {
-      if (targetStrategyIds.includes(alert.strategyId) && alert.enabled) {
-        if (alert.verifiedDestination && !subscriberEmails.includes(alert.verifiedDestination)) {
-          subscriberEmails.push(alert.verifiedDestination);
-          const delivery: EmailDeliveryRecord = {
-            id: "del_" + Math.random().toString(36).substring(2, 11),
-            signalId: newSignal.id,
-            userId: alert.userId,
-            deliveryStatus: "SENT",
-            attemptCount: 1,
-            providerMessageRef: "msg_" + Math.random().toString(36).substring(2, 14),
-            sentAt: now,
-          };
-          globalStore.deliveries.set(delivery.id, delivery);
-          if (mdb) {
-            await mdb.collection("deliveries").insertOne({ ...delivery }).catch(() => {});
+    // Merge in-memory users
+    for (const u of globalStore.users.values()) {
+      if (u.accountStatus !== "SUSPENDED" && u.email && !activeUsers.some(au => au.email === u.email.toLowerCase())) {
+        activeUsers.push({ id: u.id, email: u.email.toLowerCase() });
+      }
+    }
+
+    // Check users who explicitly disabled this strategy (opt-outs)
+    const disabledUserIds = new Set<string>();
+    if (mdb) {
+      try {
+        const disabledDocs = await mdb.collection("alert_preferences").find({
+          strategyId: { $in: targetStrategyIds },
+          enabled: false
+        }).toArray();
+        disabledDocs.forEach((d: any) => {
+          if (d.userId) disabledUserIds.add(d.userId);
+          if (d.userEmail) disabledUserIds.add(d.userEmail.toLowerCase());
+        });
+      } catch (_) {}
+    }
+
+    // Check custom destination emails
+    const customEmailMap = new Map<string, string>();
+    if (mdb) {
+      try {
+        const prefDocs = await mdb.collection("alert_preferences").find({
+          verifiedDestination: { $exists: true, $ne: "" }
+        }).toArray();
+        prefDocs.forEach((p: any) => {
+          if (p.verifiedDestination && p.verifiedDestination.includes("@")) {
+            if (p.userId) customEmailMap.set(p.userId, p.verifiedDestination.toLowerCase());
+            if (p.userEmail) customEmailMap.set(p.userEmail.toLowerCase(), p.verifiedDestination.toLowerCase());
           }
-          notifiedUsersCount++;
-        }
+        });
+      } catch (_) {}
+    }
+
+    // Create delivery records and collect emails for each active user
+    const seenEmails = new Set<string>();
+    for (const u of activeUsers) {
+      if (disabledUserIds.has(u.id) || disabledUserIds.has(u.email)) {
+        continue; // user opted out of this specific strategy
+      }
+
+      const targetEmail = (customEmailMap.get(u.id) || customEmailMap.get(u.email) || u.email).trim().toLowerCase();
+      if (!targetEmail || !targetEmail.includes("@") || targetEmail.includes("alerts@elvariscapital.in")) {
+        continue;
+      }
+
+      const delivery: EmailDeliveryRecord = {
+        id: "del_" + Math.random().toString(36).substring(2, 11),
+        signalId: newSignal.id,
+        userId: u.id,
+        recipientEmail: targetEmail,
+        strategyId: strategy.id,
+        strategyName: strategy.name,
+        instrument: newSignal.instrument,
+        timeframe: newSignal.timeframe,
+        signalType: newSignal.signalType,
+        direction: newSignal.direction,
+        entryPrice: newSignal.entryPrice,
+        stopLoss: newSignal.stopLoss,
+        targetPrice: newSignal.targetPrice,
+        deliveryStatus: "SENT",
+        attemptCount: 1,
+        providerMessageRef: "msg_" + Math.random().toString(36).substring(2, 14),
+        sentAt: now,
+      };
+
+      deliveriesToInsert.push(delivery);
+      globalStore.deliveries.set(delivery.id, delivery);
+      notifiedUsersCount++;
+
+      if (!seenEmails.has(targetEmail)) {
+        seenEmails.add(targetEmail);
+        subscriberEmails.push(targetEmail);
       }
     }
 
-    // Always ensure primary trader destinations are subscribed and delivery recorded
+    // Guaranteed primary trader inboxes
     const guaranteedInboxes = [
       { email: "sameetpisal@gmail.com", userId: "usr_sam_primary" },
       { email: "sameetpisal728@gmail.com", userId: "usr_sam_primary" },
     ];
     for (const item of guaranteedInboxes) {
-      if (!subscriberEmails.includes(item.email)) {
+      if (!seenEmails.has(item.email)) {
+        seenEmails.add(item.email);
         subscriberEmails.push(item.email);
+      }
+      const existingDel = deliveriesToInsert.find(d => d.recipientEmail === item.email);
+      if (!existingDel) {
         const delivery: EmailDeliveryRecord = {
           id: "del_" + Math.random().toString(36).substring(2, 11),
           signalId: newSignal.id,
           userId: item.userId,
+          recipientEmail: item.email,
+          strategyId: strategy.id,
+          strategyName: strategy.name,
+          instrument: newSignal.instrument,
+          timeframe: newSignal.timeframe,
+          signalType: newSignal.signalType,
+          direction: newSignal.direction,
+          entryPrice: newSignal.entryPrice,
+          stopLoss: newSignal.stopLoss,
+          targetPrice: newSignal.targetPrice,
           deliveryStatus: "SENT",
           attemptCount: 1,
           providerMessageRef: "msg_" + Math.random().toString(36).substring(2, 14),
           sentAt: now,
         };
+        deliveriesToInsert.push(delivery);
         globalStore.deliveries.set(delivery.id, delivery);
-        if (mdb) {
-          await mdb.collection("deliveries").insertOne({ ...delivery }).catch(() => {});
-        }
         notifiedUsersCount++;
       }
+    }
+
+    // Persist all deliveries to MongoDB Atlas
+    if (mdb && deliveriesToInsert.length > 0) {
+      await mdb.collection("deliveries").insertMany(deliveriesToInsert.map(d => ({ ...d }))).catch(err => {
+        console.warn("[MongoDB] Batch insert deliveries warning:", err?.message || err);
+      });
     }
 
     await this.createAuditEvent({
@@ -1604,88 +1683,127 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
     return updatedCount;
   },
 
-  async getUserDeliveries(userId: string): Promise<EmailDeliveryRecord[]> {
+  async getUserDeliveries(userId: string, limit: number = 50): Promise<EmailDeliveryRecord[]> {
     const user = await this.getUserById(userId).catch(() => null);
     const userEmails = [userId];
-    if (user?.email) userEmails.push(user.email);
+    if (user?.email) userEmails.push(user.email.toLowerCase());
     if (userId.includes("@")) userEmails.push(userId.toLowerCase());
-    userEmails.push("sameetpisal@gmail.com", "sameetpisal728@gmail.com");
+    userEmails.push("usr_sam_primary", "sameetpisal@gmail.com", "sameetpisal728@gmail.com");
 
     const mdb = await getMongoDb();
+    let rawDocs: any[] = [];
+
     if (mdb) {
       try {
-        const docs = await mdb.collection("deliveries").find({
+        rawDocs = await mdb.collection("deliveries").find({
           $or: [
             { userId: { $in: userEmails } },
             { recipientEmail: { $in: userEmails } }
           ]
-        }).sort({ sentAt: -1 }).toArray();
+        }).sort({ sentAt: -1 }).limit(limit).toArray();
 
-        if (docs.length > 0) {
-          return docs.map((d: any) => ({
-            id: d.id || d._id?.toString(),
-            signalId: d.signalId,
-            userId: d.userId,
-            deliveryStatus: d.deliveryStatus || "SENT",
-            attemptCount: d.attemptCount || 1,
-            providerMessageRef: d.providerMessageRef,
-            sentAt: d.sentAt ? new Date(d.sentAt) : new Date(),
-          }));
+        // If user is admin / primary or no direct matches, show latest deliveries across platform
+        if (rawDocs.length === 0) {
+          rawDocs = await mdb.collection("deliveries").find({}).sort({ sentAt: -1 }).limit(limit).toArray();
         }
+      } catch (err) {
+        console.warn("[MongoDB] getUserDeliveries query note:", err);
+      }
+    }
+
+    // Merge in-memory deliveries if needed
+    if (rawDocs.length === 0) {
+      for (const d of globalStore.deliveries.values()) {
+        rawDocs.push({ ...d });
+      }
+    }
+
+    // Look up signal details for enrichment
+    const signalIdsToFetch = Array.from(new Set(rawDocs.map(d => d.signalId).filter(Boolean)));
+    const signalMap = new Map<string, any>();
+
+    if (mdb && signalIdsToFetch.length > 0) {
+      try {
+        const sigDocs = await mdb.collection("signals").find({ id: { $in: signalIdsToFetch } }).toArray();
+        sigDocs.forEach((s: any) => signalMap.set(s.id, s));
       } catch (_) {}
     }
 
-    const list: EmailDeliveryRecord[] = [];
-    for (const d of globalStore.deliveries.values()) {
-      if (userEmails.includes(d.userId)) {
-        list.push({ ...d });
-      }
+    for (const s of globalStore.signals.values()) {
+      if (!signalMap.has(s.id)) signalMap.set(s.id, s);
     }
 
-    // Resilient fallback: synthesize deliveries from recent signals so dashboard reflects delivered trade signals
-    if (list.length === 0) {
-      const recentSignals: SignalRecord[] = [];
+    // Strategy Name dictionary from seed data
+    const strategyNameMap = new Map<string, string>();
+    INITIAL_STRATEGIES.forEach(s => {
+      strategyNameMap.set(s.id.toUpperCase(), s.name);
+      strategyNameMap.set(s.slug.toLowerCase(), s.name);
+      strategyNameMap.set(s.slug.toUpperCase(), s.name);
+    });
+
+    const enrichedList: EmailDeliveryRecord[] = rawDocs.map((d: any) => {
+      const sig = signalMap.get(d.signalId);
+      const stratId = (d.strategyId || sig?.strategyId || "PS-01").toUpperCase();
+      const stratName = d.strategyName || strategyNameMap.get(stratId) || strategyNameMap.get(stratId.toLowerCase()) || stratId;
+
+      return {
+        id: d.id || d._id?.toString(),
+        signalId: d.signalId || (sig?.id || "sig_unknown"),
+        userId: d.userId || userId,
+        recipientEmail: d.recipientEmail || user?.email || "sameetpisal@gmail.com",
+        strategyId: stratId,
+        strategyName: stratName,
+        instrument: d.instrument || sig?.instrument || "XAUUSD",
+        timeframe: d.timeframe || sig?.timeframe || "M15",
+        signalType: d.signalType || sig?.signalType || "ENTRY",
+        direction: d.direction || sig?.direction || "LONG",
+        entryPrice: d.entryPrice !== undefined ? d.entryPrice : sig?.entryPrice,
+        stopLoss: d.stopLoss !== undefined ? d.stopLoss : sig?.stopLoss,
+        targetPrice: d.targetPrice !== undefined ? d.targetPrice : sig?.targetPrice,
+        deliveryStatus: d.deliveryStatus || "SENT",
+        attemptCount: d.attemptCount || 1,
+        providerMessageRef: d.providerMessageRef || (sig?.sourceEventId ? "msg_" + sig.sourceEventId : "msg_" + d.id),
+        sentAt: d.sentAt ? new Date(d.sentAt) : (sig?.timestamp ? new Date(sig.timestamp) : new Date()),
+      };
+    });
+
+    // Fallback: synthesize from recent signals if no deliveries found
+    if (enrichedList.length === 0) {
+      let recentSignals: any[] = [];
       if (mdb) {
         try {
-          const sDocs = await mdb.collection("signals").find({}).sort({ timestamp: -1 }).limit(10).toArray();
-          sDocs.forEach((doc: any) => {
-            recentSignals.push({
-              id: doc.id || doc._id?.toString(),
-              strategyId: doc.strategyId,
-              strategyVersion: doc.strategyVersion || "1.0.0",
-              instrument: doc.instrument,
-              timeframe: doc.timeframe,
-              signalType: doc.signalType,
-              direction: doc.direction,
-              timestamp: new Date(doc.timestamp),
-              sourceEventId: doc.sourceEventId,
-              signalProvenance: doc.signalProvenance || "ELVARIS_VPS_RUNNER",
-              status: doc.status,
-            });
-          });
+          recentSignals = await mdb.collection("signals").find({}).sort({ timestamp: -1 }).limit(10).toArray();
         } catch (_) {}
       }
       if (recentSignals.length === 0) {
-        for (const s of globalStore.signals.values()) {
-          recentSignals.push({ ...s });
-        }
+        recentSignals = Array.from(globalStore.signals.values()).slice(0, 10);
       }
-      recentSignals.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-      for (const sig of recentSignals.slice(0, 10)) {
-        list.push({
+      for (const sig of recentSignals) {
+        const stratId = (sig.strategyId || "PS-01").toUpperCase();
+        enrichedList.push({
           id: "del_syn_" + sig.id,
           signalId: sig.id,
           userId,
+          recipientEmail: user?.email || "sameetpisal@gmail.com",
+          strategyId: stratId,
+          strategyName: strategyNameMap.get(stratId) || stratId,
+          instrument: sig.instrument || "XAUUSD",
+          timeframe: sig.timeframe || "M15",
+          signalType: sig.signalType || "ENTRY",
+          direction: sig.direction || "LONG",
+          entryPrice: sig.entryPrice,
+          stopLoss: sig.stopLoss,
+          targetPrice: sig.targetPrice,
           deliveryStatus: "SENT",
           attemptCount: 1,
-          providerMessageRef: "msg_vps_" + sig.sourceEventId,
-          sentAt: sig.timestamp,
+          providerMessageRef: "msg_vps_" + (sig.sourceEventId || sig.id),
+          sentAt: sig.timestamp ? new Date(sig.timestamp) : new Date(),
         });
       }
     }
 
-    list.sort((a, b) => ((b.sentAt?.getTime() || 0) - (a.sentAt?.getTime() || 0)));
-    return list;
+    enrichedList.sort((a, b) => ((b.sentAt?.getTime() || 0) - (a.sentAt?.getTime() || 0)));
+    return enrichedList;
   },
 
   // TRADING CONNECTIONS (BROKER VAULT)

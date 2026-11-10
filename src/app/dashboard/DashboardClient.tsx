@@ -501,19 +501,26 @@ export function DashboardClient() {
           <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>Signal Alerts Enabled</div>
         </div>
 
-        <div
+        <Link
+          href="/profile"
           style={{
+            display: "block",
             padding: "16px 20px",
             borderRadius: 12,
             border: "1px solid var(--line)",
             background: "rgba(255,255,255,0.02)",
+            textDecoration: "none",
+            transition: "border-color 0.2s ease, background 0.2s ease",
           }}
         >
-          <div style={{ fontSize: 26, fontWeight: 800, color: "#ffffff", fontFamily: "'JetBrains Mono', monospace" }}>
-            {deliveries.length}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#ffffff", fontFamily: "'JetBrains Mono', monospace" }}>
+              {deliveries.length}
+            </div>
+            <span style={{ fontSize: 11, color: "#38bdf8", fontWeight: 600 }}>Audit History ↗</span>
           </div>
           <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>Signals Delivered</div>
-        </div>
+        </Link>
 
         <div
           style={{

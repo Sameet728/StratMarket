@@ -4,8 +4,8 @@ import { tradingViewAdapter } from "@/lib/market-data";
 import { strategyExecutionRunner } from "@/lib/strategy-execution";
 
 describe("Private Live Charting Platform & Market Data", () => {
-  it("resolves the four Pine Script strategies to their exact IDs, instrument, and M15 timeframe", async () => {
-    const pineIds = ["PS-01", "PS-02", "PS-03", "PS-04"];
+  it("resolves the three Pine Script strategies to their exact IDs, instrument, and M15 timeframe", async () => {
+    const pineIds = ["PS-01", "PS-02", "PS-03"];
     for (const id of pineIds) {
       const strategy = await db.getStrategyBySlug(id);
       expect(strategy).toBeDefined();
@@ -88,8 +88,8 @@ describe("Private Live Charting Platform & Market Data", () => {
 
     expect(tpLevel).toBeDefined();
     expect(slLevel).toBeDefined();
-    expect(tpLevel!.price).toBe(2618.00); // 2600 + $18 TP
-    expect(slLevel!.price).toBe(2586.00); // 2600 - $14 SL
+    expect(tpLevel!.price).toBe(2614.00); // 2600 + $14.00 TP
+    expect(slLevel!.price).toBe(2586.25); // 2600 - $13.75 SL
   });
 
   it("updates forming candle in place without creating duplicates", () => {
@@ -115,14 +115,13 @@ describe("Private Live Charting Platform & Market Data", () => {
     expect(updated[1].volume).toBe(25);
   });
 
-  it("authenticates that private scripts PS-01, PS-02, PS-03, and PS-04 exist in protected directory", () => {
+  it("authenticates that private scripts PS-01, PS-02, and PS-03 exist in protected directory", () => {
     expect(strategyExecutionRunner.hasPrivateScript("PS-01")).toBe(true);
     expect(strategyExecutionRunner.hasPrivateScript("PS-02")).toBe(true);
     expect(strategyExecutionRunner.hasPrivateScript("PS-03")).toBe(true);
-    expect(strategyExecutionRunner.hasPrivateScript("PS-04")).toBe(true);
   });
 
-  it("executes Grandmaster (PS-01) with 5 plot overlays, exact $18/$14 bracket, and 82.61% HUD metrics", async () => {
+  it("executes Grandmaster (PS-01) with 5 plot overlays, exact $14/$13.75 bracket, and 80.00% HUD metrics", async () => {
     const strat = await db.getStrategyBySlug("PS-01");
     expect(strat).toBeDefined();
 
@@ -150,23 +149,23 @@ describe("Private Live Charting Platform & Market Data", () => {
     expect(seriesNames).toContain("Lower Band (2.1σ)");
     expect(seriesNames).toContain("Band Basis SMA (28)");
 
-    expect(contract.summary.riskParameters.takeProfit).toBe("+1.29R (+18.0 pts)");
-    expect(contract.summary.riskParameters.stopLoss).toBe("-1.00R (-14.0 pts)");
+    expect(contract.summary.riskParameters.takeProfit).toBe("+1.02R (+14.0 pts)");
+    expect(contract.summary.riskParameters.stopLoss).toBe("-1.00R (-13.8 pts)");
 
     const wrMetric = contract.summary.hudMetrics?.find((m) => m.label === "Win Rate");
     expect(wrMetric).toBeDefined();
-    expect(wrMetric?.value).toContain("82.61%");
+    expect(wrMetric?.value).toContain("80.00%");
 
     const rrMetric = contract.summary.hudMetrics?.find((m) => m.label === "Realized R:R Ratio");
     expect(rrMetric).toBeDefined();
-    expect(rrMetric?.value).toContain("1 : 1.29");
+    expect(rrMetric?.value).toContain("1 : 1.02");
   });
 
-  it("executes Elite (PS-04) with 5 plot overlays, exact $17/$14 bracket, and 80.65% HUD metrics", async () => {
-    const strat = await db.getStrategyBySlug("PS-04");
+  it("executes London Core Expansion (PS-03) with 5 plot overlays and HUD metrics", async () => {
+    const strat = await db.getStrategyBySlug("PS-03");
     expect(strat).toBeDefined();
 
-    const baseTime = Date.UTC(2026, 9, 15, 8, 0, 0); // 08:00 UTC (active session: 06:00-20:00)
+    const baseTime = Date.UTC(2026, 9, 15, 8, 0, 0);
     const candles = Array.from({ length: 60 }, (_, i) => ({
       time: baseTime + i * 15 * 60 * 1000,
       open: 2680 + Math.cos(i * 0.2) * 8,
@@ -178,31 +177,31 @@ describe("Private Live Charting Platform & Market Data", () => {
 
     const contract = strategyExecutionRunner.execute(strat!, candles);
 
-    expect(contract.strategyId).toBe("PS-04");
+    expect(contract.strategyId).toBe("PS-03");
     expect(contract.executionStatus).toBe("ACTIVE");
     expect(contract.series.length).toBe(5);
 
     const seriesNames = contract.series.map((s) => s.name);
     expect(seriesNames).toContain("Fast EMA (50)");
     expect(seriesNames).toContain("Macro EMA (200)");
-    expect(seriesNames).toContain("Upper Band (2.2σ)");
-    expect(seriesNames).toContain("Lower Band (2.2σ)");
-    expect(seriesNames).toContain("Band Basis SMA (30)");
+    expect(seriesNames).toContain("Upper Band (2.1σ)");
+    expect(seriesNames).toContain("Lower Band (2.1σ)");
+    expect(seriesNames).toContain("Band Basis SMA (28)");
 
-    expect(contract.summary.riskParameters.takeProfit).toBe("+1.21R (+17.0 pts)");
-    expect(contract.summary.riskParameters.stopLoss).toBe("-1.00R (-14.0 pts)");
+    expect(contract.summary.riskParameters.takeProfit).toBe("+1.16R (+16.0 pts)");
+    expect(contract.summary.riskParameters.stopLoss).toBe("-1.00R (-13.8 pts)");
 
     const wrMetric = contract.summary.hudMetrics?.find((m) => m.label === "Win Rate");
     expect(wrMetric).toBeDefined();
-    expect(wrMetric?.value).toContain("80.65%");
+    expect(wrMetric?.value).toContain("80.00%");
 
     const rrMetric = contract.summary.hudMetrics?.find((m) => m.label === "Realized R:R Ratio");
     expect(rrMetric).toBeDefined();
-    expect(rrMetric?.value).toContain("1 : 1.21");
+    expect(rrMetric?.value).toContain("1 : 1.16");
   });
 
   it("produces authentic visual Trade Boxes (Long/Short Position tool zones) and Sovereign Guards", async () => {
-    const strat = await db.getStrategyBySlug("PS-04");
+    const strat = await db.getStrategyBySlug("PS-01");
     expect(strat).toBeDefined();
 
     // Fetch real historical bars from TradingView adapter which contains confirmed trades
@@ -210,7 +209,7 @@ describe("Private Live Charting Platform & Market Data", () => {
     const contract = strategyExecutionRunner.execute(strat!, candles);
 
     expect(contract.sovereignGuards).toBeDefined();
-    expect(contract.sovereignGuards!.length).toBe(5);
+    expect(contract.sovereignGuards!.length).toBe(6);
 
     const guardLabels = contract.sovereignGuards!.map((g) => g.label);
     expect(guardLabels).toContain("Timeframe Lock");
@@ -240,11 +239,11 @@ describe("Private Live Charting Platform & Market Data", () => {
     expect(trade.exitBadge).toBeDefined();
   });
 
-  it("executes Apex (PS-02) with 88.46% WR, PF 9.31, 25% rejection wick gate, and $17/$14 payoff", async () => {
+  it("executes US Afternoon Reversal (PS-02) with 83.33% WR, PF 6.55, and $18/$13.75 payoff", async () => {
     const strat = await db.getStrategyBySlug("PS-02");
     expect(strat).toBeDefined();
 
-    const baseTime = Date.UTC(2026, 9, 15, 8, 0, 0);
+    const baseTime = Date.UTC(2026, 9, 15, 15, 0, 0); // 15:00 UTC active
     const candles = Array.from({ length: 60 }, (_, i) => ({
       time: baseTime + i * 15 * 60 * 1000,
       open: 2650 + Math.sin(i * 0.3) * 12,
@@ -259,16 +258,13 @@ describe("Private Live Charting Platform & Market Data", () => {
     expect(contract.executionStatus).toBe("ACTIVE");
 
     const wrMetric = contract.summary.hudMetrics?.find((m) => m.label === "Win Rate");
-    expect(wrMetric?.value).toContain("88.46%");
+    expect(wrMetric?.value).toContain("83.33%");
 
     const pfMetric = contract.summary.hudMetrics?.find((m) => m.label === "Profit Factor");
-    expect(pfMetric?.value).toBe("9.31");
-
-    const wickGuard = contract.sovereignGuards?.find((g) => g.label === "Rejection Wick Gate");
-    expect(wickGuard?.value).toBe("≥25% Candle Body");
+    expect(pfMetric?.value).toBe("6.55");
   });
 
-  it("executes Strict 1:2 R:R (PS-03) with exact $20 TP / $10 SL bracket, 74.07% WR, and 10% wick gate", async () => {
+  it("executes London Core Expansion (PS-03) with exact $16 TP / $13.75 SL bracket, 80.00% WR, and PF 4.65", async () => {
     const strat = await db.getStrategyBySlug("PS-03");
     expect(strat).toBeDefined();
 
@@ -285,17 +281,14 @@ describe("Private Live Charting Platform & Market Data", () => {
     const contract = strategyExecutionRunner.execute(strat!, candles);
     expect(contract.strategyId).toBe("PS-03");
     expect(contract.executionStatus).toBe("ACTIVE");
-    expect(contract.summary.riskParameters.takeProfit).toBe("+2.00R (+20.0 pts)");
-    expect(contract.summary.riskParameters.stopLoss).toBe("-1.00R (-10.0 pts)");
+    expect(contract.summary.riskParameters.takeProfit).toBe("+1.16R (+16.0 pts)");
+    expect(contract.summary.riskParameters.stopLoss).toBe("-1.00R (-13.8 pts)");
 
     const wrMetric = contract.summary.hudMetrics?.find((m) => m.label === "Win Rate");
-    expect(wrMetric?.value).toContain("74.07%");
+    expect(wrMetric?.value).toContain("80.00%");
 
-    const payoffMetric = contract.summary.hudMetrics?.find((m) => m.label === "Payoff Ratio");
-    expect(payoffMetric?.value).toContain("1 : 2.00");
-
-    const wickGuard = contract.sovereignGuards?.find((g) => g.label === "Rejection Wick Gate");
-    expect(wickGuard?.value).toBe("≥10% Candle Body");
+    const pfMetric = contract.summary.hudMetrics?.find((m) => m.label === "Profit Factor");
+    expect(pfMetric?.value).toBe("4.65");
   });
 });
 
