@@ -82,8 +82,8 @@ export async function getMongoClient(): Promise<MongoClient | null> {
     return null;
   }
 
-  // In test environment without explicit MONGODB_URI set, default to immediate in-memory repository
-  if (process.env.NODE_ENV === "test" && !process.env.MONGODB_URI) {
+  // In test environment or when VITEST is active, use immediate in-memory repository to prevent polluting production Atlas database
+  if (process.env.NODE_ENV === "test" || process.env.VITEST === "true" || process.env.USE_IN_MEMORY_DB === "true") {
     return null;
   }
 

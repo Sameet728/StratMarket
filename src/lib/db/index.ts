@@ -449,17 +449,20 @@ export const db = {
       }
     }
 
+    const updatedUserIds = new Set<string>();
     const u = globalStore.users.get(userId);
     if (u) {
       u.testEmailSent = true;
       u.testEmailSentAt = now;
       u.testEmailSentCount = (u.testEmailSentCount || 0) + 1;
+      updatedUserIds.add(u.id);
     }
     for (const user of globalStore.users.values()) {
-      if (user.id === userId || (userEmail && user.email.toLowerCase() === userEmail.toLowerCase().trim())) {
+      if (!updatedUserIds.has(user.id) && (user.id === userId || (userEmail && user.email.toLowerCase() === userEmail.toLowerCase().trim()))) {
         user.testEmailSent = true;
         user.testEmailSentAt = now;
         user.testEmailSentCount = (user.testEmailSentCount || 0) + 1;
+        updatedUserIds.add(user.id);
       }
     }
   },
@@ -2221,6 +2224,36 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
         }
       }
     }
+
+    // Strict filter to permanently eliminate any test artifacts, dummy trial users, or automated test records
+    const isTestAccount = (email?: string, name?: string) => {
+      if (!email) return true;
+      const e = email.toLowerCase().trim();
+      if (
+        e.includes("trial_tester") ||
+        e.includes("test_limit") ||
+        e.includes("reset_") ||
+        e.includes("iso1_") ||
+        e.includes("iso2_") ||
+        e.includes("sec_") ||
+        e.includes("entitled_") ||
+        e.includes("test_") ||
+        e.includes("@trader.stratmarket") ||
+        e.includes("+test")
+      ) {
+        return true;
+      }
+      if (name && (name.includes("Trial Tester") || name.includes("Test Limit") || name.includes("Reset User"))) {
+        return true;
+      }
+      return false;
+    };
+
+    rawUsers = rawUsers.filter((u) => !isTestAccount(u.email, u.name));
+    rawDeliveries = rawDeliveries.filter((d) => d.recipientEmail && !isTestAccount(d.recipientEmail));
+    rawAlertPrefs = rawAlertPrefs.filter((a) => !isTestAccount(a.verifiedDestination || a.userId));
+    rawPasswordResets = rawPasswordResets.filter((p) => !isTestAccount(p.email));
+    rawVisits = rawVisits.filter((v) => !v.userEmail || !isTestAccount(v.userEmail));
 
     // Helper: Formatter down to exact second
     const formatTimestamp = (d: Date | string | number | undefined | null) => {
