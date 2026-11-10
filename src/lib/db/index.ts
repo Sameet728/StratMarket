@@ -2181,70 +2181,45 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
       }
     }
 
-    // Merge in-memory users if not already present
-    for (const u of globalStore.users.values()) {
-      if (!rawUsers.some((ru) => ru.email?.toLowerCase() === u.email.toLowerCase())) {
-        rawUsers.push({ ...u });
+    // Only fallback to in-memory items if MongoDB is disconnected or returns empty
+    if (!mdb || rawUsers.length === 0) {
+      for (const u of globalStore.users.values()) {
+        if (!rawUsers.some((ru) => ru.email?.toLowerCase() === u.email.toLowerCase())) {
+          rawUsers.push({ ...u });
+        }
       }
     }
 
-    // Merge in-memory signals
-    for (const s of globalStore.signals.values()) {
-      if (!rawSignals.some((rs) => rs.id === s.id)) {
-        rawSignals.push({ ...s });
+    if (!mdb || rawSignals.length === 0) {
+      for (const s of globalStore.signals.values()) {
+        if (!rawSignals.some((rs) => rs.id === s.id)) {
+          rawSignals.push({ ...s });
+        }
       }
     }
 
-    // Merge in-memory deliveries
-    for (const d of globalStore.deliveries.values()) {
-      if (!rawDeliveries.some((rd) => rd.id === d.id)) {
-        rawDeliveries.push({ ...d });
+    if (!mdb || rawDeliveries.length === 0) {
+      for (const d of globalStore.deliveries.values()) {
+        if (!rawDeliveries.some((rd) => rd.id === d.id)) {
+          rawDeliveries.push({ ...d });
+        }
       }
     }
 
-    // Merge in-memory alert preferences
-    for (const a of globalStore.alerts.values()) {
-      if (!rawAlertPrefs.some((ra) => ra.id === a.id)) {
-        rawAlertPrefs.push({ ...a });
+    if (!mdb || rawAlertPrefs.length === 0) {
+      for (const a of globalStore.alerts.values()) {
+        if (!rawAlertPrefs.some((ra) => ra.id === a.id)) {
+          rawAlertPrefs.push({ ...a });
+        }
       }
     }
 
-    // Merge in-memory site visits
-    for (const v of globalStore.siteVisits.values()) {
-      if (!rawVisits.some((rv) => rv.id === v.id)) {
-        rawVisits.push({ ...v });
+    if (!mdb || rawVisits.length === 0) {
+      for (const v of globalStore.siteVisits.values()) {
+        if (!rawVisits.some((rv) => rv.id === v.id)) {
+          rawVisits.push({ ...v });
+        }
       }
-    }
-
-    // Baseline historical traffic synthesis if site_visits collection is brand new
-    // We synthesize realistic historical page views based on actual user registrations and logins
-    if (rawVisits.length < 50) {
-      const paths = ["/", "/market", "/dashboard", "/docs", "/how", "/research", "/signin", "/profile", "/chart/xauusd"];
-      const devices: Array<"DESKTOP" | "MOBILE" | "TABLET"> = ["DESKTOP", "MOBILE", "DESKTOP", "DESKTOP", "MOBILE"];
-      const browsers = ["Chrome", "Safari", "Edge", "Firefox"];
-      const cities = ["Mumbai", "Bengaluru", "Delhi", "London", "Singapore", "New York", "Dubai", "Frankfurt"];
-
-      rawUsers.forEach((u, i) => {
-        const uCreated = new Date(u.createdAt || Date.now() - (i + 1) * 3600 * 1000);
-        rawVisits.push({
-          id: `vst_syn_${u.id || i}`,
-          sessionId: `sm_sess_hist_${i}`,
-          userId: u.id,
-          userEmail: u.email,
-          path: paths[i % paths.length],
-          referrer: i % 2 === 0 ? "https://elvariscapital.in" : "https://google.com",
-          ip: "106.195.1." + ((i % 250) + 1),
-          country: i % 6 === 0 ? "GB" : i % 8 === 0 ? "US" : i % 10 === 0 ? "SG" : "IN",
-          city: cities[i % cities.length],
-          device: devices[i % devices.length],
-          browser: browsers[i % browsers.length],
-          os: devices[i % devices.length] === "MOBILE" ? "iOS" : "Windows",
-          screenResolution: devices[i % devices.length] === "MOBILE" ? "393x852" : "1920x1080",
-          durationSeconds: Math.floor(45 + (i * 37) % 480),
-          createdAt: uCreated,
-          lastActiveAt: new Date(uCreated.getTime() + 180 * 1000),
-        });
-      });
     }
 
     // Helper: Formatter down to exact second

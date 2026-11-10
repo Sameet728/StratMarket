@@ -118,6 +118,13 @@ export function AnalyticsClient() {
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState<"feed" | "users" | "alerts" | "signals" | "traffic">("feed");
 
+  // Admin Access Protection States
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [passwordInput, setPasswordInput] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
+
   // Filter states
   const [feedFilter, setFeedFilter] = useState<string>("ALL");
   const [feedSearch, setFeedSearch] = useState<string>("");
@@ -126,13 +133,29 @@ export function AnalyticsClient() {
 
   const fetchData = async (showRefreshIndicator = false) => {
     if (showRefreshIndicator) setIsRefreshing(true);
+    const key = typeof window !== "undefined" ? window.sessionStorage.getItem("sm_analytics_key") || "" : "";
+
     try {
       const res = await fetch("/api/analytics/overview", {
-        headers: { "Cache-Control": "no-cache" },
+        headers: {
+          "Cache-Control": "no-cache",
+          "x-analytics-key": key,
+        },
       });
+
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        if (typeof window !== "undefined") {
+          window.sessionStorage.removeItem("sm_analytics_key");
+        }
+        setLoading(false);
+        return;
+      }
+
       if (!res.ok) throw new Error("Failed to load platform telemetry overview");
       const json = await res.json();
       setData(json);
+      setIsAuthenticated(true);
       setLastRefreshedAt(new Date());
       setError(null);
     } catch (err: any) {
@@ -144,17 +167,91 @@ export function AnalyticsClient() {
     }
   };
 
+  // Initial check on mount
   useEffect(() => {
-    fetchData();
+    async function checkAuth() {
+      try {
+        const storedKey = typeof window !== "undefined" ? window.sessionStorage.getItem("sm_analytics_key") : null;
+        if (storedKey === "Vedant@06") {
+          setIsAuthenticated(true);
+          await fetchData();
+          return;
+        }
+
+        const res = await fetch("/api/analytics/auth");
+        const json = await res.json().catch(() => ({ authenticated: false }));
+        if (json.authenticated) {
+          setIsAuthenticated(true);
+          if (typeof window !== "undefined") {
+            window.sessionStorage.setItem("sm_analytics_key", "Vedant@06");
+          }
+          await fetchData();
+        } else {
+          setIsAuthenticated(false);
+          setLoading(false);
+        }
+      } catch (_) {
+        setIsAuthenticated(false);
+        setLoading(false);
+      }
+    }
+    checkAuth();
   }, []);
 
+  // 10s Auto-refresh timer when authenticated
   useEffect(() => {
-    if (!autoRefresh) return;
+    if (!autoRefresh || !isAuthenticated) return;
     const interval = setInterval(() => {
       fetchData(false);
     }, 10000);
     return () => clearInterval(interval);
-  }, [autoRefresh]);
+  }, [autoRefresh, isAuthenticated]);
+
+  const handleUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordInput.trim()) {
+      setAuthError("Administrator access key is required.");
+      return;
+    }
+
+    setIsAuthenticating(true);
+    setAuthError(null);
+
+    try {
+      const res = await fetch("/api/analytics/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: passwordInput.trim() }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (res.ok && json.ok) {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem("sm_analytics_key", passwordInput.trim());
+        }
+        setIsAuthenticated(true);
+        setLoading(true);
+        await fetchData(true);
+      } else {
+        setAuthError(json.error || "Invalid administrator password. Access denied.");
+      }
+    } catch (err: any) {
+      setAuthError(err?.message || "Authentication error occurred.");
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  const handleLockTerminal = async () => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem("sm_analytics_key");
+    }
+    await fetch("/api/analytics/auth", { method: "DELETE" }).catch(() => {});
+    setIsAuthenticated(false);
+    setData(null);
+    setPasswordInput("");
+  };
 
   // Filtered Minute-by-Minute feed
   const filteredFeed = useMemo(() => {
@@ -199,12 +296,13 @@ export function AnalyticsClient() {
     );
   }, [data?.alertReceivers, alertSearch]);
 
-  if (loading) {
+  // 1. Loading State
+  if (loading && isAuthenticated === null) {
     return (
       <div className="wrap admin-wrap" style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
         <div style={{ width: "42px", height: "42px", borderRadius: "50%", border: "2px solid rgba(163, 230, 53, 0.2)", borderTopColor: "var(--lime)", animation: "spin 0.8s linear infinite", marginBottom: "20px" }} />
-        <h2 style={{ fontSize: "20px", fontWeight: 700, letterSpacing: "-0.02em" }}>Connecting to Real-Time Telemetry Pipeline...</h2>
-        <p className="note" style={{ marginTop: "8px" }}>Streaming institutional MongoDB Atlas records and VPS signal feeds.</p>
+        <h2 style={{ fontSize: "20px", fontWeight: 700, letterSpacing: "-0.02em" }}>Authenticating Administrative Terminal...</h2>
+        <p className="note" style={{ marginTop: "8px" }}>Verifying administrator credentials.</p>
         <style jsx>{`
           @keyframes spin {
             to { transform: rotate(360deg); }
@@ -214,6 +312,146 @@ export function AnalyticsClient() {
     );
   }
 
+  // 2. RESTRICTED ACCESS SCREEN (Password Lock Gate)
+  if (!isAuthenticated) {
+    return (
+      <div className="wrap admin-wrap" style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 16px" }}>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "460px",
+            background: "rgba(10, 10, 12, 0.95)",
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+            borderRadius: "18px",
+            padding: "36px 32px",
+            boxShadow: "0 24px 64px rgba(0, 0, 0, 0.8), 0 0 40px rgba(163, 230, 53, 0.05)",
+            textAlign: "center",
+          }}
+        >
+          {/* Lock Header */}
+          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "56px", height: "56px", borderRadius: "14px", background: "rgba(163, 230, 53, 0.1)", border: "1px solid rgba(163, 230, 53, 0.3)", marginBottom: "20px", color: "var(--lime)" }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+
+          <div style={{ display: "inline-block", padding: "3px 10px", borderRadius: "999px", background: "rgba(245, 158, 11, 0.12)", border: "1px solid rgba(245, 158, 11, 0.3)", color: "#f59e0b", fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>
+            Admin Restricted · Level 1 Security
+          </div>
+
+          <h2 style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.03em", color: "#ffffff", marginBottom: "8px" }}>
+            Admin Telemetry Console
+          </h2>
+          <p style={{ fontSize: "13px", color: "var(--mut)", lineHeight: "1.55", marginBottom: "24px" }}>
+            Cloudflare-grade live telemetry across all user sessions, dwell times, registered traders, alert subscriptions, and VPS execution feeds.
+          </p>
+
+          {authError && (
+            <div
+              style={{
+                background: "rgba(239, 68, 68, 0.12)",
+                border: "1px solid rgba(239, 68, 68, 0.35)",
+                color: "#ef4444",
+                padding: "10px 14px",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: 500,
+                marginBottom: "20px",
+                textAlign: "left",
+              }}
+            >
+              ⚠ {authError}
+            </div>
+          )}
+
+          <form onSubmit={handleUnlock} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div style={{ textAlign: "left" }}>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--mut)", marginBottom: "6px" }}>
+                Administrator Access Password
+              </label>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="Enter administrator password..."
+                  autoFocus
+                  style={{
+                    width: "100%",
+                    padding: "12px 44px 12px 14px",
+                    background: "rgba(255, 255, 255, 0.04)",
+                    border: "1px solid var(--line)",
+                    borderRadius: "10px",
+                    color: "#ffffff",
+                    fontSize: "14px",
+                    outline: "none",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: "absolute",
+                    right: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    color: "var(--mut)",
+                    cursor: "pointer",
+                    padding: "4px",
+                  }}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isAuthenticating}
+              className="pill"
+              style={{
+                width: "100%",
+                padding: "13px",
+                borderRadius: "10px",
+                background: "var(--lime)",
+                color: "#000000",
+                fontWeight: 700,
+                fontSize: "14px",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: "0 4px 18px rgba(163, 230, 53, 0.25)",
+                touchAction: "manipulation",
+              }}
+            >
+              {isAuthenticating ? "Verifying Access Key..." : "Unlock Admin Telemetry →"}
+            </button>
+          </form>
+
+          <div style={{ marginTop: "24px", paddingTop: "18px", borderTop: "1px solid var(--line)" }}>
+            <Link href="/" style={{ color: "var(--mut)", fontSize: "12px", textDecoration: "none" }}>
+              ← Return to StratMarket Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Error State (When authenticated but data failed to load)
   if (error || !data) {
     return (
       <div className="wrap admin-wrap" style={{ textAlign: "center", minHeight: "60vh", paddingTop: "40px" }}>
@@ -226,6 +464,7 @@ export function AnalyticsClient() {
     );
   }
 
+  // 4. FULL ADMIN TELEMETRY DASHBOARD (Authenticated View)
   return (
     <div className="wrap admin-wrap" style={{ maxWidth: "1360px", margin: "0 auto", paddingBottom: "80px" }}>
       {/* Top Breadcrumb & Live Status Bar */}
@@ -236,7 +475,7 @@ export function AnalyticsClient() {
             <span style={{ fontWeight: 700, fontSize: "14px", letterSpacing: "-0.02em" }}>StratMarket</span>
           </Link>
           <span style={{ color: "var(--mut)", fontSize: "13px" }}>/</span>
-          <span style={{ color: "#ffffff", fontWeight: 600, fontSize: "13px" }}>Real-Time Telemetry & Site Analytics</span>
+          <span style={{ color: "#ffffff", fontWeight: 600, fontSize: "13px" }}>Cloudflare-Grade Admin Telemetry</span>
           <span
             style={{
               display: "inline-flex",
@@ -254,7 +493,7 @@ export function AnalyticsClient() {
             }}
           >
             <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--lime)", boxShadow: "0 0 10px var(--lime)" }} />
-            Live Monitored
+            100% Live Atlas Records
           </span>
         </div>
 
@@ -307,13 +546,35 @@ export function AnalyticsClient() {
           <span className="mono" style={{ fontSize: "11px", color: "var(--mut)" }}>
             {lastRefreshedAt ? `Updated ${lastRefreshedAt.toLocaleTimeString()}` : "Live Connected"}
           </span>
+
+          <button
+            type="button"
+            onClick={handleLockTerminal}
+            style={{
+              padding: "6px 12px",
+              borderRadius: "8px",
+              background: "rgba(239, 68, 68, 0.1)",
+              border: "1px solid rgba(239, 68, 68, 0.3)",
+              color: "#ef4444",
+              fontSize: "12px",
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              marginLeft: "6px",
+            }}
+            title="Lock administrative console"
+          >
+            🔒 Lock Terminal
+          </button>
         </div>
       </div>
 
       {/* Main Page Title */}
       <div style={{ marginBottom: "28px" }}>
         <h1 style={{ fontSize: "clamp(24px, 4vw, 34px)", fontWeight: 800, letterSpacing: "-0.03em", color: "#ffffff", marginBottom: "8px" }}>
-          Platform Telemetry & User Analytics
+          Platform Telemetry &amp; User Analytics
         </h1>
         <p style={{ color: "var(--mut)", fontSize: "14px", maxWidth: "800px", lineHeight: "1.5" }}>
           Full 24/7 minute-by-minute institutional telemetry across site visitors, user registrations, real-time alert subscribers, and algorithmic VPS signal dispatches.
@@ -350,7 +611,7 @@ export function AnalyticsClient() {
           <div className="mono" style={{ fontSize: "28px", fontWeight: 800, color: "#ffffff", lineHeight: 1.1 }}>
             {data.summary.totalPageViews.toLocaleString()}
           </div>
-          <div style={{ fontSize: "11px", color: "var(--mut)", marginTop: "6px" }}>Page visits & terminal views</div>
+          <div style={{ fontSize: "11px", color: "var(--mut)", marginTop: "6px" }}>Page visits &amp; terminal views</div>
         </div>
 
         {/* Avg Dwell Time on Site */}
@@ -552,7 +813,7 @@ export function AnalyticsClient() {
             touchAction: "manipulation",
           }}
         >
-          <span>📡 Signals & Deliveries</span>
+          <span>📡 Signals &amp; Deliveries</span>
           <span
             className="mono"
             style={{
@@ -584,7 +845,7 @@ export function AnalyticsClient() {
             touchAction: "manipulation",
           }}
         >
-          <span>📊 Traffic & Dwell Time</span>
+          <span>📊 Traffic &amp; Dwell Time</span>
           <span
             className="mono"
             style={{
@@ -1103,9 +1364,9 @@ export function AnalyticsClient() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
               <thead>
                 <tr style={{ background: "rgba(255, 255, 255, 0.03)", borderBottom: "1px solid var(--line)" }}>
-                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>SIGNAL ID & STRATEGY</th>
+                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>SIGNAL ID &amp; STRATEGY</th>
                   <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>INSTRUMENT / TF</th>
-                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>DIRECTION & ORDER</th>
+                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>DIRECTION &amp; ORDER</th>
                   <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>ENTRY / SL / TP</th>
                   <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>DISPATCHED TO</th>
                   <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>TIMESTAMP</th>
@@ -1186,7 +1447,7 @@ export function AnalyticsClient() {
                 <tr style={{ background: "rgba(255, 255, 255, 0.03)", borderBottom: "1px solid var(--line)" }}>
                   <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>DELIVERY ID</th>
                   <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>RECIPIENT INBOX</th>
-                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>STRATEGY & ASSET</th>
+                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>STRATEGY &amp; ASSET</th>
                   <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>STATUS</th>
                   <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--mut)" }}>DISPATCH TIMESTAMP</th>
                 </tr>
@@ -1253,31 +1514,35 @@ export function AnalyticsClient() {
             {/* Top Visited Pages */}
             <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--line)", borderRadius: "14px", padding: "20px" }}>
               <h4 style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", marginBottom: "16px" }}>
-                Top Visited Pages & Routes
+                Top Visited Pages &amp; Routes
               </h4>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {data.traffic.topPages.map((page) => (
-                  <div key={page.path}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-                      <span className="mono" style={{ fontSize: "13px", fontWeight: 600, color: "#ffffff" }}>
-                        {page.path}
-                      </span>
-                      <span className="mono" style={{ fontSize: "12px", color: "var(--lime)" }}>
-                        {page.views} views ({page.percentage}%)
-                      </span>
+                {data.traffic.topPages.length === 0 ? (
+                  <div style={{ color: "var(--mut)", fontSize: "13px" }}>No page visits recorded yet.</div>
+                ) : (
+                  data.traffic.topPages.map((page) => (
+                    <div key={page.path}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                        <span className="mono" style={{ fontSize: "13px", fontWeight: 600, color: "#ffffff" }}>
+                          {page.path}
+                        </span>
+                        <span className="mono" style={{ fontSize: "12px", color: "var(--lime)" }}>
+                          {page.views} views ({page.percentage}%)
+                        </span>
+                      </div>
+                      <div style={{ width: "100%", height: "6px", background: "rgba(255, 255, 255, 0.06)", borderRadius: "999px", overflow: "hidden" }}>
+                        <div
+                          style={{
+                            width: `${Math.max(4, page.percentage)}%`,
+                            height: "100%",
+                            background: "var(--lime)",
+                            borderRadius: "999px",
+                          }}
+                        />
+                      </div>
                     </div>
-                    <div style={{ width: "100%", height: "6px", background: "rgba(255, 255, 255, 0.06)", borderRadius: "999px", overflow: "hidden" }}>
-                      <div
-                        style={{
-                          width: `${Math.max(4, page.percentage)}%`,
-                          height: "100%",
-                          background: "var(--lime)",
-                          borderRadius: "999px",
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -1287,32 +1552,36 @@ export function AnalyticsClient() {
                 Device Breakdown
               </h4>
               <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                {data.traffic.devices.map((d) => (
-                  <div key={d.device}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-                      <span style={{ fontSize: "13px", fontWeight: 600, color: "#ffffff" }}>
-                        {d.device === "DESKTOP" ? "🖥️ Desktop" : d.device === "MOBILE" ? "📱 Mobile Device" : "📟 Tablet"}
-                      </span>
-                      <span className="mono" style={{ fontSize: "12px", color: "#38bdf8" }}>
-                        {d.count} ({d.percentage}%)
-                      </span>
+                {data.traffic.devices.length === 0 ? (
+                  <div style={{ color: "var(--mut)", fontSize: "13px" }}>Awaiting client session telemetry.</div>
+                ) : (
+                  data.traffic.devices.map((d) => (
+                    <div key={d.device}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                        <span style={{ fontSize: "13px", fontWeight: 600, color: "#ffffff" }}>
+                          {d.device === "DESKTOP" ? "🖥️ Desktop" : d.device === "MOBILE" ? "📱 Mobile Device" : "📟 Tablet"}
+                        </span>
+                        <span className="mono" style={{ fontSize: "12px", color: "#38bdf8" }}>
+                          {d.count} ({d.percentage}%)
+                        </span>
+                      </div>
+                      <div style={{ width: "100%", height: "6px", background: "rgba(255, 255, 255, 0.06)", borderRadius: "999px", overflow: "hidden" }}>
+                        <div
+                          style={{
+                            width: `${Math.max(4, d.percentage)}%`,
+                            height: "100%",
+                            background: "#38bdf8",
+                            borderRadius: "999px",
+                          }}
+                        />
+                      </div>
                     </div>
-                    <div style={{ width: "100%", height: "6px", background: "rgba(255, 255, 255, 0.06)", borderRadius: "999px", overflow: "hidden" }}>
-                      <div
-                        style={{
-                          width: `${Math.max(4, d.percentage)}%`,
-                          height: "100%",
-                          background: "#38bdf8",
-                          borderRadius: "999px",
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               <h4 style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", marginTop: "24px", marginBottom: "14px" }}>
-                Browsers & Operating Systems
+                Browsers &amp; Operating Systems
               </h4>
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                 {data.traffic.browsers.map((b) => (
@@ -1354,27 +1623,31 @@ export function AnalyticsClient() {
                 Geographic Terminal Origin
               </h4>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {data.traffic.locations.map((loc, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "8px 12px",
-                      background: "rgba(255, 255, 255, 0.02)",
-                      borderRadius: "8px",
-                      border: "1px solid rgba(255, 255, 255, 0.03)",
-                    }}
-                  >
-                    <span style={{ fontSize: "13px", color: "#ffffff", fontWeight: 600 }}>
-                      🌍 {loc.city ? `${loc.city}, ` : ""}{loc.country}
-                    </span>
-                    <span className="mono" style={{ fontSize: "12px", color: "var(--lime)", fontWeight: 700 }}>
-                      {loc.count} sessions
-                    </span>
-                  </div>
-                ))}
+                {data.traffic.locations.length === 0 ? (
+                  <div style={{ color: "var(--mut)", fontSize: "13px" }}>No geographical sessions logged yet.</div>
+                ) : (
+                  data.traffic.locations.map((loc, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "8px 12px",
+                        background: "rgba(255, 255, 255, 0.02)",
+                        borderRadius: "8px",
+                        border: "1px solid rgba(255, 255, 255, 0.03)",
+                      }}
+                    >
+                      <span style={{ fontSize: "13px", color: "#ffffff", fontWeight: 600 }}>
+                        🌍 {loc.city ? `${loc.city}, ` : ""}{loc.country}
+                      </span>
+                      <span className="mono" style={{ fontSize: "12px", color: "var(--lime)", fontWeight: 700 }}>
+                        {loc.count} sessions
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

@@ -87,3 +87,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: error?.message || "Failed to record telemetry" }, { status: 500 });
   }
 }
+

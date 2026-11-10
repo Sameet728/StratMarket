@@ -71,9 +71,6 @@ export function HeaderNav() {
       </span>
 
       <div className="r">
-        <Link href="/analytics" className="pill g sm nav-analytics-link" title="Real-time site telemetry & user analytics">
-          Analytics
-        </Link>
         <Link href="/docs" className="pill g sm nav-docs-link">
           Docs
         </Link>
@@ -88,9 +85,14 @@ export function HeaderNav() {
                   Profile
                 </Link>
                 {user.role === "ADMIN" && (
-                  <Link href="/admin" className="pill g sm nav-desktop-only" style={{ borderColor: "rgba(255, 255, 255, 0.2)" }}>
-                    Admin
-                  </Link>
+                  <>
+                    <Link href="/analytics" className="pill g sm nav-desktop-only" style={{ color: "var(--lime)", borderColor: "rgba(163, 230, 53, 0.3)" }}>
+                      Analytics
+                    </Link>
+                    <Link href="/admin" className="pill g sm nav-desktop-only" style={{ borderColor: "rgba(255, 255, 255, 0.2)" }}>
+                      Admin
+                    </Link>
+                  </>
                 )}
                 <button
                   type="button"
