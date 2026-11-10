@@ -62,7 +62,7 @@ export default async function StrategyReportPage({ params }: Props) {
   };
 
   return (
-    <div className="page" id="p-strategy-report" style={{ minHeight: "100vh", paddingTop: "20px" }}>
+    <div className="page" id="p-strategy-report" style={{ minHeight: "100vh" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

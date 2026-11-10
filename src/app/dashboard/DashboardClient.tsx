@@ -362,7 +362,7 @@ export function DashboardClient() {
 
   if (loading) {
     return (
-      <div className="wrap" style={{ padding: "120px 24px", textAlign: "center" }}>
+      <div className="wrap dashboard-wrap" style={{ textAlign: "center" }}>
         <div
           style={{
             display: "inline-block",
@@ -401,7 +401,7 @@ export function DashboardClient() {
   const activeTrialsCount = strategies.filter((s) => s.trialStatus === "ACTIVE").length;
 
   return (
-    <div className="wrap" style={{ padding: "90px 24px 80px", maxWidth: 1280, margin: "0 auto" }}>
+    <div className="wrap dashboard-wrap">
       {/* 1. Header Bar */}
       <div
         style={{
@@ -422,13 +422,15 @@ export function DashboardClient() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
-                padding: "3px 10px",
+                padding: "4px 12px",
                 borderRadius: 20,
                 fontSize: 12,
                 fontWeight: 700,
                 background: "rgba(163, 230, 53, 0.06)",
                 border: "1px solid rgba(163, 230, 53, 0.3)",
                 color: "#ffffff",
+                maxWidth: "100%",
+                flexWrap: "wrap",
               }}
             >
               <span
@@ -444,7 +446,7 @@ export function DashboardClient() {
             </span>
           </div>
 
-          <h1 style={{ fontSize: 32, margin: "10px 0 0", fontWeight: 800, display: "flex", alignItems: "center", gap: 10 }}>
+          <h1 style={{ fontSize: "clamp(24px, 5.5vw, 32px)", margin: "10px 0 0", fontWeight: 800, display: "flex", alignItems: "center", gap: 10 }}>
             <StratMarketLogo size={28} color="#ffffff" />
             <span>Trading Dashboard</span>
           </h1>
@@ -454,7 +456,7 @@ export function DashboardClient() {
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <Link href="/profile" className="pill g sm" style={{ fontSize: 13 }}>
             Profile &amp; Settings
           </Link>

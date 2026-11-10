@@ -157,7 +157,7 @@ export function StrategyReportView({ strategy }: Props) {
   };
 
   return (
-    <div className="strategy-report-container native-report-wrap" style={{ maxWidth: "1180px", margin: "0 auto", padding: "36px 24px 140px" }}>
+    <div className="strategy-report-container native-report-wrap" style={{ maxWidth: "1180px", margin: "0 auto" }}>
       {/* Top Breadcrumb & Strategy Badges */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", paddingBottom: "24px", borderBottom: "1px solid var(--line)", marginBottom: "32px" }}>
         <Link href="/market" className="report-back-link" style={{ display: "inline-flex", alignItems: "center", gap: "8px", color: "var(--mut)", fontSize: "14px", textDecoration: "none" }}>

@@ -660,6 +660,24 @@ section.b {
   padding: 96px 0;
 }
 
+.dashboard-wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 92px 24px 80px;
+}
+
+.admin-wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 110px 24px 80px;
+}
+
+.docs-layout-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 96px 24px 80px;
+}
+
 section h2 {
   font-size: clamp(32px, 5vw, 56px);
   margin-bottom: 16px;
@@ -1613,7 +1631,7 @@ footer p {
 .strategy-report-container {
   max-width: 1140px;
   margin: 0 auto;
-  padding: 24px 20px 100px;
+  padding: 92px 20px 100px;
 }
 
 .report-header-bar {
@@ -3291,7 +3309,10 @@ button, a, input, select, textarea, .chip, .card {
   /* Documentation Layout & Mobile Menu */
   .docs-layout-wrap {
     flex-direction: column !important;
-    padding-top: 12px !important;
+    padding-top: calc(82px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
   .docs-aside {
     width: 100% !important;
@@ -3409,8 +3430,17 @@ button, a, input, select, textarea, .chip, .card {
   }
 
   /* Navigation Bar */
-  #nav {
-    padding: 10px 14px !important;
+  #nav, #nav.s {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 100 !important;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 10px !important;
+    background: rgba(9, 9, 11, 0.94) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border-bottom: 1px solid var(--line) !important;
   }
   #nav .chip0 {
     display: none !important;
@@ -3545,7 +3575,24 @@ button, a, input, select, textarea, .chip, .card {
 
   /* Containers & Padding */
   .wrap {
-    padding: 0 16px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  section.b {
+    padding-top: calc(82px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: 60px !important;
+  }
+  .dashboard-wrap {
+    padding-top: calc(82px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .admin-wrap {
+    padding-top: calc(82px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
   .hc {
     padding: 88px 16px 20px !important;
@@ -3610,7 +3657,10 @@ button, a, input, select, textarea, .chip, .card {
 
   /* Strategy Report View on Mobile */
   .strategy-report-container {
-    padding: 16px 14px 80px !important;
+    padding-top: calc(82px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
   }
   .report-hero {
     padding: 12px 0 24px !important;

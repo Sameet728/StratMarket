@@ -116,7 +116,7 @@ export function AdminClient() {
 
   if (loading) {
     return (
-      <div className="wrap" style={{ padding: "120px 24px", textAlign: "center" }}>
+      <div className="wrap admin-wrap" style={{ textAlign: "center" }}>
         <p className="note">Authenticating administrative credentials...</p>
       </div>
     );
@@ -124,7 +124,7 @@ export function AdminClient() {
 
   if (error) {
     return (
-      <div className="wrap" style={{ padding: "120px 24px", textAlign: "center" }}>
+      <div className="wrap admin-wrap" style={{ textAlign: "center" }}>
         <h2 style={{ color: "var(--dn)" }}>Access Restricted</h2>
         <p className="note" style={{ margin: "16px 0 24px" }}>{error}</p>
         <button type="button" className="pill" onClick={() => router.push("/signin")} style={{ touchAction: "manipulation" }}>
@@ -135,7 +135,7 @@ export function AdminClient() {
   }
 
   return (
-    <div className="wrap" style={{ padding: "120px 24px 80px" }}>
+    <div className="wrap admin-wrap">
       {/* Admin Header */}
       <div
         style={{
