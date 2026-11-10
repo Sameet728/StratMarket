@@ -95,6 +95,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/analytics" style={{ color: "var(--lime, #a3e635)", fontWeight: 600, textDecoration: "none" }}>
+                  ● Real-Time Telemetry &amp; Analytics
+                </Link>
+              </li>
+              <li>
                 <Link href="/signin" style={{ color: "#9ca3af", textDecoration: "none" }}>
                   Trader Sign In (Free)
                 </Link>

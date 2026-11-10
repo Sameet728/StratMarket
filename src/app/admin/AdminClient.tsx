@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { StratMarketLogo } from "@/components/StratMarketLogo";
 import { StrategySeedItem } from "@/lib/db/seed-data";
 
@@ -160,6 +161,24 @@ export function AdminClient() {
           <p className="note" style={{ fontSize: "14px", marginTop: "4px" }}>
             Operational monitoring, Python VPS gateway management, customer entitlements, and security audits.
           </p>
+        </div>
+        <div>
+          <Link
+            href="/analytics"
+            className="pill g sm"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              background: "rgba(163, 230, 53, 0.12)",
+              borderColor: "rgba(163, 230, 53, 0.4)",
+              color: "var(--lime)",
+              fontWeight: 700,
+            }}
+          >
+            <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--lime)", boxShadow: "0 0 8px var(--lime)" }} />
+            View Live Telemetry Dashboard ↗
+          </Link>
         </div>
       </div>
 

@@ -8,6 +8,7 @@ import { DockNav } from "@/components/DockNav";
 import { Footer } from "@/components/Footer";
 import { PageTransitionWipe } from "@/components/PageTransitionWipe";
 import { SpotlightCursor } from "@/components/SpotlightCursor";
+import { SiteAnalyticsTracker } from "@/components/SiteAnalyticsTracker";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -167,6 +168,9 @@ export default function RootLayout({
           <i className="a2" />
         </div>
         <TopProgressBar />
+        <Suspense fallback={null}>
+          <SiteAnalyticsTracker />
+        </Suspense>
         <Suspense fallback={null}>
           <HeaderNav />
         </Suspense>

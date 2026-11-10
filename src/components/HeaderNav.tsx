@@ -71,6 +71,9 @@ export function HeaderNav() {
       </span>
 
       <div className="r">
+        <Link href="/analytics" className="pill g sm nav-analytics-link" title="Real-time site telemetry & user analytics">
+          Analytics
+        </Link>
         <Link href="/docs" className="pill g sm nav-docs-link">
           Docs
         </Link>
