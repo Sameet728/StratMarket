@@ -332,6 +332,7 @@ export async function sendSignalAlertEmail(params: {
   winRate?: number | string;
   profitFactor?: number | string;
   maxDrawdown?: number | string;
+  isTest?: boolean;
 }): Promise<EmailResult> {
   const {
     to,
@@ -346,6 +347,7 @@ export async function sendSignalAlertEmail(params: {
     targetPrice,
     timestamp = new Date(),
     sourceEventId,
+    isTest = false,
   } = params;
 
   const formattedEntry = entryPrice !== undefined ? `$${Number(entryPrice).toFixed(2)}` : "Market Open";
@@ -370,21 +372,47 @@ export async function sendSignalAlertEmail(params: {
   const signalId = sourceEventId || `SIG-${strategyId}-${Date.now().toString().slice(-6)}`;
   const marketStatus = "Active Session";
 
+  const emailSubject = isTest
+    ? `[TEST EMAIL] Sample Signal Alert • ${signalType} ${direction} ${instrument} • ${strategyName} (Verification Only)`
+    : `[SIGNAL] ${signalType} ${direction} ${instrument} • ${strategyName}`;
+
   const html = `<!doctype html>
 <html lang="en">
 <head>
-${getEmailHead(`StratMarket | Trade alert — ${instrument}`)}
+${getEmailHead(isTest ? `[TEST EMAIL] StratMarket | Sample Alert — ${instrument}` : `StratMarket | Trade alert — ${instrument}`)}
 </head>
 <body>
 <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0">
 <tr><td align="center" class="outer">
 <table role="presentation" class="shell" width="600" cellpadding="0" cellspacing="0">
-${getEmailHeader("TRADING NOTIFICATION")}
+${getEmailHeader(isTest ? "TEST NOTIFICATION • VERIFICATION ONLY" : "TRADING NOTIFICATION")}
 
-<tr><td class="pad" style="padding-top:32px;padding-bottom:18px;">
-  <div class="eyebrow" style="color:#7c8490;">Strategy alert · ${alertTime}</div>
-  <h1 class="headline" style="margin-bottom:7px;">${instrument} <span style="font-size:15px;letter-spacing:0;color:#6f7a87;font-weight:400;">· ${timeframe}</span></h1>
-  <p class="bodycopy">${strategyName} (${strategyId}) has generated a new ${direction} signal.</p>
+${isTest ? `
+<tr><td class="pad" style="padding-top:22px;padding-bottom:0;">
+  <table role="presentation" width="100%" style="background:#fffbe6;border:1px solid #ffe58f;border-left:4px solid #faad14;border-radius:6px;">
+    <tr><td style="padding:14px 18px;">
+      <div style="font-size:13px;font-weight:700;color:#d46b08;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:4px;">
+        ⚠️ THIS IS A SAMPLE TEST EMAIL (VERIFICATION ONLY)
+      </div>
+      <div style="font-size:13px;line-height:20px;color:#595959;">
+        This test message was dispatched from your <strong>StratMarket</strong> account to verify that your inbox can reliably receive trade notifications. <strong>No real trade or order has been executed.</strong> Live institutional trade signals will arrive in this identical format.
+      </div>
+    </td></tr>
+  </table>
+</td></tr>
+` : ""}
+
+<tr><td class="pad" style="padding-top:26px;padding-bottom:18px;">
+  <div class="eyebrow" style="color:#7c8490;">${isTest ? "Sample Test Alert (Simulated)" : "Strategy alert"} · ${alertTime}</div>
+  <h1 class="headline" style="margin-bottom:7px;">
+    ${isTest ? `<span style="display:inline-block;background:#e6f7ff;border:1px solid #91d5ff;color:#096dd9;font-size:12px;font-weight:700;padding:2px 8px;border-radius:3px;vertical-align:middle;margin-right:6px;">TEST SIGNAL</span>` : ""}
+    ${instrument} <span style="font-size:15px;letter-spacing:0;color:#6f7a87;font-weight:400;">· ${timeframe}</span>
+  </h1>
+  <p class="bodycopy">
+    ${isTest
+      ? `<strong>[TEST ONLY]</strong> This is a deliverability verification test signal for <strong>${strategyName} (${strategyId})</strong> displaying a simulated ${direction} setup.`
+      : `${strategyName} (${strategyId}) has generated a new ${direction} signal.`}
+  </p>
 </td></tr>
 <tr><td class="pad" style="padding-bottom:20px;">
   <table role="presentation" width="100%" style="border:1px solid #e2e6ea;">
@@ -409,12 +437,18 @@ ${getEmailHeader("TRADING NOTIFICATION")}
 <tr><td class="pad" style="padding-bottom:28px;">
   <table role="presentation" width="100%" style="background:#f8f9fa;border:1px solid #e7eaee;">
     <tr><td style="padding:14px 16px;">
-      <div class="eyebrow">Signal reference</div>
-      <div style="font-size:12px;line-height:20px;color:#56616e;margin-top:5px;">${signalId} &nbsp;·&nbsp; ${marketStatus}</div>
+      <div class="eyebrow">${isTest ? "Test Reference ID" : "Signal reference"}</div>
+      <div style="font-size:12px;line-height:20px;color:#56616e;margin-top:5px;">
+        ${isTest ? `TEST-${signalId} &nbsp;·&nbsp; Simulated Execution (Deliverability Test)` : `${signalId} &nbsp;·&nbsp; ${marketStatus}`}
+      </div>
     </td></tr>
   </table>
   <div style="margin-top:18px;"><a class="button" href="${dashboardUrl}">VIEW TRADE DETAILS</a></div>
-  <p class="muted" style="margin-top:17px;">This notification is informational and is not investment advice. Trading involves risk. Review the full strategy details and manage risk before taking any action.</p>
+  <p class="muted" style="margin-top:17px;">
+    ${isTest
+      ? "This is an automated deliverability verification test email sent from StratMarket. Test emails are limited to maximum 1 per registered user account to preserve gateway capacity."
+      : "This notification is informational and is not investment advice. Trading involves risk. Review the full strategy details and manage risk before taking any action."}
+  </p>
 </td></tr>
 
 ${getEmailFooter()}
@@ -423,7 +457,7 @@ ${getEmailFooter()}
 
   return sendResendMail({
     to,
-    subject: `[SIGNAL] ${signalType} ${direction} ${instrument} • ${strategyName}`,
+    subject: emailSubject,
     html,
   });
 }

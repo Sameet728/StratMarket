@@ -99,6 +99,7 @@ export default function ProfilePage() {
   const [emailStatusMsg, setEmailStatusMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [sendingTest, setSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<{ text: string; ok: boolean } | null>(null);
+  const [testEmailSent, setTestEmailSent] = useState(false);
   const [updatingAlert, setUpdatingAlert] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -159,6 +160,9 @@ export default function ProfilePage() {
           setStrategies(reconciled);
           setAlerts(alertData.preferences || []);
           setDeliveries(alertData.deliveries || []);
+          if (alertData.testEmailSent) {
+            setTestEmailSent(true);
+          }
           setSignalEmail(alertData.destinationEmail || meData.user.email);
         } else {
           setSignalEmail(meData.user.email);
@@ -206,6 +210,13 @@ export default function ProfilePage() {
 
   // Dispatch sample test email via institutional gateway
   const handleSendTestEmail = async () => {
+    if (testEmailSent) {
+      setTestResult({
+        text: "You have already sent your verification test email (maximum 1 allowed per user).",
+        ok: false,
+      });
+      return;
+    }
     setSendingTest(true);
     setTestResult(null);
     try {
@@ -216,11 +227,13 @@ export default function ProfilePage() {
       });
       const data = await res.json();
       if (res.ok) {
+        setTestEmailSent(true);
         setTestResult({
-          text: `Sample signal alert sent to ${signalEmail}! Check your inbox.`,
+          text: `Sample verification test alert sent to ${signalEmail}! Check your inbox. (Limit: 1/1 test email used)`,
           ok: true,
         });
       } else {
+        if (data.alreadySent) setTestEmailSent(true);
         setTestResult({ text: data.error || "Failed to send sample alert.", ok: false });
       }
     } catch {
@@ -643,15 +656,18 @@ export default function ProfilePage() {
                   </button>
                   <button
                     type="button"
-                    disabled={sendingTest}
+                    disabled={sendingTest || testEmailSent}
                     onClick={handleSendTestEmail}
-                    className="pill g sm"
+                    className={`pill ${testEmailSent ? "d" : "g"} sm`}
                     style={{
                       fontSize: 13,
                       fontWeight: 600,
+                      opacity: testEmailSent ? 0.6 : 1,
+                      cursor: testEmailSent ? "not-allowed" : "pointer",
                     }}
+                    title={testEmailSent ? "Test email has already been sent (limit: 1 per user)" : "Send a verification test email"}
                   >
-                    {sendingTest ? "Sending..." : "Send Test Signal"}
+                    {sendingTest ? "Sending..." : testEmailSent ? "✓ Test Email Sent (1/1)" : "Send Test Signal"}
                   </button>
                 </div>
 

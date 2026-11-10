@@ -167,6 +167,12 @@ export async function GET(request: NextRequest) {
       })
     );
 
+    const userRecord = await db.getUserById(user.id);
+    const testEmailSent = Boolean(
+      (userRecord as any)?.testEmailSent ||
+      ((userRecord as any)?.testEmailSentCount && (userRecord as any)?.testEmailSentCount >= 1)
+    );
+
     const response = NextResponse.json({
       success: true,
       preferences,
@@ -175,6 +181,7 @@ export async function GET(request: NextRequest) {
       deliveries,
       destinationEmail: currentDestination,
       userEmail: user.email,
+      testEmailSent,
     });
 
     // Refresh and sync the alert prefs cookie so it is always warm
@@ -304,14 +311,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const targetEmail = (body.email && typeof body.email === "string") ? body.email.trim() : user.email;
 
     if (!/^\S+@\S+\.\S+$/.test(targetEmail)) {
       return NextResponse.json({ error: "Invalid recipient email address" }, { status: 400 });
     }
 
-    // Send sample signal email via verified institutional gateway
+    // Strict Limit: Check if user has already sent a test email (max 1 allowed per user)
+    const userRecord = await db.getUserById(user.id);
+    const alreadySent = Boolean(
+      (userRecord as any)?.testEmailSent ||
+      ((userRecord as any)?.testEmailSentCount && (userRecord as any)?.testEmailSentCount >= 1)
+    );
+
+    if (alreadySent) {
+      return NextResponse.json(
+        {
+          error: "You have already sent your verification test email. Test emails are limited to maximum 1 per user account.",
+          alreadySent: true,
+          testEmailSent: true,
+        },
+        { status: 429 }
+      );
+    }
+
+    // Send sample signal email via verified institutional gateway with isTest: true
     const emailRes = await sendSignalAlertEmail({
       to: targetEmail,
       strategyName: "Grandmaster (82.6% WR)",
@@ -325,6 +350,7 @@ export async function POST(request: NextRequest) {
       targetPrice: 3913.50,
       timestamp: new Date(),
       sourceEventId: "evt_sample_test_" + Date.now(),
+      isTest: true,
     });
 
     if (!emailRes.success) {
@@ -334,10 +360,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Atomically mark test email as sent in database
+    await db.markUserTestEmailSent(user.id, targetEmail);
+
     return NextResponse.json({
       success: true,
-      message: `Sample signal alert email sent successfully to ${targetEmail}! Check your inbox.`,
+      message: `Sample verification test email sent successfully to ${targetEmail}! Check your inbox. (Limit: 1/1 test email used)`,
       messageId: emailRes.messageId,
+      alreadySent: true,
+      testEmailSent: true,
     });
   } catch (error: any) {
     console.error("POST /api/me/alerts error:", error);

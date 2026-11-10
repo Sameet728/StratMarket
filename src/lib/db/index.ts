@@ -16,6 +16,9 @@ export interface UserRecord {
   emailVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
+  testEmailSent?: boolean;
+  testEmailSentCount?: number;
+  testEmailSentAt?: Date;
 }
 
 export interface EntitlementRecord {
@@ -324,6 +327,9 @@ export const db = {
           emailVerified: doc.emailVerified,
           createdAt: new Date(doc.createdAt),
           updatedAt: new Date(doc.updatedAt),
+          testEmailSent: Boolean(doc.testEmailSent || (doc.testEmailSentCount && doc.testEmailSentCount > 0)),
+          testEmailSentCount: doc.testEmailSentCount || (doc.testEmailSent ? 1 : 0),
+          testEmailSentAt: doc.testEmailSentAt ? new Date(doc.testEmailSentAt) : undefined,
         };
       }
     }
@@ -342,6 +348,8 @@ export const db = {
         emailVerified: true,
         createdAt: new Date("2026-01-01"),
         updatedAt: new Date(),
+        testEmailSent: false,
+        testEmailSentCount: 0,
       };
       globalStore.users.set(guaranteedUser.id, guaranteedUser);
       return { ...guaranteedUser };
@@ -372,6 +380,9 @@ export const db = {
             emailVerified: doc.emailVerified,
             createdAt: new Date(doc.createdAt),
             updatedAt: new Date(doc.updatedAt),
+            testEmailSent: Boolean(doc.testEmailSent || (doc.testEmailSentCount && doc.testEmailSentCount > 0)),
+            testEmailSentCount: doc.testEmailSentCount || (doc.testEmailSent ? 1 : 0),
+            testEmailSentAt: doc.testEmailSentAt ? new Date(doc.testEmailSentAt) : undefined,
           };
         }
       } catch (_) {}
@@ -386,6 +397,50 @@ export const db = {
     if (id === "usr_sam_01") return this.getUserByEmail("sameetpisal728@gmail.com");
     if (id === "usr_sam_02") return this.getUserByEmail("sameetpisal@gmail.com");
     return null;
+  },
+
+  async markUserTestEmailSent(userId: string, userEmail?: string): Promise<void> {
+    const mdb = await getMongoDb();
+    const now = new Date();
+    if (mdb) {
+      try {
+        const orConditions: any[] = [{ id: userId }, { email: userId }];
+        if (userEmail) {
+          orConditions.push({ email: userEmail.toLowerCase().trim() }, { id: userEmail.toLowerCase().trim() });
+        }
+        if (ObjectId.isValid(userId)) {
+          try {
+            orConditions.push({ _id: new ObjectId(userId) });
+          } catch (_) {}
+        }
+        await mdb.collection("users").updateMany(
+          { $or: orConditions },
+          {
+            $set: {
+              testEmailSent: true,
+              testEmailSentAt: now,
+            },
+            $inc: { testEmailSentCount: 1 },
+          }
+        );
+      } catch (e) {
+        console.error("Failed to mark testEmailSent in MongoDB:", e);
+      }
+    }
+
+    const u = globalStore.users.get(userId);
+    if (u) {
+      u.testEmailSent = true;
+      u.testEmailSentAt = now;
+      u.testEmailSentCount = (u.testEmailSentCount || 0) + 1;
+    }
+    for (const user of globalStore.users.values()) {
+      if (user.id === userId || (userEmail && user.email.toLowerCase() === userEmail.toLowerCase().trim())) {
+        user.testEmailSent = true;
+        user.testEmailSentAt = now;
+        user.testEmailSentCount = (user.testEmailSentCount || 0) + 1;
+      }
+    }
   },
 
   async createUser(data: {
@@ -410,6 +465,8 @@ export const db = {
       emailVerified: true,
       createdAt: new Date(),
       updatedAt: new Date(),
+      testEmailSent: false,
+      testEmailSentCount: 0,
     };
 
     const mdb = await getMongoDb();

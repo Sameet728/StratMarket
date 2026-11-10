@@ -205,6 +205,16 @@ a {
   font-size: 13px;
 }
 
+.pill:disabled, .pill.d {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #71717a !important;
+}
+
 /* Header Navigation */
 #nav {
   position: fixed;

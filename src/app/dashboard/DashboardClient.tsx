@@ -119,6 +119,7 @@ export function DashboardClient() {
   // Test email state
   const [sendingTest, setSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<{ text: string; ok: boolean } | null>(null);
+  const [testEmailSent, setTestEmailSent] = useState(false);
 
   // Alert toggle state
   const [updatingStrategy, setUpdatingStrategy] = useState<string | null>(null);
@@ -175,6 +176,9 @@ export function DashboardClient() {
 
           setStrategies(reconciled);
           setDeliveries(alertsData.deliveries || []);
+          if (alertsData.testEmailSent) {
+            setTestEmailSent(true);
+          }
           const dest = alertsData.destinationEmail || authData.user.email;
           setDestinationEmail(dest);
           setEmailInput(dest);
@@ -311,6 +315,13 @@ export function DashboardClient() {
 
   // Send sample test signal to destination email
   const handleSendTestSignal = async () => {
+    if (testEmailSent) {
+      setTestResult({
+        text: "You have already sent your verification test email (maximum 1 allowed per user).",
+        ok: false,
+      });
+      return;
+    }
     setSendingTest(true);
     setTestResult(null);
     try {
@@ -321,11 +332,13 @@ export function DashboardClient() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        setTestEmailSent(true);
         setTestResult({
-          text: `Sample signal sent to ${destinationEmail || user?.email}! Check your inbox.`,
+          text: `Sample verification test signal sent to ${destinationEmail || user?.email}! Check your inbox. (Limit: 1/1 test email used)`,
           ok: true,
         });
       } else {
+        if (data.alreadySent) setTestEmailSent(true);
         setTestResult({ text: data.error || "Failed to dispatch test signal.", ok: false });
       }
     } catch {
@@ -577,11 +590,18 @@ export function DashboardClient() {
             <button
               type="button"
               onClick={handleSendTestSignal}
-              disabled={sendingTest}
-              className="pill g sm"
-              style={{ fontSize: 12, fontWeight: 600, touchAction: "manipulation" }}
+              disabled={sendingTest || testEmailSent}
+              className={`pill ${testEmailSent ? "d" : "g"} sm`}
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                touchAction: "manipulation",
+                opacity: testEmailSent ? 0.6 : 1,
+                cursor: testEmailSent ? "not-allowed" : "pointer",
+              }}
+              title={testEmailSent ? "Test email has already been sent (limit: 1 per user)" : "Send a verification test email"}
             >
-              {sendingTest ? "Sending..." : "Send Test Signal"}
+              {sendingTest ? "Sending..." : testEmailSent ? "✓ Test Email Sent (1/1)" : "Send Test Signal"}
             </button>
             <button
               type="button"

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { db } from "@/lib/db";
 import { generateVpsSignature, verifyVpsSignature, isAuthorizedVpsOrWebhookRequest } from "@/lib/vps/security";
 import { hashPassword } from "@/lib/auth/session";
+import { sendSignalAlertEmail } from "@/lib/email/resend";
 
 describe("Python VPS Signal Integration & Email Delivery", () => {
   const testSecret = "stratmarket-dev-vps-hmac-shared-secret-key-2026";
@@ -131,5 +132,34 @@ describe("Python VPS Signal Integration & Email Delivery", () => {
       secret: testSecret,
     });
     expect(invalidAuth.valid).toBe(false);
+  });
+
+  it("marks test email as sent and enforces max 1 test email limit per user", async () => {
+    const testUserEmail = `test_limit_${Date.now()}@elvariscapital.in`;
+    const user = await db.createUser({
+      name: "Test Limit Trader",
+      email: testUserEmail,
+      passwordHash: await hashPassword("Elvaris2026!"),
+    });
+
+    expect(user.testEmailSent).toBe(false);
+
+    // Initial check before sending test email
+    const u1 = await db.getUserById(user.id);
+    expect(u1?.testEmailSent).toBe(false);
+
+    // Mark test email as sent
+    await db.markUserTestEmailSent(user.id, testUserEmail);
+
+    // Verify user is now marked as testEmailSent: true
+    const u2 = await db.getUserById(user.id);
+    expect(u2?.testEmailSent).toBe(true);
+    expect(u2?.testEmailSentCount).toBe(1);
+    expect(u2?.testEmailSentAt).toBeDefined();
+
+    // Calling again increments the count
+    await db.markUserTestEmailSent(user.id, testUserEmail);
+    const u3 = await db.getUserById(user.id);
+    expect(u3?.testEmailSentCount).toBe(2);
   });
 });
