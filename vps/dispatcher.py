@@ -64,9 +64,6 @@ class VpsSignalDispatcher:
         signature = self.generate_signature(raw_body, timestamp)
 
         endpoints_to_try = [self.api_endpoint]
-        fallback_endpoint = "https://strat-market-chi.vercel.app/api/internal/signals"
-        if self.api_endpoint != fallback_endpoint:
-            endpoints_to_try.append(fallback_endpoint)
 
         last_error = ""
         last_status = 500

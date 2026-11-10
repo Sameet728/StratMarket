@@ -52,10 +52,6 @@ export class VpsSignalDispatcher {
     const signature = this.generateSignature(rawBody, timestamp);
 
     const endpointsToTry = [this.apiEndpoint];
-    const liveFallback = "https://strat-market-chi.vercel.app/api/internal/signals";
-    if (this.apiEndpoint !== liveFallback) {
-      endpointsToTry.push(liveFallback);
-    }
 
     let lastError = "";
     let lastStatusCode = 500;

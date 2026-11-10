@@ -37,6 +37,11 @@ const pythonScriptPath = path.resolve(__dirname, "./python_runner/mt5_runner.py"
 let pythonProcess: any = null;
 
 function startPythonRunner() {
+  const enabledPython = (config.pythonStrategies || []).filter((s: any) => s.enabled);
+  if (enabledPython.length === 0) {
+    console.log("[VPS Supervisor] Python MT5 strategies disabled in config.json. Skipping Python runner.");
+    return;
+  }
   const pythonCmd = process.platform === "win32" ? "python" : "python3";
   console.log(`[VPS Supervisor] Launching Python MT5 runner (${pythonScriptPath}) via ${pythonCmd}...`);
   pythonProcess = spawn(pythonCmd, [pythonScriptPath], {

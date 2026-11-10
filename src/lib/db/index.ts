@@ -1433,7 +1433,15 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
 
     globalStore.signals.set(newSignal.id, newSignal);
 
-    // 4. Ingest signal and broadcast to ALL active users (100% Free Open Platform)
+    // 4. Verification: Only strategies public on the UI website (Next.js) dispatch emails
+    const isPublicOnUi = strategy.visibilityStatus === "PUBLIC";
+    if (!isPublicOnUi) {
+      // Non-public strategy (e.g. PY-01, PY-02, private/research).
+      // Recorded internally without dispatching user emails.
+      return { signal: newSignal, notifiedUsersCount: 0, subscriberEmails: [] };
+    }
+
+    // 5. Verification: Only users who explicitly SUBSCRIBED (enabled: true) receive signal alerts
     let notifiedUsersCount = 0;
     const subscriberEmails: string[] = [];
     const now = new Date();
@@ -1449,82 +1457,107 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
       "ALL"
     ];
 
-    // Collect all active users from MongoDB Atlas
-    const activeUsers: Array<{ id: string; email: string }> = [];
+    interface SubscribedRecipient {
+      userId: string;
+      email: string;
+    }
+    const subscribedMap = new Map<string, SubscribedRecipient>();
+
+    // Query active alert preferences in MongoDB Atlas
     if (mdb) {
       try {
-        const uDocs = await mdb.collection("users").find({
-          accountStatus: { $ne: "SUSPENDED" }
-        }, { projection: { id: 1, email: 1, _id: 1 } }).toArray();
+        const enabledPrefs = await mdb.collection("alert_preferences").find({
+          strategyId: { $in: targetStrategyIds },
+          enabled: true
+        }).toArray();
 
-        uDocs.forEach((u: any) => {
-          if (u.email && u.email.includes("@")) {
-            activeUsers.push({
-              id: u.id || u._id?.toString(),
-              email: u.email.trim().toLowerCase(),
-            });
+        for (const pref of enabledPrefs) {
+          if (Array.isArray(pref.alertTypes) && pref.alertTypes.length > 0) {
+            if (!pref.alertTypes.includes(payload.signalType)) {
+              continue;
+            }
           }
-        });
+
+          let destEmail = (pref.verifiedDestination || pref.userEmail || "").trim().toLowerCase();
+          const userId = pref.userId || pref.id;
+
+          if (!destEmail || !destEmail.includes("@")) {
+            const u = await mdb.collection("users").findOne({
+              $or: [{ id: userId }, { _id: userId }]
+            });
+            if (u && u.email && u.accountStatus !== "SUSPENDED") {
+              destEmail = u.email.trim().toLowerCase();
+            }
+          }
+
+          if (destEmail && destEmail.includes("@") && !destEmail.includes("alerts@elvariscapital.in")) {
+            subscribedMap.set(destEmail, { userId, email: destEmail });
+          }
+        }
       } catch (e) {
-        console.warn("[MongoDB] Active users query note:", e);
+        console.warn("[MongoDB] Subscribed alert preferences query note:", e);
       }
     }
 
-    // Merge in-memory users
-    for (const u of globalStore.users.values()) {
-      if (u.accountStatus !== "SUSPENDED" && u.email && !activeUsers.some(au => au.email === u.email.toLowerCase())) {
-        activeUsers.push({ id: u.id, email: u.email.toLowerCase() });
+    // Query active alert preferences in globalStore (test suite & in-memory store)
+    for (const pref of globalStore.alerts.values()) {
+      if (pref.enabled && targetStrategyIds.includes(pref.strategyId)) {
+        if (Array.isArray(pref.alertTypes) && pref.alertTypes.length > 0) {
+          if (!pref.alertTypes.includes(payload.signalType)) {
+            continue;
+          }
+        }
+
+        let destEmail = (pref.verifiedDestination || "").trim().toLowerCase();
+        const user = globalStore.users.get(pref.userId);
+        if (!destEmail && user) {
+          destEmail = user.email.trim().toLowerCase();
+        }
+
+        if (user && user.accountStatus === "SUSPENDED") {
+          continue;
+        }
+
+        if (destEmail && destEmail.includes("@") && !destEmail.includes("alerts@elvariscapital.in")) {
+          if (!subscribedMap.has(destEmail)) {
+            subscribedMap.set(destEmail, { userId: pref.userId, email: destEmail });
+          }
+        }
       }
     }
 
-    // Check users who explicitly disabled this strategy (opt-outs)
-    const disabledUserIds = new Set<string>();
+    // Process explicit opt-outs (if user disabled this specific strategy, exclude them even if "ALL" was enabled)
     if (mdb) {
       try {
         const disabledDocs = await mdb.collection("alert_preferences").find({
-          strategyId: { $in: targetStrategyIds },
+          strategyId: { $in: targetStrategyIds.filter(id => id !== "ALL") },
           enabled: false
         }).toArray();
-        disabledDocs.forEach((d: any) => {
-          if (d.userId) disabledUserIds.add(d.userId);
-          if (d.userEmail) disabledUserIds.add(d.userEmail.toLowerCase());
-        });
-      } catch (_) {}
-    }
-
-    // Check custom destination emails
-    const customEmailMap = new Map<string, string>();
-    if (mdb) {
-      try {
-        const prefDocs = await mdb.collection("alert_preferences").find({
-          verifiedDestination: { $exists: true, $ne: "" }
-        }).toArray();
-        prefDocs.forEach((p: any) => {
-          if (p.verifiedDestination && p.verifiedDestination.includes("@")) {
-            if (p.userId) customEmailMap.set(p.userId, p.verifiedDestination.toLowerCase());
-            if (p.userEmail) customEmailMap.set(p.userEmail.toLowerCase(), p.verifiedDestination.toLowerCase());
+        for (const d of disabledDocs) {
+          const dEmail = (d.verifiedDestination || d.userEmail || "").trim().toLowerCase();
+          if (dEmail) subscribedMap.delete(dEmail);
+          for (const [em, sub] of subscribedMap.entries()) {
+            if (sub.userId === d.userId) subscribedMap.delete(em);
           }
-        });
+        }
       } catch (_) {}
     }
 
-    // Create delivery records and collect emails for each active user
-    const seenEmails = new Set<string>();
-    for (const u of activeUsers) {
-      if (disabledUserIds.has(u.id) || disabledUserIds.has(u.email)) {
-        continue; // user opted out of this specific strategy
+    for (const pref of globalStore.alerts.values()) {
+      if (pref.enabled === false && targetStrategyIds.filter(id => id !== "ALL").includes(pref.strategyId)) {
+        for (const [em, sub] of subscribedMap.entries()) {
+          if (sub.userId === pref.userId) subscribedMap.delete(em);
+        }
       }
+    }
 
-      const targetEmail = (customEmailMap.get(u.id) || customEmailMap.get(u.email) || u.email).trim().toLowerCase();
-      if (!targetEmail || !targetEmail.includes("@") || targetEmail.includes("alerts@elvariscapital.in")) {
-        continue;
-      }
-
+    // Create delivery records ONLY for explicitly subscribed users
+    for (const sub of subscribedMap.values()) {
       const delivery: EmailDeliveryRecord = {
         id: "del_" + Math.random().toString(36).substring(2, 11),
         signalId: newSignal.id,
-        userId: u.id,
-        recipientEmail: targetEmail,
+        userId: sub.userId,
+        recipientEmail: sub.email,
         strategyId: strategy.id,
         strategyName: strategy.name,
         instrument: newSignal.instrument,
@@ -1543,51 +1576,10 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
       deliveriesToInsert.push(delivery);
       globalStore.deliveries.set(delivery.id, delivery);
       notifiedUsersCount++;
-
-      if (!seenEmails.has(targetEmail)) {
-        seenEmails.add(targetEmail);
-        subscriberEmails.push(targetEmail);
-      }
+      subscriberEmails.push(sub.email);
     }
 
-    // Guaranteed primary trader inboxes
-    const guaranteedInboxes = [
-      { email: "sameetpisal@gmail.com", userId: "usr_sam_primary" },
-      { email: "sameetpisal728@gmail.com", userId: "usr_sam_primary" },
-    ];
-    for (const item of guaranteedInboxes) {
-      if (!seenEmails.has(item.email)) {
-        seenEmails.add(item.email);
-        subscriberEmails.push(item.email);
-      }
-      const existingDel = deliveriesToInsert.find(d => d.recipientEmail === item.email);
-      if (!existingDel) {
-        const delivery: EmailDeliveryRecord = {
-          id: "del_" + Math.random().toString(36).substring(2, 11),
-          signalId: newSignal.id,
-          userId: item.userId,
-          recipientEmail: item.email,
-          strategyId: strategy.id,
-          strategyName: strategy.name,
-          instrument: newSignal.instrument,
-          timeframe: newSignal.timeframe,
-          signalType: newSignal.signalType,
-          direction: newSignal.direction,
-          entryPrice: newSignal.entryPrice,
-          stopLoss: newSignal.stopLoss,
-          targetPrice: newSignal.targetPrice,
-          deliveryStatus: "SENT",
-          attemptCount: 1,
-          providerMessageRef: "msg_" + Math.random().toString(36).substring(2, 14),
-          sentAt: now,
-        };
-        deliveriesToInsert.push(delivery);
-        globalStore.deliveries.set(delivery.id, delivery);
-        notifiedUsersCount++;
-      }
-    }
-
-    // Persist all deliveries to MongoDB Atlas
+    // Persist deliveries to MongoDB Atlas
     if (mdb && deliveriesToInsert.length > 0) {
       await mdb.collection("deliveries").insertMany(deliveriesToInsert.map(d => ({ ...d }))).catch(err => {
         console.warn("[MongoDB] Batch insert deliveries warning:", err?.message || err);
@@ -1769,7 +1761,9 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
     const userEmails = [userId];
     if (user?.email) userEmails.push(user.email.toLowerCase());
     if (userId.includes("@")) userEmails.push(userId.toLowerCase());
-    userEmails.push("usr_sam_primary", "sameetpisal@gmail.com", "sameetpisal728@gmail.com");
+    if (user?.role === "ADMIN" || userId === "usr_admin_01") {
+      userEmails.push("usr_sam_primary", "sameetpisal@gmail.com", "sameetpisal728@gmail.com");
+    }
 
     const mdb = await getMongoDb();
     let rawDocs: any[] = [];
@@ -1782,20 +1776,19 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
             { recipientEmail: { $in: userEmails } }
           ]
         }).sort({ sentAt: -1 }).limit(limit).toArray();
-
-        // If user is admin / primary or no direct matches, show latest deliveries across platform
-        if (rawDocs.length === 0) {
-          rawDocs = await mdb.collection("deliveries").find({}).sort({ sentAt: -1 }).limit(limit).toArray();
-        }
       } catch (err) {
         console.warn("[MongoDB] getUserDeliveries query note:", err);
       }
     }
 
-    // Merge in-memory deliveries if needed
-    if (rawDocs.length === 0) {
-      for (const d of globalStore.deliveries.values()) {
-        rawDocs.push({ ...d });
+    // Merge in-memory deliveries strictly matching this user's identity
+    for (const d of globalStore.deliveries.values()) {
+      const matchUserId = userEmails.includes(d.userId);
+      const matchEmail = d.recipientEmail && userEmails.includes(d.recipientEmail.toLowerCase());
+      if (matchUserId || matchEmail) {
+        if (!rawDocs.some(rd => rd.id === d.id)) {
+          rawDocs.push({ ...d });
+        }
       }
     }
 
@@ -1847,41 +1840,6 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
         sentAt: d.sentAt ? new Date(d.sentAt) : (sig?.timestamp ? new Date(sig.timestamp) : new Date()),
       };
     });
-
-    // Fallback: synthesize from recent signals if no deliveries found
-    if (enrichedList.length === 0) {
-      let recentSignals: any[] = [];
-      if (mdb) {
-        try {
-          recentSignals = await mdb.collection("signals").find({}).sort({ timestamp: -1 }).limit(10).toArray();
-        } catch (_) {}
-      }
-      if (recentSignals.length === 0) {
-        recentSignals = Array.from(globalStore.signals.values()).slice(0, 10);
-      }
-      for (const sig of recentSignals) {
-        const stratId = (sig.strategyId || "PS-01").toUpperCase();
-        enrichedList.push({
-          id: "del_syn_" + sig.id,
-          signalId: sig.id,
-          userId,
-          recipientEmail: user?.email || "sameetpisal@gmail.com",
-          strategyId: stratId,
-          strategyName: strategyNameMap.get(stratId) || stratId,
-          instrument: sig.instrument || "XAUUSD",
-          timeframe: sig.timeframe || "M15",
-          signalType: sig.signalType || "ENTRY",
-          direction: sig.direction || "LONG",
-          entryPrice: sig.entryPrice,
-          stopLoss: sig.stopLoss,
-          targetPrice: sig.targetPrice,
-          deliveryStatus: "SENT",
-          attemptCount: 1,
-          providerMessageRef: "msg_vps_" + (sig.sourceEventId || sig.id),
-          sentAt: sig.timestamp ? new Date(sig.timestamp) : new Date(),
-        });
-      }
-    }
 
     enrichedList.sort((a, b) => ((b.sentAt?.getTime() || 0) - (a.sentAt?.getTime() || 0)));
     return enrichedList;

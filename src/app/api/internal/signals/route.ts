@@ -157,27 +157,30 @@ export async function POST(request: NextRequest) {
     try {
       const result = await db.ingestVpsSignal(parsed.data);
 
-      // 4. Trigger Resend Email Alerts to subscribers & operators (fully awaited for serverless execution)
+      // 4. Trigger Resend Email Alerts ONLY for strategies public on the UI website and only to subscribed users
       const strategy = await db.getStrategyBySlug(parsed.data.strategyId);
+      const isPublicOnUi = strategy?.visibilityStatus === "PUBLIC";
       const strategyName = strategy ? strategy.name : parsed.data.strategyId;
 
       let emailResult: { dispatchedCount: number; errors: string[] } = { dispatchedCount: 0, errors: [] };
-      try {
-        emailResult = await dispatchSignalAlertEmails({
-          strategyName,
-          strategyId: parsed.data.strategyId,
-          instrument: parsed.data.instrument,
-          timeframe: parsed.data.timeframe,
-          signalType: parsed.data.signalType,
-          direction: parsed.data.direction,
-          entryPrice: parsed.data.entryPrice,
-          stopLoss: parsed.data.stopLoss,
-          targetPrice: parsed.data.targetPrice,
-          sourceEventId: parsed.data.sourceEventId,
-          extraRecipients: result.subscriberEmails,
-        });
-      } catch (err) {
-        console.error("[Signal Email Dispatch Failed]:", err);
+      if (isPublicOnUi && result.subscriberEmails && result.subscriberEmails.length > 0) {
+        try {
+          emailResult = await dispatchSignalAlertEmails({
+            strategyName,
+            strategyId: parsed.data.strategyId,
+            instrument: parsed.data.instrument,
+            timeframe: parsed.data.timeframe,
+            signalType: parsed.data.signalType,
+            direction: parsed.data.direction,
+            entryPrice: parsed.data.entryPrice,
+            stopLoss: parsed.data.stopLoss,
+            targetPrice: parsed.data.targetPrice,
+            sourceEventId: parsed.data.sourceEventId,
+            extraRecipients: result.subscriberEmails,
+          });
+        } catch (err) {
+          console.error("[Signal Email Dispatch Failed]:", err);
+        }
       }
 
       return NextResponse.json({

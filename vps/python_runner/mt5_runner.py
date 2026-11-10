@@ -179,6 +179,24 @@ class PythonMT5Runner:
         return bars
 
     def evaluate_ensemble(self, ens: Dict[str, Any]):
+        # Safeguard: Do not dispatch signals in simulation mode without connected live MetaTrader 5 terminal
+        if not self.mt5_initialized:
+            return
+
+        # Safeguard: Check if strategy is enabled in config.json
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        cfg_file = os.path.join(base_dir, "config.json")
+        if os.path.exists(cfg_file):
+            try:
+                with open(cfg_file, "r", encoding="utf-8") as f:
+                    cfg_data = json.load(f)
+                    py_strats = cfg_data.get("pythonStrategies", [])
+                    matched = next((s for s in py_strats if s.get("id") == ens["id"]), None)
+                    if matched and not matched.get("enabled", False):
+                        return
+            except Exception:
+                pass
+
         state = self.states[ens["id"]]
         bars = self.get_latest_bars(ens["instrument"], ens["timeframe"], count=60)
         if len(bars) < 20:

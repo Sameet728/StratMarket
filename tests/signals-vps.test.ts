@@ -162,4 +162,78 @@ describe("Python VPS Signal Integration & Email Delivery", () => {
     const u3 = await db.getUserById(user.id);
     expect(u3?.testEmailSentCount).toBe(2);
   });
+
+  it("does not dispatch signal notifications or emails for non-public strategies (PY-01, PY-02)", async () => {
+    // PY-02 is private / unlisted on the UI website
+    const res = await db.ingestVpsSignal({
+      sourceEventId: "evt_py02_test_" + Date.now(),
+      strategyId: "PY-02",
+      instrument: "XAUUSD",
+      timeframe: "M5",
+      signalType: "ENTRY",
+      direction: "SHORT",
+      entryPrice: 4019.27,
+    });
+
+    expect(res.signal.id).toBeDefined();
+    // Non-public strategy must have ZERO notified users and ZERO subscriber emails
+    expect(res.notifiedUsersCount).toBe(0);
+    expect(res.subscriberEmails).toHaveLength(0);
+  });
+
+  it("only dispatches signals to users who explicitly subscribed and opted in", async () => {
+    const unsubscribedUserEmail = `unsub_${Date.now()}@elvariscapital.in`;
+    const subscribedUserEmail = `sub_${Date.now()}@elvariscapital.in`;
+    const optedOutUserEmail = `optout_${Date.now()}@elvariscapital.in`;
+
+    const userUnsub = await db.createUser({
+      name: "Unsubscribed User",
+      email: unsubscribedUserEmail,
+      passwordHash: await hashPassword("Elvaris2026!"),
+    });
+
+    const userSub = await db.createUser({
+      name: "Subscribed User",
+      email: subscribedUserEmail,
+      passwordHash: await hashPassword("Elvaris2026!"),
+    });
+
+    const userOptOut = await db.createUser({
+      name: "Opted Out User",
+      email: optedOutUserEmail,
+      passwordHash: await hashPassword("Elvaris2026!"),
+    });
+
+    // Explicitly enable PS-02 for Subscribed User
+    await db.setAlertPreference(userSub.id, "PS-02", true, ["ENTRY", "EXIT"], subscribedUserEmail);
+
+    // Explicitly disable PS-02 for Opted Out User
+    await db.setAlertPreference(userOptOut.id, "PS-02", false, ["ENTRY", "EXIT"], optedOutUserEmail);
+
+    // Ingest public signal for PS-02
+    const eventId = "evt_ps02_strict_test_" + Date.now();
+    const res = await db.ingestVpsSignal({
+      sourceEventId: eventId,
+      strategyId: "PS-02",
+      instrument: "XAUUSD",
+      timeframe: "M15",
+      signalType: "ENTRY",
+      direction: "SHORT",
+      entryPrice: 2650.0,
+    });
+
+    // Only userSub should be notified
+    expect(res.subscriberEmails).toContain(subscribedUserEmail.toLowerCase());
+    expect(res.subscriberEmails).not.toContain(unsubscribedUserEmail.toLowerCase());
+    expect(res.subscriberEmails).not.toContain(optedOutUserEmail.toLowerCase());
+
+    const unsubDeliveries = await db.getUserDeliveries(userUnsub.id);
+    expect(unsubDeliveries.some((d) => d.signalId === res.signal.id)).toBe(false);
+
+    const optOutDeliveries = await db.getUserDeliveries(userOptOut.id);
+    expect(optOutDeliveries.some((d) => d.signalId === res.signal.id)).toBe(false);
+
+    const subDeliveries = await db.getUserDeliveries(userSub.id);
+    expect(subDeliveries.some((d) => d.signalId === res.signal.id)).toBe(true);
+  });
 });
