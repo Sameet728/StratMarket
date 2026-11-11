@@ -54,7 +54,6 @@ export function StrategyChart({
   const candlesRef = useRef<MarketCandle[]>([]);
   const contractRef = useRef<StrategyChartContract | null>(null);
   const latestSignalIdRef = useRef<string>("");
-  const userVisibleRangeRef = useRef<{ from: number; to: number } | null>(null);
 
   const [contract, setContract] = useState<StrategyChartContract | null>(null);
   const [candles, setCandles] = useState<MarketCandle[]>([]);
@@ -350,18 +349,6 @@ export function StrategyChart({
           ws.chart?.renderer?.set("timezone", "Asia/Kolkata");
         } catch (_) {}
 
-        // Track user's interactive pan & zoom so live tick updates never displace the view
-        const activeChart = ws.chart || ws.cell?.("c1")?.chart || (ws as any).active?.chart;
-        if (activeChart && typeof activeChart.on === "function") {
-          try {
-            activeChart.on("viewport:changed", (range: any) => {
-              if (range && typeof range.from === "number" && typeof range.to === "number") {
-                userVisibleRangeRef.current = range;
-              }
-            });
-          } catch (_) {}
-        }
-
         // Remove Vela logo & watermark from renderer and DOM
         try {
           ws.chart?.renderer?.set("attribution", false);
@@ -655,57 +642,43 @@ export function StrategyChart({
           if (updated && workspaceRef.current) {
             try {
               const ws = workspaceRef.current;
-              const targetChart = ws.chart || ws.cell?.("c1")?.chart || (ws as any).active?.chart;
-              const cellChart = ws.cell?.("c1")?.chart;
-
-              // Capture user's exact zoom/pan window before anything touches the chart
-              const currentRange =
-                (typeof targetChart?.getVisibleRange === "function" ? targetChart.getVisibleRange() : null) ||
-                userVisibleRangeRef.current;
+              const targetChart: any = ws.chart || ws.cell?.("c1")?.chart || (ws as any).active?.chart;
+              const orch: any = targetChart?.orchestrator || (ws as any).orchestrator;
+              const rendererPort: any = targetChart?.rendererPort || orch?.renderer;
 
               let inPlaceApplied = false;
 
-              // 1. In-place live bar mutation: applyBar updates the candle on canvas while preserving exact user scroll & zoom
-              if (targetChart && typeof (targetChart as any).applyBar === "function") {
+              // 1. Authoritative Vela live bar mutation via orchestrator.applyBar
+              // Updates candle on canvas, eases live tick, preserves exact user zoom level and scroll position with ZERO viewport disruption
+              if (orch && typeof orch.applyBar === "function") {
                 try {
-                  (targetChart as any).applyBar(latestIncomingBar);
+                  orch.applyBar(latestIncomingBar);
                   inPlaceApplied = true;
                 } catch (_) {}
               }
 
-              if (cellChart && cellChart !== targetChart && typeof (cellChart as any).applyBar === "function") {
+              // 2. Direct rendererPort updateBar (WebGL2 / canvas2d live candle mutation)
+              if (!inPlaceApplied && rendererPort && typeof rendererPort.updateBar === "function") {
                 try {
-                  (cellChart as any).applyBar(latestIncomingBar);
+                  rendererPort.updateBar(latestIncomingBar);
                   inPlaceApplied = true;
                 } catch (_) {}
               }
 
-              // 2. Direct renderer.updateBar (lightweight-charts / native WebGL canvas layer)
-              if (!inPlaceApplied && targetChart?.renderer && typeof (targetChart.renderer as any).updateBar === "function") {
+              // 3. Fallback: rendererPort.setBars with preserveView: true
+              if (!inPlaceApplied && rendererPort && typeof rendererPort.setBars === "function") {
                 try {
-                  (targetChart.renderer as any).updateBar(latestIncomingBar);
+                  rendererPort.setBars(candlesRef.current, { preserveView: true });
                   inPlaceApplied = true;
                 } catch (_) {}
               }
 
-              // 3. Fallback: If setMarket MUST be used, explicitly pass visibleRange so Vela never snaps back to default framing
+              // 4. Safe fallback: setMarket without forced range override (preserves user view)
               if (!inPlaceApplied) {
-                const switchPayload = {
-                  data: candlesRef.current,
-                  ...(currentRange ? { visibleRange: currentRange } : {}),
-                };
                 if (typeof ws.chart?.setMarket === "function") {
-                  void ws.chart.setMarket(switchPayload);
-                }
-                if (cellChart && typeof cellChart.setMarket === "function") {
-                  void cellChart.setMarket(switchPayload);
-                }
-                if (currentRange && typeof targetChart?.setVisibleRange === "function") {
-                  setTimeout(() => {
-                    try {
-                      targetChart.setVisibleRange(currentRange);
-                    } catch (_) {}
-                  }, 40);
+                  void ws.chart.setMarket({ data: candlesRef.current });
+                } else if (ws.cell?.("c1")?.chart?.setMarket) {
+                  void ws.cell("c1").chart.setMarket({ data: candlesRef.current });
                 }
               }
             } catch (err) {
