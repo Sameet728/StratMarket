@@ -852,10 +852,10 @@ export function StrategyReportView({ strategy, initialSignals = [] }: Props) {
                   >
                     {/* Trade ID / Number */}
                     <td>
-                      <b style={{ color: "#ffffff", fontFamily: "JetBrains Mono, monospace" }}>
-                        #{t.tradeNumber || 5 - idx}
+                      <b style={{ color: "#ffffff", fontFamily: "JetBrains Mono, monospace", fontSize: "13px" }}>
+                        Trade #{t.tradeNumber}
                       </b>
-                      <span style={{ display: "block", fontSize: "11px", color: "var(--mut)" }}>
+                      <span style={{ display: "block", fontSize: "11px", color: "var(--mut)", marginTop: "2px" }}>
                         {t.timeframe || "M15"} · {t.instrument || "XAUUSD"}
                       </span>
                     </td>

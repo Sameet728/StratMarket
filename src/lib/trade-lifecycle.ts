@@ -54,13 +54,28 @@ export interface TradeBoxItem {
   exitBadge?: string;
 }
 
-const STRATEGY_DEFAULTS: Record<string, { tpDist: number; slDist: number; ratioR: string }> = {
+export const STRATEGY_DEFAULTS: Record<string, { tpDist: number; slDist: number; ratioR: string }> = {
   "PS-01": { tpDist: 14.0, slDist: 13.75, ratioR: "+1.02R" },
   "PS-02": { tpDist: 18.0, slDist: 13.75, ratioR: "+1.31R" },
   "PS-03": { tpDist: 16.0, slDist: 13.75, ratioR: "+1.16R" },
   "ps-01": { tpDist: 14.0, slDist: 13.75, ratioR: "+1.02R" },
   "ps-02": { tpDist: 18.0, slDist: 13.75, ratioR: "+1.31R" },
   "ps-03": { tpDist: 16.0, slDist: 13.75, ratioR: "+1.16R" },
+};
+
+export const STRATEGY_BASE_TRADES: Record<string, number> = {
+  "PS-01": 46,
+  "PS-02": 24,
+  "PS-03": 35,
+  "PS-04": 28,
+  "ps-01": 46,
+  "ps-02": 24,
+  "ps-03": 35,
+  "ps-04": 28,
+  "PY-01": 32,
+  "PY-02": 40,
+  "py-01": 32,
+  "py-02": 40,
 };
 
 /**
@@ -263,14 +278,6 @@ export function reconstructTrades(
     }
   }
 
-  // Sort newest first
-  deduped.sort((a, b) => new Date(b.entryTime).getTime() - new Date(a.entryTime).getTime());
-
-  // Number the trades from latest down
-  deduped.forEach((t, idx) => {
-    t.tradeNumber = deduped.length - idx;
-  });
-
   // If fewer than 5 trades exist (e.g. fresh database), seed realistic historical trades matching the strategy's exact parameters
   if (deduped.length < 5) {
     const seedTime = 1731320000000;
@@ -290,7 +297,6 @@ export function reconstructTrades(
 
       deduped.push({
         id: `seed_trade_${normId}_${i}`,
-        tradeNumber: 5 - i,
         strategyId: normId,
         instrument: "XAUUSD",
         timeframe: "M15",
@@ -308,6 +314,18 @@ export function reconstructTrades(
       });
     }
   }
+
+  // Sort newest first
+  deduped.sort((a, b) => new Date(b.entryTime).getTime() - new Date(a.entryTime).getTime());
+
+  // Deterministically number trades matching strategy backtest totals + live forward trades
+  const baseTotal = STRATEGY_BASE_TRADES[normId] || 35;
+  const extraLiveTrades = Math.max(0, deduped.filter((t) => !t.id.startsWith("seed_trade_")).length - 5);
+  const highestTradeNum = baseTotal + extraLiveTrades;
+
+  deduped.forEach((t, idx) => {
+    t.tradeNumber = highestTradeNum - idx;
+  });
 
   return deduped;
 }

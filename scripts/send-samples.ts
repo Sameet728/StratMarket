@@ -36,29 +36,51 @@ async function main() {
   });
   console.log("OTP Email Response:", otpRes);
 
-  // Sample 3: Real-Time Live Signal Alert Email (trade-alert.html)
-  console.log("\n[3/4] Dispatching V3 Quantitative Trade Signal Email...");
+  // Sample 3: Real-Time Live Signal Alert Email (ENTRY with Trade #)
+  console.log("\n[3/5] Dispatching V3 Quantitative Trade Signal Email (ENTRY Trade #46)...");
   const signalRes = await sendSignalAlertEmail({
     to: recipient,
-    strategyName: "Grandmaster Dual-10R",
+    strategyName: "Grandmaster Dual 10R / 8R",
     strategyId: "PS-01",
     instrument: "XAUUSD",
     timeframe: "M15",
     signalType: "ENTRY",
     direction: "LONG",
     entryPrice: 2642.50,
-    stopLoss: 2628.00,
-    targetPrice: 2671.00,
+    stopLoss: 2628.75,
+    targetPrice: 2656.50,
+    tradeNumber: 46,
     timestamp: new Date(),
     sourceEventId: "vps_sig_" + Date.now(),
-    winRate: "82.6%",
-    profitFactor: "6.11",
-    maxDrawdown: "2.3%",
+    winRate: "80.4%",
+    profitFactor: "4.19",
+    maxDrawdown: "2.0%",
   });
   console.log("Signal Email Response:", signalRes);
 
-  // Sample 4: User Login Security Alert Email
-  console.log("\n[4/4] Dispatching V3 Security Sign-in Alert Email...");
+  // Sample 4: Trade Outcome Alert Email (TAKE PROFIT HIT 🎯 with Emoji Animation)
+  console.log("\n[4/5] Dispatching V3 Trade Outcome Email (TP HIT 🎯 Trade #46)...");
+  const tpHitRes = await sendSignalAlertEmail({
+    to: recipient,
+    strategyName: "Grandmaster Dual 10R / 8R",
+    strategyId: "PS-01",
+    instrument: "XAUUSD",
+    timeframe: "M15",
+    signalType: "TAKE_PROFIT",
+    direction: "LONG",
+    entryPrice: 2642.50,
+    stopLoss: 2628.75,
+    targetPrice: 2656.50,
+    exitPrice: 2656.50,
+    tradeNumber: 46,
+    pnlR: "+1.02R",
+    timestamp: new Date(),
+    sourceEventId: "vps_tp_" + Date.now(),
+  });
+  console.log("TP Hit Email Response:", tpHitRes);
+
+  // Sample 5: User Login Security Alert Email
+  console.log("\n[5/5] Dispatching V3 Security Sign-in Alert Email...");
   const securityRes = await sendLoginSecurityEmail({
     to: recipient,
     name: "Sameet Pisal",

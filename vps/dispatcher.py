@@ -32,6 +32,7 @@ class VpsSignalDispatcher:
         entry_price: Optional[float] = None,
         stop_loss: Optional[float] = None,
         target_price: Optional[float] = None,
+        trade_number: Optional[int] = None,
         strategy_version: str = "1.0.0",
         provenance: str = "ELVARIS_VPS_MT5_ENGINE"
     ) -> Dict[str, Any]:
@@ -53,6 +54,8 @@ class VpsSignalDispatcher:
             "signalProvenance": provenance,
         }
 
+        if trade_number is not None:
+            payload_dict["tradeNumber"] = int(trade_number)
         if entry_price is not None:
             payload_dict["entryPrice"] = round(float(entry_price), 2)
         if stop_loss is not None:

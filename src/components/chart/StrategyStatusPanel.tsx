@@ -447,9 +447,24 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
                           boxShadow: isOpen ? "0 0 14px rgba(59, 130, 246, 0.15)" : "none",
                         }}
                       >
-                        {/* Header: Direction + Prominent Status Badge */}
+                        {/* Header: Trade # + Direction + Prominent Status Badge */}
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 800,
+                                color: "#ffffff",
+                                fontFamily: "'JetBrains Mono', monospace",
+                                background: "rgba(255, 255, 255, 0.08)",
+                                border: "1px solid rgba(255, 255, 255, 0.16)",
+                                padding: "2px 7px",
+                                borderRadius: 4,
+                                letterSpacing: "0.02em",
+                              }}
+                            >
+                              Trade #{t.tradeNumber}
+                            </span>
                             <span
                               style={{
                                 display: "inline-flex",

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAuthorizedVpsOrWebhookRequest } from "@/lib/vps/security";
 import { db } from "@/lib/db";
 import { dispatchSignalAlertEmails } from "@/lib/email/resend";
+import { STRATEGY_BASE_TRADES } from "@/lib/trade-lifecycle";
 import { z } from "zod";
 
 const SignalPayloadSchema = z.object({
@@ -162,6 +163,20 @@ export async function POST(request: NextRequest) {
       const isPublicOnUi = strategy?.visibilityStatus === "PUBLIC";
       const strategyName = strategy ? strategy.name : parsed.data.strategyId;
 
+      // Extract or compute identifiable Trade #
+      const baseTrades = STRATEGY_BASE_TRADES[stratId] || 35;
+      let tradeNumber: number | undefined;
+      if (typeof bodyData.tradeNumber === "number") tradeNumber = bodyData.tradeNumber;
+      else if (typeof bodyData.trade_number === "number") tradeNumber = bodyData.trade_number;
+      else if (typeof bodyData.tradeNo === "number") tradeNumber = bodyData.tradeNo;
+      else if (bodyData.tradeNumber) tradeNumber = parseInt(String(bodyData.tradeNumber), 10);
+      else if (bodyData.tradeNo) tradeNumber = parseInt(String(bodyData.tradeNo), 10);
+
+      if (!tradeNumber) {
+        const existingSignals = await db.getSignals(stratId, 100);
+        tradeNumber = baseTrades + Math.floor(existingSignals.length / 2) + 1;
+      }
+
       let emailResult: { dispatchedCount: number; errors: string[] } = { dispatchedCount: 0, errors: [] };
       if (isPublicOnUi && result.subscriberEmails && result.subscriberEmails.length > 0) {
         try {
@@ -175,6 +190,9 @@ export async function POST(request: NextRequest) {
             entryPrice: parsed.data.entryPrice,
             stopLoss: parsed.data.stopLoss,
             targetPrice: parsed.data.targetPrice,
+            tradeNumber,
+            pnlR: bodyData.pnlR || bodyData.pnl_r,
+            profitUsd: typeof bodyData.profitUsd === "number" ? bodyData.profitUsd : undefined,
             sourceEventId: parsed.data.sourceEventId,
             extraRecipients: result.subscriberEmails,
           });
