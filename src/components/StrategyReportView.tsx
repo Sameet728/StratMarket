@@ -368,7 +368,7 @@ export function StrategyReportView({ strategy, initialSignals = [] }: Props) {
         </div>
 
         {/* 4 Clear Visual Payoff Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "16px", marginBottom: "20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: "16px", marginBottom: "20px" }}>
           <div className="report-card" style={{ borderLeft: "3px solid #a3e635", padding: "18px 18px", overflow: "hidden", minWidth: 0 }}>
             <span style={{ fontSize: "13px", color: "var(--mut)", display: "block", marginBottom: "6px" }}>Average Winning Trade</span>
             <b style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "clamp(19px, 2.1vw, 24px)", color: "#a3e635", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -454,7 +454,7 @@ export function StrategyReportView({ strategy, initialSignals = [] }: Props) {
           Both trade directions are independently profitable with balanced risk execution.
         </p>
         
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: "20px" }}>
           {reportData.longStats && (
             <div className="report-card" style={{ padding: "28px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "22px", paddingBottom: "16px", borderBottom: "1px solid var(--line)" }}>
@@ -725,7 +725,7 @@ export function StrategyReportView({ strategy, initialSignals = [] }: Props) {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))",
             gap: "12px",
             marginBottom: "20px",
           }}

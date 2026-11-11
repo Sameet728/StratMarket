@@ -3813,3 +3813,32 @@ button, a, input, select, textarea, .chip, .card {
   height: 100% !important;
   overflow: hidden !important;
 }
+
+/* Mobile Smooth Scrolling, Safe Area & Touch Hardware Acceleration */
+@media (max-width: 768px) {
+  .chart-page-fullscreen,
+  .chart-layout-root {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+  .chart-canvas-wrapper {
+    height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+  body, html {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+  .table-wrap, .trade-list, .scrollable-x {
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  .table-wrap::-webkit-scrollbar, .trade-list::-webkit-scrollbar, .scrollable-x::-webkit-scrollbar {
+    display: none !important;
+  }
+  /* Add bottom padding to scrollable body content so dock nav doesn't overlap actions */
+  .page, #p-market, #p-strategy-report, .wrap {
+    padding-bottom: max(60px, calc(40px + env(safe-area-inset-bottom, 0px))) !important;
+  }
+}

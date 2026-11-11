@@ -214,11 +214,34 @@ export function StrategyChart({
       }
 
       try {
-        setLoading(true);
-        setError(null);
-
         const isMobile = typeof window !== "undefined" && (window.innerWidth < 768 || window.matchMedia("(pointer: coarse)").matches);
-        const candleCount = isMobile ? 350 : 1500;
+        const candleCount = isMobile ? 200 : 1500;
+        const cacheKey = `stratmarket_chart_cache_${strategyId}_${timeframe}`;
+
+        // 1. Instant Cache Hydration: If cached data exists in sessionStorage, mount immediately (0ms latency)
+        let hasCache = false;
+        try {
+          const cachedRaw = sessionStorage.getItem(cacheKey);
+          if (cachedRaw) {
+            const cached = JSON.parse(cachedRaw);
+            if (cached.contract && Array.isArray(cached.candles) && cached.candles.length > 0) {
+              setContract(cached.contract);
+              contractRef.current = cached.contract;
+              setCandles(cached.candles);
+              candlesRef.current = cached.candles;
+              if (Array.isArray(cached.storedSignals)) {
+                setStoredSignals(cached.storedSignals);
+              }
+              setLoading(false);
+              hasCache = true;
+            }
+          }
+        } catch (_) {}
+
+        if (!hasCache) {
+          setLoading(true);
+        }
+        setError(null);
 
         // Fetch high-fidelity bars and strategy execution contract (optimized count on mobile for 60fps)
         const res = await fetch(`/api/chart/${strategyId}/series?count=${candleCount}&timeframe=${timeframe}`, {
@@ -257,6 +280,18 @@ export function StrategyChart({
         }
         setStatus("LIVE");
         setPaywallType("NONE");
+
+        // Persist fresh chart snapshot in sessionStorage for 0ms restoration
+        try {
+          sessionStorage.setItem(
+            cacheKey,
+            JSON.stringify({
+              contract: data.contract,
+              candles: data.candles,
+              storedSignals: data.storedSignals,
+            })
+          );
+        } catch (_) {}
 
         // Clean up prior instance if switching timeframe/strategy
         if (workspaceRef.current) {
@@ -845,7 +880,7 @@ export function StrategyChart({
             </div>
           )}
 
-          {loading && !isLocked && (
+          {loading && !isLocked && candles.length === 0 && (
             <div className="chart-loading-overlay">
               <div className="chart-spinner" />
               <p>Streaming authoritative TradingView market data for {strategyId}...</p>
