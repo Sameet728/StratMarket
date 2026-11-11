@@ -78,7 +78,7 @@ export async function getMongoClient(): Promise<MongoClient | null> {
   }
 
   // If we already attempted and failed recently, return null immediately without delay
-  if (!isConnected && Date.now() - lastFailedAttempt < RETRY_COOLDOWN_MS) {
+  if (!isConnected && performance.now() - lastFailedAttempt < RETRY_COOLDOWN_MS) {
     return null;
   }
 
@@ -111,7 +111,7 @@ export async function getMongoClient(): Promise<MongoClient | null> {
           lastConnectionError = errMsg;
           console.warn("[MongoDB] Connection attempt failed, falling back to in-memory store:", errMsg);
           isConnected = false;
-          lastFailedAttempt = Date.now();
+          lastFailedAttempt = performance.now();
           clientPromise = null;
           client = null;
           return null as any;
@@ -121,7 +121,7 @@ export async function getMongoClient(): Promise<MongoClient | null> {
       lastConnectionError = errMsg;
       console.warn("[MongoDB] Client initialization error:", errMsg);
       isConnected = false;
-      lastFailedAttempt = Date.now();
+      lastFailedAttempt = performance.now();
       clientPromise = null;
       return null;
     }

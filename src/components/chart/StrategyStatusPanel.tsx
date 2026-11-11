@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { StrategyChartContract } from "@/lib/strategy-execution";
+import { reconstructTrades, TradeRecord } from "@/lib/trade-lifecycle";
 
 interface StoredSignal {
   id: string;
@@ -26,6 +28,24 @@ interface Props {
 }
 
 export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, storedSignals = [] }: Props) {
+  const [tradeFilter, setTradeFilter] = useState<"ALL" | "STILL_OPEN" | "TP_HIT" | "SL_HIT">("ALL");
+  const [tabMode, setTabMode] = useState<"TRADES" | "SIGNALS">("TRADES");
+
+  // Reconstruct trades with explicit TP / SL / STILL OPEN lifecycles
+  const trades = useMemo(() => {
+    if (!contract) return [];
+    return reconstructTrades(contract.strategyId, storedSignals, contract.tradeBoxes || []);
+  }, [contract, storedSignals]);
+
+  const openTrades = useMemo(() => trades.filter((t) => t.status === "STILL_OPEN"), [trades]);
+  const tpTrades = useMemo(() => trades.filter((t) => t.status === "TP_HIT"), [trades]);
+  const slTrades = useMemo(() => trades.filter((t) => t.status === "SL_HIT"), [trades]);
+
+  const filteredTrades = useMemo(() => {
+    if (tradeFilter === "ALL") return trades;
+    return trades.filter((t) => t.status === tradeFilter);
+  }, [trades, tradeFilter]);
+
   if (!isOpen || !contract) return null;
 
   const isPine = contract.implementationType === "PINE_SCRIPT";
@@ -256,35 +276,295 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
           </div>
         </div>
 
-        {/* Live VPS Signal Feed */}
+        {/* Trade Execution History & Live Lifecycle */}
         <div className="panel-section">
-          <div className="section-title">
-            Live VPS Signals
-            <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 600, background: "rgba(16,185,129,0.15)", color: "#10b981", padding: "2px 6px", borderRadius: 10, border: "1px solid rgba(16,185,129,0.2)" }}>
-              {storedSignals.length > 0 ? `${storedSignals.length} signals` : "LIVE"}
-            </span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <div className="section-title" style={{ margin: 0 }}>
+              Trades & Execution History
+            </div>
+            <div style={{ display: "flex", gap: 4 }}>
+              <button
+                type="button"
+                onClick={() => setTabMode("TRADES")}
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: "3px 8px",
+                  borderRadius: 5,
+                  border: "1px solid",
+                  borderColor: tabMode === "TRADES" ? "rgba(163, 230, 53, 0.4)" : "#27272a",
+                  background: tabMode === "TRADES" ? "rgba(163, 230, 53, 0.12)" : "transparent",
+                  color: tabMode === "TRADES" ? "#a3e635" : "#71717a",
+                  cursor: "pointer",
+                }}
+              >
+                Trades ({trades.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setTabMode("SIGNALS")}
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: "3px 8px",
+                  borderRadius: 5,
+                  border: "1px solid",
+                  borderColor: tabMode === "SIGNALS" ? "rgba(16, 185, 129, 0.4)" : "#27272a",
+                  background: tabMode === "SIGNALS" ? "rgba(16, 185, 129, 0.12)" : "transparent",
+                  color: tabMode === "SIGNALS" ? "#10b981" : "#71717a",
+                  cursor: "pointer",
+                }}
+              >
+                Raw Signals ({storedSignals.length})
+              </button>
+            </div>
           </div>
-          {storedSignals.length > 0 ? (
+
+          {tabMode === "TRADES" ? (
+            <>
+              {/* Active Position Banner if any position is still open */}
+              {openTrades.length > 0 && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: "linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.05) 100%)",
+                    border: "1px solid rgba(59, 130, 246, 0.35)",
+                    marginBottom: 10,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: "#3b82f6",
+                        boxShadow: "0 0 10px #3b82f6",
+                      }}
+                    />
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: "#93c5fd" }}>
+                      {openTrades.length} Active Position Open
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 10.5, color: "#bfdbfe", fontFamily: "'JetBrains Mono', monospace" }}>
+                    {openTrades[0].direction} @ ${openTrades[0].entryPrice.toFixed(2)}
+                  </span>
+                </div>
+              )}
+
+              {/* Status Filter Chips */}
+              <div style={{ display: "flex", gap: 5, marginBottom: 10, flexWrap: "wrap" }}>
+                {(
+                  [
+                    { key: "ALL", label: `All (${trades.length})` },
+                    { key: "STILL_OPEN", label: `Still Open (${openTrades.length})`, count: openTrades.length },
+                    { key: "TP_HIT", label: `TP Hit (${tpTrades.length})`, count: tpTrades.length },
+                    { key: "SL_HIT", label: `SL Hit (${slTrades.length})`, count: slTrades.length },
+                  ] as const
+                ).map((chip) => {
+                  const isActive = tradeFilter === chip.key;
+                  return (
+                    <button
+                      key={chip.key}
+                      type="button"
+                      onClick={() => setTradeFilter(chip.key)}
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 600,
+                        padding: "3px 8px",
+                        borderRadius: 12,
+                        border: "1px solid",
+                        borderColor: isActive
+                          ? chip.key === "TP_HIT"
+                            ? "#10b981"
+                            : chip.key === "SL_HIT"
+                            ? "#ef4444"
+                            : chip.key === "STILL_OPEN"
+                            ? "#3b82f6"
+                            : "#ffffff"
+                          : "#27272a",
+                        background: isActive
+                          ? chip.key === "TP_HIT"
+                            ? "rgba(16, 185, 129, 0.15)"
+                            : chip.key === "SL_HIT"
+                            ? "rgba(239, 68, 68, 0.15)"
+                            : chip.key === "STILL_OPEN"
+                            ? "rgba(59, 130, 246, 0.15)"
+                            : "rgba(255, 255, 255, 0.1)"
+                          : "rgba(255, 255, 255, 0.02)",
+                        color: isActive
+                          ? chip.key === "TP_HIT"
+                            ? "#34d399"
+                            : chip.key === "SL_HIT"
+                            ? "#f87171"
+                            : chip.key === "STILL_OPEN"
+                            ? "#60a5fa"
+                            : "#ffffff"
+                          : "#a1a1aa",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {chip.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Trades List */}
+              {filteredTrades.length > 0 ? (
+                <div style={{ display: "grid", gap: 8 }}>
+                  {filteredTrades.slice(0, 10).map((t, idx) => {
+                    const isLong = t.direction === "LONG";
+                    const isOpen = t.status === "STILL_OPEN";
+                    const isTP = t.status === "TP_HIT";
+                    const isSL = t.status === "SL_HIT";
+
+                    const statusBg = isOpen
+                      ? "rgba(59, 130, 246, 0.12)"
+                      : isTP
+                      ? "rgba(16, 185, 129, 0.12)"
+                      : "rgba(239, 68, 68, 0.12)";
+                    const statusColor = isOpen ? "#60a5fa" : isTP ? "#34d399" : "#f87171";
+                    const statusBorder = isOpen ? "rgba(59, 130, 246, 0.35)" : isTP ? "rgba(16, 185, 129, 0.35)" : "rgba(239, 68, 68, 0.35)";
+
+                    const entryDate = new Date(t.entryTime);
+                    const timeStr = entryDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+                    const dateStr = entryDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+
+                    return (
+                      <div
+                        key={t.id}
+                        style={{
+                          padding: "10px 12px",
+                          borderRadius: 9,
+                          background: "rgba(255, 255, 255, 0.025)",
+                          border: `1px solid ${statusBorder}`,
+                          boxShadow: isOpen ? "0 0 14px rgba(59, 130, 246, 0.15)" : "none",
+                        }}
+                      >
+                        {/* Header: Direction + Prominent Status Badge */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 3,
+                                fontSize: 11,
+                                fontWeight: 800,
+                                padding: "2px 7px",
+                                borderRadius: 4,
+                                background: isLong ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
+                                color: isLong ? "#10b981" : "#ef4444",
+                                letterSpacing: "0.04em",
+                              }}
+                            >
+                              {isLong ? "▲ LONG" : "▼ SHORT"}
+                            </span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "#ffffff", fontFamily: "'JetBrains Mono', monospace" }}>
+                              @ ${t.entryPrice.toFixed(2)}
+                            </span>
+                          </div>
+
+                          {/* Outcome / Status Badge */}
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 5,
+                              padding: "2px 8px",
+                              borderRadius: 5,
+                              fontSize: 10.5,
+                              fontWeight: 800,
+                              letterSpacing: "0.03em",
+                              background: statusBg,
+                              color: statusColor,
+                              border: `1px solid ${statusBorder}`,
+                            }}
+                          >
+                            {isOpen ? (
+                              <>
+                                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#60a5fa" }} />
+                                STILL OPEN
+                              </>
+                            ) : isTP ? (
+                              <>✓ TP HIT ({t.pnlR})</>
+                            ) : (
+                              <>✕ SL HIT ({t.pnlR})</>
+                            )}
+                          </span>
+                        </div>
+
+                        {/* Mid Row: TP & SL Bracket Levels */}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            fontSize: 10.5,
+                            fontFamily: "'JetBrains Mono', monospace",
+                            padding: "5px 8px",
+                            borderRadius: 6,
+                            background: "rgba(0, 0, 0, 0.25)",
+                            marginBottom: 6,
+                          }}
+                        >
+                          <span style={{ color: "#34d399" }}>
+                            TP: ${t.targetPrice.toFixed(2)}
+                          </span>
+                          <span style={{ color: "#f87171" }}>
+                            SL: ${t.stopLoss.toFixed(2)}
+                          </span>
+                          {t.exitPrice && (
+                            <span style={{ color: "#e4e4e7" }}>
+                              Exit: ${t.exitPrice.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Footer: Date & Trade Reference */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 10, color: "#71717a" }}>
+                          <span>
+                            {isOpen ? "Active Market Position" : isTP ? "Target Payoff Achieved" : "Strict Risk Guard Hit"}
+                          </span>
+                          <span>
+                            {timeStr} · {dateStr}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    padding: "12px",
+                    borderRadius: 8,
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid #1f1f23",
+                    fontSize: 11.5,
+                    color: "#71717a",
+                    lineHeight: 1.5,
+                    textAlign: "center",
+                  }}
+                >
+                  No trades match the selected status filter.
+                </div>
+              )}
+            </>
+          ) : (
+            /* Raw Signal View */
             <div style={{ display: "grid", gap: 6 }}>
-              {storedSignals.slice(0, 8).map((sig) => {
-                const isEntry = sig.signalType === "ENTRY";
+              {storedSignals.slice(0, 10).map((sig) => {
                 const isTP = sig.signalType === "TAKE_PROFIT";
                 const isSL = sig.signalType === "STOP_LOSS";
                 const isLong = sig.direction === "LONG";
-
                 const color = isTP ? "#10b981" : isSL ? "#ef4444" : isLong ? "#10b981" : "#ef4444";
-                const bg = isTP
-                  ? "rgba(16,185,129,0.07)"
-                  : isSL
-                  ? "rgba(239,68,68,0.07)"
-                  : "rgba(255,255,255,0.03)";
-                const icon = isTP ? "▲" : isSL ? "▼" : isLong ? "▲" : "▼";
-                const label = isTP
-                  ? "TP HIT"
-                  : isSL
-                  ? "SL HIT"
-                  : `${sig.signalType} ${sig.direction}`;
-
+                const label = isTP ? "TP HIT" : isSL ? "SL HIT" : `${sig.signalType} ${sig.direction}`;
                 const ts = new Date(sig.timestamp);
                 const timeStr = ts.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
                 const dateStr = ts.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
@@ -298,22 +578,17 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
                       alignItems: "center",
                       padding: "8px 10px",
                       borderRadius: 8,
-                      background: bg,
+                      background: "rgba(255,255,255,0.02)",
                       border: `1px solid ${color}30`,
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 14 }}>{icon}</span>
-                      <div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color, letterSpacing: "0.04em" }}>{label}</div>
-                        {sig.entryPrice && (
-                          <div style={{ fontSize: 10, color: "#a1a1aa", fontFamily: "'JetBrains Mono', monospace", marginTop: 1 }}>
-                            @ ${sig.entryPrice.toFixed(2)}
-                            {sig.stopLoss && ` · SL $${sig.stopLoss.toFixed(2)}`}
-                            {sig.targetPrice && ` · TP $${sig.targetPrice.toFixed(2)}`}
-                          </div>
-                        )}
-                      </div>
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color }}>{label}</div>
+                      {sig.entryPrice && (
+                        <div style={{ fontSize: 10, color: "#a1a1aa", fontFamily: "'JetBrains Mono', monospace" }}>
+                          @ ${sig.entryPrice.toFixed(2)} · SL ${sig.stopLoss?.toFixed(2) || "—"} · TP ${sig.targetPrice?.toFixed(2) || "—"}
+                        </div>
+                      )}
                     </div>
                     <div style={{ fontSize: 10, color: "#71717a", textAlign: "right", flexShrink: 0 }}>
                       <div>{timeStr}</div>
@@ -322,22 +597,6 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
                   </div>
                 );
               })}
-            </div>
-          ) : (
-            <div
-              style={{
-                padding: "12px",
-                borderRadius: 8,
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid #1f1f23",
-                fontSize: 11.5,
-                color: "#71717a",
-                lineHeight: 1.5,
-              }}
-            >
-              <span style={{ color: "#10b981" }}>●</span> VPS engine monitoring live markets 24/7.
-              <br />
-              Signals appear here in real-time when conditions are met.
             </div>
           )}
         </div>

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { StrategyReportView } from "@/components/StrategyReportView";
@@ -67,7 +68,9 @@ export default async function StrategyReportPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <StrategyReportView strategy={strategy} />
+      <Suspense fallback={<div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--mut)" }}>Loading performance report...</div>}>
+        <StrategyReportView strategy={strategy} />
+      </Suspense>
     </div>
   );
 }
