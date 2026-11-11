@@ -126,11 +126,11 @@ export function DockNav() {
       </Link>
 
       <Link
-        href="/how"
+        href="/blog"
         className="l"
-        data-t="How it works"
-        aria-label="How it works"
-        aria-current={isActive("/how") ? "true" : undefined}
+        data-t="Blog"
+        aria-label="Quantitative Trading Blog"
+        aria-current={isActive("/blog") ? "true" : undefined}
       >
         <svg
           width="20"
@@ -142,9 +142,8 @@ export function DockNav() {
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <circle cx="5" cy="19" r="2" />
-          <circle cx="19" cy="5" r="2" />
-          <path d="M7 19h6a4 4 0 0 0 0-8h-2a4 4 0 0 1 0-8h6" />
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
         </svg>
       </Link>
 
@@ -169,6 +168,28 @@ export function DockNav() {
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
           <path d="M9 7h6" />
           <path d="M9 11h6" />
+        </svg>
+      </Link>
+
+      <Link
+        href="/profile"
+        className="l"
+        data-t="Profile"
+        aria-label="Account Profile & Alerts"
+        aria-current={isActive("/profile") ? "true" : undefined}
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
         </svg>
       </Link>
     </nav>

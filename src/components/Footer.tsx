@@ -95,6 +95,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/blog" style={{ color: "#a3e635", fontWeight: 600, textDecoration: "none" }}>
+                  Quant Research Blog
+                </Link>
+              </li>
+              <li>
                 <Link href="/signin" style={{ color: "#9ca3af", textDecoration: "none" }}>
                   Trader Sign In (Free)
                 </Link>
@@ -121,6 +126,21 @@ export function Footer() {
               <li>
                 <Link href="/docs/algorithmic-strategies" style={{ color: "#9ca3af", textDecoration: "none" }}>
                   Strategy Catalog (PS &amp; PY)
+                </Link>
+              </li>
+              <li>
+                <Link href="/docs/pine-script-architecture" style={{ color: "#9ca3af", textDecoration: "none" }}>
+                  Pine Script v5 Architecture
+                </Link>
+              </li>
+              <li>
+                <Link href="/docs/walk-forward-optimization" style={{ color: "#9ca3af", textDecoration: "none" }}>
+                  Walk-Forward Optimization
+                </Link>
+              </li>
+              <li>
+                <Link href="/docs/live-vps-signal-relays" style={{ color: "#9ca3af", textDecoration: "none" }}>
+                  VPS Relays &amp; Push Alerts
                 </Link>
               </li>
               <li>

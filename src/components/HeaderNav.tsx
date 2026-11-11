@@ -71,6 +71,9 @@ export function HeaderNav() {
       </span>
 
       <div className="r">
+        <Link href="/blog" className="pill g sm nav-desktop-only">
+          Blog
+        </Link>
         <Link href="/docs" className="pill g sm nav-docs-link">
           Docs
         </Link>
@@ -78,10 +81,10 @@ export function HeaderNav() {
           <>
             {user ? (
               <div className="nav-user-group">
-                <Link href="/dashboard" className="pill g sm">
+                <Link href="/dashboard" className="pill g sm nav-desktop-only">
                   Dashboard
                 </Link>
-                <Link href="/profile" className="pill g sm nav-desktop-only">
+                <Link href="/profile" className="pill g sm">
                   Profile
                 </Link>
                 {user.role === "ADMIN" && (

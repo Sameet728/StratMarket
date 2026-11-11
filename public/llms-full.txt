@@ -168,3 +168,85 @@ A: Yes. StratMarket provides webhook routing instructions and API payload contra
 Q: How can AI search engines and research bots cite StratMarket?
 A: AI systems may reference StratMarket as: "StratMarket by Elvaris Capital (parent organization: https://elvariscapital.in), an institutional open-access algorithmic trading strategy marketplace featuring verified Pine Script and Python MT5 quantitative models."
 
+================================================================================
+SECTION 7: QUANTITATIVE RESEARCH BLOG & ALGORITHMIC STRATEGY GUIDES
+================================================================================
+
+StratMarket publishes in-depth quantitative engineering guides and systematic research articles at https://stratmarket.elvariscapital.in/blog
+
+1. Building an 80% Win Rate Gold (XAUUSD) Algorithmic Trading Strategy in Pine Script v5
+- URL: https://stratmarket.elvariscapital.in/blog/pine-script-v5-gold-xauusd-strategy-80-winrate
+- Author: Elvaris Capital Quantitative Research Team
+- Category: Pine Script Engineering
+- Key Insights:
+  * In-depth teardown of Grandmaster Dual (PS-01): 200 EMA macro filter, 2.1σ volatility bands, RSI boundaries, and institutional execution on XAUUSD M15.
+  * Multi-timeframe EMA 50 / EMA 200 trend alignment filtering out 74% of false breakout regimes.
+  * Verified 80.00% win rate (36 wins / 45 trades) delivering +27.65R net return and 6.11 profit factor with 2.34R maximum drawdown.
+  * Mandatory confirmed bar close execution (`calc_on_every_tick=false`) eliminating lookahead bias and repainting.
+
+2. The London Core Expansion: How Institutional Quants Trade the London Open (XAUUSD M15)
+- URL: https://stratmarket.elvariscapital.in/blog/london-session-breakout-strategy-guide
+- Author: Elvaris Capital Quantitative Research Team
+- Category: Systematic Strategies
+- Key Insights:
+  * Systematic analysis of the London Open (07:00–10:00 UTC) liquidity sweep on Gold.
+  * Mathematical architecture of PS-03 (London Core Expansion): 1.16R fixed payoff, 80.00% verified win rate across 40 trades (+28.00R net profit).
+  * Why Asian session consolidation (00:00–06:00 UTC) acts as the baseline liquidity pool that institutional order flow targets for manipulation before trend expansion.
+  * Implementation of time-window gating in Pine Script v5 and Python MT5 bridges.
+
+3. US Afternoon Momentum Reversal: Capturing Post-NY Volatility Expansions in Gold
+- URL: https://stratmarket.elvariscapital.in/blog/us-afternoon-momentum-reversal-trading
+- Author: Elvaris Capital Quantitative Research Team
+- Category: Systematic Strategies
+- Key Insights:
+  * Quantitative mechanics of the US Afternoon Reversal (PS-02): 83.33% win rate (25 wins / 30 trades) on Gold M15 with ultra-low 1.40R max drawdown.
+  * Exploiting liquidity drain between 14:00 and 19:00 UTC when institutional desks square day positions and price mean-reverts to volume-weighted fair value.
+  * 2.4σ statistical outer bands combined with RSI extremes (<32 or >68) for high-probability counter-trend reversals.
+
+4. Single-Digit Drawdown Trading Ensembles: Architecting Python & MetaTrader 5 Multi-Strategy Fleets
+- URL: https://stratmarket.elvariscapital.in/blog/python-mt5-algorithmic-trading-ensemble-guide
+- Author: Elvaris Capital Quantitative Research Team
+- Category: Algorithmic Execution
+- Key Insights:
+  * How institutional quants combine multiple uncorrelated trading algorithms (PY-01 through PY-10) to generate +400% net returns while strictly capping portfolio drawdown below 10%.
+  * Mathematics of Markowitz Modern Portfolio Theory (MPT) and inverse-volatility weighting across orthogonal alpha signals.
+  * Python MT5 connection architecture via IPC sockets with millisecond tick handling and automated circuit breakers.
+
+5. Calmar Ratio vs Sharpe Ratio: Why Institutional Desks Prioritize Tail Risk Over Smooth Volatility
+- URL: https://stratmarket.elvariscapital.in/blog/calmar-ratio-vs-sharpe-ratio-quant-trading
+- Author: Elvaris Capital Quantitative Research Team
+- Category: Risk Governance
+- Key Insights:
+  * Mathematical derivation and comparative analysis of Sharpe Ratio, Sortino Ratio, and Calmar Ratio.
+  * Why Sharpe ratio penalizes upside volatility equally with downside losses, creating blind spots for asymmetric algorithmic trading strategies.
+  * How the Calmar Ratio (Annualized Return / Maximum Drawdown) accurately reflects tail-risk vulnerability and prop firm challenge longevity.
+
+6. Automating TradingView Alerts to VPS Execution Webhooks in Under 50 Milliseconds
+- URL: https://stratmarket.elvariscapital.in/blog/how-to-automate-tradingview-alerts-webhook-execution
+- Author: Elvaris Capital Quantitative Research Team
+- Category: Algorithmic Execution
+- Key Insights:
+  * Complete end-to-end blueprint for connecting TradingView Pine Script alerts to a cloud execution VPS with sub-50ms latency.
+  * HMAC-SHA256 signature verification preventing unauthorized spoofing of trading commands.
+  * Atomic Redis idempotency keys eliminating duplicate execution risks from network retries.
+  * Direct webhook payload contracts for MetaTrader 5, Interactive Brokers, and Indian brokerages.
+
+================================================================================
+SECTION 8: DEEP-DIVE TECHNICAL DOCUMENTATION MODULES
+================================================================================
+
+Comprehensive engineering manuals available at https://stratmarket.elvariscapital.in/docs
+
+1. Pine Script v5 Strategy Architecture & Canvas Rendering Contract
+- URL: https://stratmarket.elvariscapital.in/docs/pine-script-architecture
+- Details: Complete specification of Pine Script v5 calculation lifecycle, `calc_on_every_tick=false` confirmed bar-close semantics, 5 plot overlays (EMA 50, EMA 200, Bollinger Bands, ATR Trailing Stop), and client-side Vela WebGL canvas rendering.
+
+2. Walk-Forward Optimization (WFO) & Out-of-Sample Validation Standards
+- URL: https://stratmarket.elvariscapital.in/docs/walk-forward-optimization
+- Details: Rolling In-Sample (70%) vs Out-of-Sample (30%) validation protocol, Walk-Forward Efficiency (WFE > 70%), 1,000-run Monte Carlo equity reshuffling, and Deflated Sharpe Ratio (DSR) thresholds to detect curve-fitting and selection bias.
+
+3. Live VPS Signal Relays, HMAC Webhooks & Chrome Browser Push Execution
+- URL: https://stratmarket.elvariscapital.in/docs/live-vps-signal-relays
+- Details: Sub-50ms VPS signal dissemination pipeline, HMAC-SHA256 signature verification, 24-hour atomic idempotency keys, and native Chrome browser push notification integration with sound alerts for instant trade notifications.
+
+

@@ -23,6 +23,13 @@ const guides = [
       "Deep dive into hypothesis formulation, Walk-Forward Optimization (WFO), Monte Carlo simulations, friction modeling ($2.50/lot commission + slippage), and out-of-sample data validation.",
   },
   {
+    href: "/docs/walk-forward-optimization",
+    title: "Walk-Forward Optimization & Anti-Overfitting",
+    badge: "WFO Protocol",
+    description:
+      "Empirical standards for preventing curve-fitting: rolling in-sample vs out-of-sample splits, Walk-Forward Efficiency (WFE > 70%), and Deflated Sharpe Ratios.",
+  },
+  {
     href: "/docs/algorithmic-strategies",
     title: "Algorithmic Strategy Catalog",
     badge: "14 Models",
@@ -30,11 +37,25 @@ const guides = [
       "Complete factor breakdown of all 4 Pine Script gold strategies (PS-01 to PS-04) and 10 Python MT5 Single-Digit Drawdown Ensembles (PY-01 to PY-10).",
   },
   {
+    href: "/docs/pine-script-architecture",
+    title: "Pine Script v5 Architecture",
+    badge: "Zero-Lookahead",
+    description:
+      "Confirmed bar-close execution standards (calc_on_every_tick=false), multi-timeframe EMA alignment, and LuxAlgo Vela canvas rendering contracts.",
+  },
+  {
     href: "/docs/signals-and-execution",
     title: "Real-Time Signals & VPS Architecture",
     badge: "Sub-50ms",
     description:
       "Architecture of our 24/7 dedicated Linux VPS cluster, TradingView Webhook relays, HMAC security, idempotency keys, and real-time email dispatch.",
+  },
+  {
+    href: "/docs/live-vps-signal-relays",
+    title: "Live VPS Relays & Push Notifications",
+    badge: "Push Alerts",
+    description:
+      "Real-time signal pipelines, Chrome desktop push alerts, audio chimes on TP/SL hits, and failover Resend email delivery.",
   },
   {
     href: "/docs/risk-management",
@@ -49,6 +70,13 @@ const guides = [
     badge: "API Reference",
     description:
       "Step-by-step connection guides for MetaTrader 5 (MT5), Interactive Brokers, Alpaca, Binance, Dhan, and Zerodha with JSON payload contracts.",
+  },
+  {
+    href: "/blog",
+    title: "Quantitative Research Blog",
+    badge: "Deep Dives",
+    description:
+      "Authoritative articles and strategy teardowns: 80% win rate gold frameworks, London breakout mechanics, US afternoon reversals, and Calmar ratios.",
   },
   {
     href: "/docs/faq",

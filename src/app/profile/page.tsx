@@ -141,15 +141,32 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
+    let unmounted = false;
     async function loadData() {
       try {
-        // 1. Fast Auth Check (<60ms) - Unblock Profile UI immediately
-        const meRes = await fetch("/api/auth/me");
-        const meData = await meRes.json();
-        if (!meData.authenticated || !meData.user) {
-          router.push("/signin");
+        // 1. Fast Auth Check (<60ms) with 6s timeout guard - Unblock Profile UI immediately
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+        const meRes = await fetch("/api/auth/me", { signal: controller.signal }).catch(() => null);
+        clearTimeout(timeoutId);
+
+        if (!meRes || !meRes.ok) {
+          if (!unmounted) {
+            setLoading(false);
+            router.push("/signin");
+          }
           return;
         }
+
+        const meData = await meRes.json().catch(() => ({}));
+        if (!meData.authenticated || !meData.user) {
+          if (!unmounted) {
+            setLoading(false);
+            router.push("/signin");
+          }
+          return;
+        }
+        if (unmounted) return;
         setUser(meData.user);
         setSignalEmail(meData.user.email);
         setLoading(false); // Instantly dismiss full-page spinner! User sees profile banner in <100ms
@@ -483,7 +500,13 @@ export default function ProfilePage() {
       <div className="page" style={{ minHeight: "80vh", display: "grid", placeItems: "center" }}>
         <div style={{ textAlign: "center", color: "var(--mut)" }}>
           <div className="chart-spinner" style={{ margin: "0 auto 16px", width: 28, height: 28 }} />
-          Loading account profile...
+          <div style={{ fontSize: 14, color: "#fff", marginBottom: 8 }}>Loading account profile...</div>
+          <div style={{ fontSize: 12, color: "#71717a" }}>
+            Taking longer than usual?{" "}
+            <Link href="/signin" style={{ color: "var(--lime)", textDecoration: "underline" }}>
+              Sign In
+            </Link>
+          </div>
         </div>
       </div>
     );

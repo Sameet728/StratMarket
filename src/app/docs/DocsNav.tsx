@@ -12,6 +12,7 @@ export const DOCS_PAGES = [
       { href: "/docs", title: "Documentation Hub", badge: "Start" },
       { href: "/docs/elvaris-capital", title: "About Elvaris Capital", badge: "Parent Org" },
       { href: "/docs/faq", title: "Quantitative FAQ", badge: "Popular" },
+      { href: "/blog", title: "Quantitative Research Blog", badge: "New" },
     ],
   },
   {
@@ -19,13 +20,16 @@ export const DOCS_PAGES = [
     items: [
       { href: "/docs/quantitative-methodology", title: "Research Methodology", badge: null },
       { href: "/docs/algorithmic-strategies", title: "Strategy Catalog (PS & PY)", badge: "14 Models" },
+      { href: "/docs/walk-forward-optimization", title: "Walk-Forward Optimization", badge: "WFO" },
       { href: "/docs/risk-management", title: "Sovereign Risk Governance", badge: null },
     ],
   },
   {
     category: "Execution & Engineering",
     items: [
+      { href: "/docs/pine-script-architecture", title: "Pine Script v5 Architecture", badge: "v5" },
       { href: "/docs/signals-and-execution", title: "Signals & VPS Architecture", badge: "Sub-50ms" },
+      { href: "/docs/live-vps-signal-relays", title: "VPS Relays & Push Alerts", badge: "Relays" },
       { href: "/docs/broker-integration", title: "Broker Integration & Webhooks", badge: "APIs" },
     ],
   },

@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
+import { BLOG_POSTS } from "@/lib/blog/posts";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://stratmarket.elvariscapital.in";
-  const now = new Date("2026-11-08T00:00:00.000Z");
+  const now = new Date("2026-11-11T00:00:00.000Z");
 
   // Static core routes
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -17,7 +18,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/market`,
       lastModified: now,
       changeFrequency: "daily",
-      priority: 0.9,
+      priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.95,
     },
     {
       url: `${baseUrl}/docs`,
@@ -38,13 +45,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/docs/walk-forward-optimization`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/docs/algorithmic-strategies`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/docs/pine-script-architecture`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/docs/signals-and-execution`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/docs/live-vps-signal-relays`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.85,
@@ -81,6 +106,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  // Dynamic Blog Post Routes
+  const blogRoutes: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.publishDate),
+    changeFrequency: "weekly",
+    priority: 0.9,
+  }));
+
   // Dynamic strategy routes
   try {
     const strategies = await db.getStrategies({ includeDrafts: false });
@@ -99,8 +132,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
     ]);
 
-    return [...staticRoutes, ...strategyRoutes];
+    return [...staticRoutes, ...blogRoutes, ...strategyRoutes];
   } catch {
-    return staticRoutes;
+    return [...staticRoutes, ...blogRoutes];
   }
 }
