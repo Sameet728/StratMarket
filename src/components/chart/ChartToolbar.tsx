@@ -108,7 +108,7 @@ export function ChartToolbar({
           </svg>
           <StratMarketLogo size={17} color="#ffffff" style={{ marginRight: "6px" }} />
           <span className="chart-brand">StratMarket</span>
-          <span style={{ fontSize: "10.5px", color: "#a1a1aa", fontWeight: 500, marginLeft: "4px", opacity: 0.9 }}>by Elvaris Capital</span>
+          <span className="chart-brand-sub" style={{ fontSize: "10.5px", color: "#a1a1aa", fontWeight: 500, marginLeft: "4px", opacity: 0.9 }}>by Elvaris Capital</span>
         </a>
 
         <div className="chart-divider" />
@@ -158,20 +158,9 @@ export function ChartToolbar({
               display: "inline-block",
             }}
           />
-          <span>Position Boxes</span>
+          <span className="chart-btn-text-full">Position Boxes</span>
+          <span className="chart-btn-text-short">Boxes</span>
         </button>
-
-        {onToggleAlert && (
-          <button
-            type="button"
-            className={`chart-btn-clean ${alertEnabled ? "active" : ""}`}
-            onClick={onToggleAlert}
-            style={{ touchAction: "manipulation" }}
-            title={alertEnabled ? "Email alerts active - click to mute" : "Click to enable real-time email trade alerts"}
-          >
-            <span>{alertEnabled ? "Email Alerts ON" : "Email Alerts OFF"}</span>
-          </button>
-        )}
 
         {onToggleBrowserAlerts && (
           <button
@@ -181,7 +170,19 @@ export function ChartToolbar({
             style={{ touchAction: "manipulation" }}
             title={browserAlertsEnabled ? "Browser Chrome push alerts active - click to pause" : "Click to enable Chrome browser desktop notifications for trades, TP & SL"}
           >
-            <span>{browserAlertsEnabled ? "🔔 Push ON" : "🔕 Push OFF"}</span>
+            <span>{browserAlertsEnabled ? "🔔 Push ON" : "🔕 Push"}</span>
+          </button>
+        )}
+
+        {onToggleAlert && (
+          <button
+            type="button"
+            className={`chart-btn-clean chart-btn-email ${alertEnabled ? "active" : ""}`}
+            onClick={onToggleAlert}
+            style={{ touchAction: "manipulation" }}
+            title={alertEnabled ? "Email alerts active - click to mute" : "Click to enable real-time email trade alerts"}
+          >
+            <span>{alertEnabled ? "✉️ Email ON" : "✉️ Email"}</span>
           </button>
         )}
 
@@ -194,8 +195,38 @@ export function ChartToolbar({
               boxShadow: isLive ? "0 0 8px #a3e635" : "none",
             }}
           />
-          <span style={{ color: isLive ? "#a3e635" : "inherit" }}>{isLive ? "Live Feed" : "Connecting"}</span>
+          <span style={{ color: isLive ? "#a3e635" : "inherit" }}>{isLive ? "Live" : "Connecting"}</span>
         </div>
+
+        {/* Direct Link to Profile */}
+        <Link
+          href="/profile"
+          className="chart-btn-clean chart-nav-link"
+          style={{ touchAction: "manipulation", textDecoration: "none" }}
+          title="Open Profile, Alert Settings & Active Subscriptions"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          <span>Profile</span>
+        </Link>
+
+        {/* Direct Link to Dashboard */}
+        <Link
+          href="/dashboard"
+          className="chart-btn-clean chart-nav-link"
+          style={{ touchAction: "manipulation", textDecoration: "none" }}
+          title="Open Quantitative Trading Dashboard"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="9" rx="1.5" />
+            <rect x="14" y="3" width="7" height="5" rx="1.5" />
+            <rect x="14" y="12" width="7" height="9" rx="1.5" />
+            <rect x="3" y="16" width="7" height="5" rx="1.5" />
+          </svg>
+          <span>Dashboard</span>
+        </Link>
 
         {/* Strategy Details Sidebar Toggle */}
         <button

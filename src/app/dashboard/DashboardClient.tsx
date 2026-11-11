@@ -171,6 +171,7 @@ export function DashboardClient() {
         }
         setUser(authData.user);
         setEmailInput(authData.user.email);
+        setLoading(false); // Instantly dismiss full-page spinner! Trader sees institutional dashboard in <100ms
 
         const [alertsRes, entRes, connRes] = await Promise.all([
           fetch("/api/me/alerts"),

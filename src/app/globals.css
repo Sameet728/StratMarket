@@ -2485,6 +2485,22 @@ footer p {
   border-color: rgba(255, 255, 255, 0.25);
 }
 
+.chart-btn-text-short {
+  display: none;
+}
+
+.chart-btn-text-full {
+  display: inline;
+}
+
+.chart-nav-link {
+  text-decoration: none;
+}
+
+.chart-nav-link:hover {
+  color: #ffffff;
+}
+
 /* Clean Feed Status */
 .chart-feed-status {
   display: inline-flex;
@@ -3417,15 +3433,11 @@ button, a, input, select, textarea, .chip, .card {
     -webkit-backdrop-filter: blur(8px) !important;
   }
 
-  /* Mobile Touch Target Expansion & Immediate 0ms Touch Responsiveness */
+  /* Mobile Touch Target Expansion & Immediate 0ms Touch Responsiveness (General Site) */
   button,
   .pill,
   .chip,
-  .card-chart-link,
-  .chart-btn-clean,
-  .chart-back-btn,
-  .chart-strategy-select-clean,
-  .chart-feed-status {
+  .card-chart-link {
     min-height: 40px !important;
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
@@ -3435,23 +3447,6 @@ button, a, input, select, textarea, .chip, .card {
     padding: 8px 14px !important;
     font-size: 13px !important;
     border-radius: 8px !important;
-  }
-
-  .chart-btn-clean {
-    padding: 8px 12px !important;
-    font-size: 13px !important;
-    border-radius: 8px !important;
-  }
-
-  .chart-strategy-select-clean {
-    padding: 8px 10px !important;
-    font-size: 14px !important;
-    min-height: 40px !important;
-  }
-
-  .chart-back-btn {
-    padding: 8px 10px !important;
-    font-size: 14px !important;
   }
 
   /* Prevent iOS auto-zoom on input focus */
@@ -3524,25 +3519,76 @@ button, a, input, select, textarea, .chip, .card {
     display: none !important;
   }
 
-  /* Chart Layout & Toolbar */
+  /* Chart Layout & Institutional Toolbar Mobile Optimization */
   .chart-toolbar {
+    display: flex !important;
+    flex-direction: column !important;
     height: auto !important;
-    min-height: 48px !important;
-    padding: 6px 10px !important;
-    overflow-x: auto !important;
-    flex-wrap: nowrap !important;
+    min-height: unset !important;
+    padding: 6px 10px 8px !important;
+    gap: 6px !important;
+    background: #09090b !important;
+    border-bottom: 1px solid #1f1f23 !important;
+    overflow: visible !important;
     justify-content: flex-start !important;
-    scrollbar-width: none !important;
-    -webkit-overflow-scrolling: touch !important;
   }
   .chart-toolbar::-webkit-scrollbar {
     display: none !important;
   }
-  .chart-toolbar-left,
-  .chart-toolbar-center,
-  .chart-toolbar-right {
-    flex-shrink: 0 !important;
+  .chart-toolbar-left {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     gap: 8px !important;
+    flex-shrink: 0 !important;
+  }
+  .chart-toolbar-right {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 2px !important;
+    flex-shrink: 0 !important;
+  }
+  .chart-toolbar-right::-webkit-scrollbar {
+    display: none !important;
+  }
+  .chart-btn-text-full {
+    display: none !important;
+  }
+  .chart-btn-text-short {
+    display: inline !important;
+  }
+  .chart-brand-sub {
+    display: none !important;
+  }
+  .chart-symbol-clean {
+    display: none !important;
+  }
+  .chart-divider {
+    display: none !important;
+  }
+  .chart-strategy-select-clean {
+    max-width: 175px !important;
+    font-size: 11.5px !important;
+    padding: 4px 8px !important;
+    border-radius: 6px !important;
+    text-overflow: ellipsis !important;
+  }
+  .chart-toolbar .chart-btn-clean,
+  .chart-toolbar .chart-back-btn,
+  .chart-toolbar .chart-strategy-select-clean,
+  .chart-toolbar .chart-feed-status {
+    min-height: 32px !important;
+    padding: 5px 9px !important;
+    font-size: 11.5px !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
   }
   .chart-bars-badge {
     display: none !important;

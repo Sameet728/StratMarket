@@ -143,19 +143,22 @@ export default function ProfilePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Parallel non-blocking network fetch
-        const [meRes, entRes, alertRes] = await Promise.all([
-          fetch("/api/auth/me"),
-          fetch("/api/me/entitlements"),
-          fetch("/api/me/alerts"),
-        ]);
-
+        // 1. Fast Auth Check (<60ms) - Unblock Profile UI immediately
+        const meRes = await fetch("/api/auth/me");
         const meData = await meRes.json();
         if (!meData.authenticated || !meData.user) {
           router.push("/signin");
           return;
         }
         setUser(meData.user);
+        setSignalEmail(meData.user.email);
+        setLoading(false); // Instantly dismiss full-page spinner! User sees profile banner in <100ms
+
+        // 2. Fetch entitlements and alerts asynchronously in parallel
+        const [entRes, alertRes] = await Promise.all([
+          fetch("/api/me/entitlements"),
+          fetch("/api/me/alerts"),
+        ]);
 
         // Load trials, entitlements and purchase orders
         let fetchedTrials: Trial[] = [];

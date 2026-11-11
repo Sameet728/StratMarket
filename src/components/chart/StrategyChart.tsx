@@ -215,16 +215,23 @@ export function StrategyChart({
 
       try {
         const isMobile = typeof window !== "undefined" && (window.innerWidth < 768 || window.matchMedia("(pointer: coarse)").matches);
-        const candleCount = isMobile ? 200 : 1500;
+        // Authoritative execution requires at least 500-1500 bars so the 200 Macro EMA is fully warmed up and generates trade boxes identically on both mobile and desktop
+        const candleCount = 1500;
         const cacheKey = `stratmarket_chart_cache_${strategyId}_${timeframe}`;
 
-        // 1. Instant Cache Hydration: If cached data exists in sessionStorage, mount immediately (0ms latency)
+        // 1. Instant Cache Hydration: If valid cached data exists in sessionStorage with full trade boxes, mount immediately (0ms latency)
         let hasCache = false;
         try {
           const cachedRaw = sessionStorage.getItem(cacheKey);
           if (cachedRaw) {
             const cached = JSON.parse(cachedRaw);
-            if (cached.contract && Array.isArray(cached.candles) && cached.candles.length > 0) {
+            if (
+              cached.contract &&
+              Array.isArray(cached.candles) &&
+              cached.candles.length >= 500 &&
+              Array.isArray(cached.contract.tradeBoxes) &&
+              cached.contract.tradeBoxes.length > 0
+            ) {
               setContract(cached.contract);
               contractRef.current = cached.contract;
               setCandles(cached.candles);
@@ -234,6 +241,9 @@ export function StrategyChart({
               }
               setLoading(false);
               hasCache = true;
+            } else {
+              // Evict stale or insufficient cache (e.g. legacy 200 candle cache lacking trade boxes)
+              sessionStorage.removeItem(cacheKey);
             }
           }
         } catch (_) {}
@@ -379,7 +389,7 @@ export function StrategyChart({
               uniqueBoxes.unshift(b);
             }
           }
-          const maxBoxes = isMobile ? 10 : 25;
+          const maxBoxes = 25;
           const boxesToPlot = uniqueBoxes.slice(-maxBoxes);
 
           for (const tb of boxesToPlot) {
