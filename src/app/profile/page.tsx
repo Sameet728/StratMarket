@@ -105,10 +105,36 @@ export default function ProfilePage() {
   const [updatingAlert, setUpdatingAlert] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // 1. Instant Cache Hydration: Read cached profile from localStorage immediately (0ms latency)
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem("stratmarket_user_profile");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.user) {
+          setUser(parsed.user);
+          if (parsed.signalEmail) setSignalEmail(parsed.signalEmail);
+          if (Array.isArray(parsed.trials)) setTrials(parsed.trials);
+          if (Array.isArray(parsed.entitlements)) setEntitlements(parsed.entitlements);
+          if (Array.isArray(parsed.strategies)) setStrategies(parsed.strategies);
+          if (Array.isArray(parsed.deliveries)) setDeliveries(parsed.deliveries);
+          if (parsed.testEmailSent !== undefined) setTestEmailSent(parsed.testEmailSent);
+          setLoading(false); // Instantly dismiss spinner!
+        }
+      }
+    } catch (_) {}
+  }, []);
+
   useEffect(() => {
     async function loadData() {
       try {
-        const meRes = await fetch("/api/auth/me");
+        // Parallel non-blocking network fetch
+        const [meRes, entRes, alertRes] = await Promise.all([
+          fetch("/api/auth/me"),
+          fetch("/api/me/entitlements"),
+          fetch("/api/me/alerts"),
+        ]);
+
         const meData = await meRes.json();
         if (!meData.authenticated || !meData.user) {
           router.push("/signin");
@@ -117,17 +143,24 @@ export default function ProfilePage() {
         setUser(meData.user);
 
         // Load trials, entitlements and purchase orders
-        const entRes = await fetch("/api/me/entitlements");
-        const entData = await entRes.json();
+        let fetchedTrials: Trial[] = [];
+        let fetchedEntitlements: any[] = [];
+        const entData = await entRes.json().catch(() => ({}));
         if (entData.success) {
-          setTrials(entData.trials || []);
-          setEntitlements(entData.entitlements || []);
+          fetchedTrials = entData.trials || [];
+          fetchedEntitlements = entData.entitlements || [];
+          setTrials(fetchedTrials);
+          setEntitlements(fetchedEntitlements);
           setOrders(entData.orders || []);
         }
 
         // Load alert preferences & destination email
-        const alertRes = await fetch("/api/me/alerts");
-        const alertData = await alertRes.json();
+        let reconciledStrategies: any[] = [];
+        let fetchedDeliveries: EmailDelivery[] = [];
+        let destEmail = meData.user.email;
+        let isTestSent = false;
+
+        const alertData = await alertRes.json().catch(() => ({}));
         if (alertData.success) {
           let localAlertMap: Record<string, boolean> = {};
           try {
@@ -136,7 +169,7 @@ export default function ProfilePage() {
           } catch (_) {}
 
           const rawStrategies = alertData.strategies || [];
-          const reconciled = rawStrategies.map((s: any) => {
+          reconciledStrategies = rawStrategies.map((s: any) => {
             const localVal =
               localAlertMap[s.id] !== undefined
                 ? localAlertMap[s.id]
@@ -152,23 +185,42 @@ export default function ProfilePage() {
 
           try {
             const synced: Record<string, boolean> = { ...localAlertMap };
-            reconciled.forEach((s: any) => {
+            reconciledStrategies.forEach((s: any) => {
               synced[s.id] = s.enabled;
               synced[s.slug] = s.enabled;
             });
             localStorage.setItem("stratmarket_user_alerts_" + meData.user.id, JSON.stringify(synced));
           } catch (_) {}
 
-          setStrategies(reconciled);
+          setStrategies(reconciledStrategies);
           setAlerts(alertData.preferences || []);
-          setDeliveries(alertData.deliveries || []);
+          fetchedDeliveries = alertData.deliveries || [];
+          setDeliveries(fetchedDeliveries);
           if (alertData.testEmailSent) {
+            isTestSent = true;
             setTestEmailSent(true);
           }
-          setSignalEmail(alertData.destinationEmail || meData.user.email);
+          destEmail = alertData.destinationEmail || meData.user.email;
+          setSignalEmail(destEmail);
         } else {
           setSignalEmail(meData.user.email);
         }
+
+        // Cache full profile snapshot for instant 0ms restoration on subsequent visits
+        try {
+          localStorage.setItem(
+            "stratmarket_user_profile",
+            JSON.stringify({
+              user: meData.user,
+              signalEmail: destEmail,
+              trials: fetchedTrials,
+              entitlements: fetchedEntitlements,
+              strategies: reconciledStrategies,
+              deliveries: fetchedDeliveries,
+              testEmailSent: isTestSent,
+            })
+          );
+        } catch (_) {}
       } catch (err) {
         console.error("Failed to load profile data:", err);
       } finally {
@@ -428,7 +480,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <div className="profile-header-actions" style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <Link href="/dashboard" className="pill g sm" style={{ fontSize: 13 }}>
                 Open Dashboard →
               </Link>
@@ -450,7 +502,7 @@ export default function ProfilePage() {
 
             {/* 1. INSTITUTIONAL STRATEGY ACCESS (100% FREE ACCESS) */}
             <div
-              className="card"
+              className="card profile-section-card"
               style={{
                 padding: "28px",
                 border: "1px solid var(--line)",
@@ -606,7 +658,7 @@ export default function ProfilePage() {
 
             {/* 2. REAL-TIME SIGNAL EMAIL NOTIFICATION SETTINGS */}
             <div
-              className="card"
+              className="card profile-section-card"
               style={{
                 padding: "28px",
                 border: "1px solid var(--line)",
@@ -643,7 +695,7 @@ export default function ProfilePage() {
                 <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
                   Deliver Signals To:
                 </label>
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <div className="profile-email-form" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                   <input
                     type="email"
                     value={signalEmail}

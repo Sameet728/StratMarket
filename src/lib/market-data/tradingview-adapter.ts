@@ -11,7 +11,8 @@ interface CacheEntry {
 
 export class TradingViewDataAdapter implements MarketDataProvider {
   private cache: Map<string, CacheEntry> = new Map();
-  private cacheTtlMs: number = 8000; // 8-second cache to prevent feed spamming
+  private cacheTtlMs: number = 60000; // 60-second fresh cache
+  private isRevalidating: Set<string> = new Set();
   private status: MarketDataStatus = "LIVE";
 
   /**
@@ -57,7 +58,7 @@ export class TradingViewDataAdapter implements MarketDataProvider {
   }
 
   /**
-   * Fetches historical candles from TradingView via v4 API
+   * Fetches historical candles from TradingView via v4 API with Stale-While-Revalidate caching
    */
   public async getHistoricalBars(
     symbol: string,
@@ -69,12 +70,35 @@ export class TradingViewDataAdapter implements MarketDataProvider {
     const effectiveCount = Math.min(Math.max(count, 10), 5500);
     const cacheKey = `${tvSymbol}:${tvTimeframe}:${effectiveCount}`;
 
-    // Check cache
+    // Stale-While-Revalidate: Return cached bars instantly (0ms)
     const cached = this.cache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < this.cacheTtlMs) {
-      return cached.candles;
+    const now = Date.now();
+    if (cached) {
+      const age = now - cached.timestamp;
+      if (age < this.cacheTtlMs) {
+        return cached.candles;
+      }
+      // If stale but less than 15 minutes old, return cached immediately & revalidate asynchronously
+      if (age < 15 * 60 * 1000) {
+        if (!this.isRevalidating.has(cacheKey)) {
+          this.isRevalidating.add(cacheKey);
+          this.fetchRemoteBars(tvSymbol, tvTimeframe, effectiveCount, cacheKey)
+            .catch(() => {})
+            .finally(() => this.isRevalidating.delete(cacheKey));
+        }
+        return cached.candles;
+      }
     }
 
+    return this.fetchRemoteBars(tvSymbol, tvTimeframe, effectiveCount, cacheKey);
+  }
+
+  private async fetchRemoteBars(
+    tvSymbol: string,
+    tvTimeframe: string,
+    effectiveCount: number,
+    cacheKey: string
+  ): Promise<MarketCandle[]> {
     try {
       const fetchPromise = getCandles({
         symbol: tvSymbol,
@@ -83,7 +107,7 @@ export class TradingViewDataAdapter implements MarketDataProvider {
       });
 
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`TradingView request timed out after 2000ms`)), 2000)
+        setTimeout(() => reject(new Error(`TradingView request timed out after 1200ms`)), 1200)
       );
 
       const rawCandles = (await Promise.race([fetchPromise, timeoutPromise])) as any[];
@@ -94,7 +118,7 @@ export class TradingViewDataAdapter implements MarketDataProvider {
 
       return this.transformAndCache(cacheKey, rawCandles);
     } catch (err: any) {
-      console.warn(`[TradingViewDataAdapter] Live fetch failed for ${tvSymbol} (${tvTimeframe}), using resilient fallback:`, err?.message || err);
+      console.warn(`[TradingViewDataAdapter] Remote fetch notice for ${tvSymbol} (${tvTimeframe}):`, err?.message || err);
       this.status = "HISTORICAL";
       return this.generateFallbackBars(tvSymbol, effectiveCount, cacheKey);
     }

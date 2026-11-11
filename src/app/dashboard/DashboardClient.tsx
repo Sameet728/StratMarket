@@ -125,6 +125,27 @@ export function DashboardClient() {
   // Alert toggle state
   const [updatingStrategy, setUpdatingStrategy] = useState<string | null>(null);
 
+  // 1. Instant Cache Hydration: Read cached dashboard snapshot immediately (0ms)
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem("stratmarket_dashboard_snapshot");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.user) {
+          setUser(parsed.user);
+          setEmailInput(parsed.user.email);
+          if (Array.isArray(parsed.strategies)) setStrategies(parsed.strategies);
+          if (Array.isArray(parsed.deliveries)) setDeliveries(parsed.deliveries);
+          if (Array.isArray(parsed.trials)) setTrials(parsed.trials);
+          if (Array.isArray(parsed.connections)) setConnections(parsed.connections);
+          if (parsed.destinationEmail) setDestinationEmail(parsed.destinationEmail);
+          if (parsed.testEmailSent !== undefined) setTestEmailSent(parsed.testEmailSent);
+          setLoading(false);
+        }
+      }
+    } catch (_) {}
+  }, []);
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -143,6 +164,13 @@ export function DashboardClient() {
           fetch("/api/me/connections"),
         ]);
 
+        let reconciledStrategies: StrategyAlertItem[] = [];
+        let fetchedDeliveries: any[] = [];
+        let fetchedTrials: TrialItem[] = [];
+        let fetchedConns: ConnectionItem[] = [];
+        let finalDest = authData.user.email;
+        let isTestSent = false;
+
         const alertsData = await alertsRes.json();
         if (alertsData.success) {
           let localAlertMap: Record<string, boolean> = {};
@@ -152,7 +180,7 @@ export function DashboardClient() {
           } catch (_) {}
 
           const rawStrategies = alertsData.strategies || [];
-          const reconciled = rawStrategies.map((s: StrategyAlertItem) => {
+          reconciledStrategies = rawStrategies.map((s: StrategyAlertItem) => {
             const localVal =
               localAlertMap[s.id] !== undefined
                 ? localAlertMap[s.id]
@@ -168,32 +196,52 @@ export function DashboardClient() {
 
           try {
             const synced: Record<string, boolean> = { ...localAlertMap };
-            reconciled.forEach((s: StrategyAlertItem) => {
+            reconciledStrategies.forEach((s: StrategyAlertItem) => {
               synced[s.id] = s.enabled;
               synced[s.slug] = s.enabled;
             });
             localStorage.setItem("stratmarket_user_alerts_" + authData.user.id, JSON.stringify(synced));
           } catch (_) {}
 
-          setStrategies(reconciled);
-          setDeliveries(alertsData.deliveries || []);
+          setStrategies(reconciledStrategies);
+          fetchedDeliveries = alertsData.deliveries || [];
+          setDeliveries(fetchedDeliveries);
           if (alertsData.testEmailSent) {
+            isTestSent = true;
             setTestEmailSent(true);
           }
-          const dest = alertsData.destinationEmail || authData.user.email;
-          setDestinationEmail(dest);
-          setEmailInput(dest);
+          finalDest = alertsData.destinationEmail || authData.user.email;
+          setDestinationEmail(finalDest);
+          setEmailInput(finalDest);
         }
 
         const entData = await entRes.json();
         if (entData.success) {
-          setTrials(entData.trials || []);
+          fetchedTrials = entData.trials || [];
+          setTrials(fetchedTrials);
         }
 
         const connData = await connRes.json();
         if (connData.success) {
-          setConnections(connData.connections || []);
+          fetchedConns = connData.connections || [];
+          setConnections(fetchedConns);
         }
+
+        // Cache dashboard snapshot for instant 0ms restoration
+        try {
+          localStorage.setItem(
+            "stratmarket_dashboard_snapshot",
+            JSON.stringify({
+              user: authData.user,
+              strategies: reconciledStrategies,
+              deliveries: fetchedDeliveries,
+              trials: fetchedTrials,
+              connections: fetchedConns,
+              destinationEmail: finalDest,
+              testEmailSent: isTestSent,
+            })
+          );
+        } catch (_) {}
       } catch (err) {
         console.error("Dashboard data load error:", err);
       } finally {

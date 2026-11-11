@@ -3724,6 +3724,43 @@ button, a, input, select, textarea, .chip, .card {
   .logo-text {
     font-size: 16px !important;
   }
+  /* Mobile Responsive Enhancements for Profile, Dashboard, and Live Charts */
+  .profile-header-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .profile-header-actions .pill {
+    flex: 1 1 calc(50% - 4px) !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+  .profile-section-card {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+  .profile-email-form {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .profile-email-form input {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .profile-email-form button {
+    width: 100% !important;
+    padding: 10px 14px !important;
+  }
+  .chart-toolbar {
+    padding: 4px 8px !important;
+    gap: 6px !important;
+  }
+  .chart-toolbar button, .chart-toolbar a {
+    font-size: 11px !important;
+    padding: 5px 8px !important;
+    white-space: nowrap !important;
+  }
 }
 
 @media (max-width: 480px) {
