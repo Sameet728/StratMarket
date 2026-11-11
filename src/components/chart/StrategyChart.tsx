@@ -659,7 +659,7 @@ export function StrategyChart({
           }
         }
       } catch (_) {}
-    }, 4000);
+    }, 2000);
 
     return () => {
       isDisposed = true;
@@ -753,6 +753,8 @@ export function StrategyChart({
         onToggleBoxes={() => setShowBoxes((prev) => !prev)}
         alertEnabled={alertEnabled}
         onToggleAlert={handleToggleAlert}
+        browserAlertsEnabled={browserAlerts}
+        onToggleBrowserAlerts={handleToggleBrowserAlerts}
         trialStatus={trialStatus}
         daysLeft={daysLeft}
         trialExpiry={trialExpiry}

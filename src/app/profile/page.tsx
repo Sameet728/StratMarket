@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "@/components/ui/Toast";
+import {
+  getBrowserAlertPreference,
+  setBrowserAlertPreference,
+  requestBrowserNotificationPermission,
+  sendBrowserTradeNotification,
+  isNotificationSupported,
+} from "@/lib/notifications/browser-notifications";
 
 interface Trial {
   id: string;
@@ -104,6 +111,14 @@ export default function ProfilePage() {
   const [testEmailSent, setTestEmailSent] = useState(false);
   const [updatingAlert, setUpdatingAlert] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [browserAlertsEnabled, setBrowserAlertsEnabled] = useState(false);
+  const [browserAlertsSupported, setBrowserAlertsSupported] = useState(false);
+
+  // Sync browser notification preference on mount
+  useEffect(() => {
+    setBrowserAlertsSupported(isNotificationSupported());
+    setBrowserAlertsEnabled(getBrowserAlertPreference());
+  }, []);
 
   // 1. Instant Cache Hydration: Read cached profile from localStorage immediately (0ms latency)
   useEffect(() => {
@@ -309,6 +324,54 @@ export default function ProfilePage() {
     } finally {
       setSendingTest(false);
     }
+  };
+
+  const handleToggleBrowserAlerts = async () => {
+    if (!browserAlertsEnabled) {
+      const granted = await requestBrowserNotificationPermission();
+      if (granted) {
+        setBrowserAlertsEnabled(true);
+        toast.success(
+          "Chrome Push Notifications Enabled",
+          "You will receive desktop alerts for Trade Entries, Take Profit (+1.16R), and Stop Loss (-1.00R)."
+        );
+        sendBrowserTradeNotification({
+          strategyName: "Grandmaster Dual (PS-01)",
+          strategyId: "PS-01",
+          signalType: "ENTRY",
+          direction: "LONG",
+          entryPrice: 4055.2,
+          instrument: "XAUUSD",
+        });
+      } else {
+        toast.warning(
+          "Notification Permission Blocked",
+          "Please click the lock icon in Chrome's address bar and set Notifications to Allow."
+        );
+      }
+    } else {
+      setBrowserAlertPreference(false);
+      setBrowserAlertsEnabled(false);
+      toast.info("Push Notifications Paused", "Desktop trade notifications are disabled.");
+    }
+  };
+
+  const handleTestBrowserAlert = () => {
+    if (!browserAlertsEnabled) {
+      toast.info("Enable Push First", "Please turn on browser notifications before testing.");
+      return;
+    }
+    sendBrowserTradeNotification({
+      strategyName: "StratMarket Institutional",
+      strategyId: "PS-01",
+      signalType: "TAKE_PROFIT",
+      direction: "LONG",
+      entryPrice: 4055.2,
+      exitPrice: 4071.2,
+      pnlR: "+1.16R",
+      instrument: "XAUUSD",
+    });
+    toast.trade("Test Push Triggered", "Check your system desktop notifications for the alert chime.");
   };
 
   // Toggle individual strategy alert
@@ -776,6 +839,78 @@ export default function ProfilePage() {
                   </div>
                 )}
               </form>
+
+              {/* Chrome Desktop & Mobile Push Notifications Card */}
+              <div
+                style={{
+                  padding: "16px 20px",
+                  borderRadius: 12,
+                  background: "rgba(255, 255, 255, 0.03)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  marginBottom: 28,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 16,
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 16 }}>🔔</span>
+                    <strong style={{ fontSize: 15, color: "#ffffff" }}>
+                      Chrome &amp; Desktop Browser Push Notifications
+                    </strong>
+                    <span
+                      style={{
+                        fontSize: 10.5,
+                        fontWeight: 700,
+                        padding: "2px 8px",
+                        borderRadius: 10,
+                        background: browserAlertsEnabled ? "rgba(163, 230, 53, 0.15)" : "rgba(255, 255, 255, 0.06)",
+                        color: browserAlertsEnabled ? "#a3e635" : "#a1a1aa",
+                        border: `1px solid ${browserAlertsEnabled ? "rgba(163, 230, 53, 0.3)" : "rgba(255, 255, 255, 0.1)"}`,
+                      }}
+                    >
+                      {browserAlertsEnabled ? "PUSH ACTIVE" : "PUSH OFF"}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 12.5, color: "var(--mut)", maxWidth: 540, lineHeight: 1.5 }}>
+                    Receive instant desktop notifications and audio chimes whenever an institutional trade enters, hits Take Profit (+1.16R), or Stop Loss (-1.00R)—even if you are on another browser tab.
+                  </p>
+                </div>
+
+                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={handleToggleBrowserAlerts}
+                    className="pill sm"
+                    style={{
+                      background: browserAlertsEnabled ? "#ffffff" : "rgba(255, 255, 255, 0.08)",
+                      color: browserAlertsEnabled ? "#000000" : "#ffffff",
+                      fontWeight: 700,
+                      fontSize: 12.5,
+                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                      cursor: "pointer",
+                      padding: "8px 16px",
+                      touchAction: "manipulation",
+                    }}
+                  >
+                    {browserAlertsEnabled ? "✓ Chrome Push ON (Click to Pause)" : "🔔 Turn ON Chrome Push"}
+                  </button>
+                  {browserAlertsEnabled && (
+                    <button
+                      type="button"
+                      onClick={handleTestBrowserAlert}
+                      className="pill g sm"
+                      style={{ fontSize: 12.5, padding: "8px 14px", cursor: "pointer", touchAction: "manipulation" }}
+                      title="Trigger an audible test browser alert"
+                    >
+                      Test Chime &amp; Push
+                    </button>
+                  )}
+                </div>
+              </div>
 
               {/* Per-Strategy Alert Subscriptions */}
               <div style={{ marginTop: 24 }}>
