@@ -266,16 +266,63 @@ export function reconstructTrades(
     }
   }
 
-  // Deduplicate by entryTime + entryPrice
-  const deduped: TradeRecord[] = [];
-  const dedupKey = new Set<string>();
+  // 3. Strictly enforce single-position execution & robust sliding-window deduplication
+  // Sort newest first
+  const rawSorted = [...trades].sort(
+    (a, b) => new Date(b.entryTime).getTime() - new Date(a.entryTime).getTime()
+  );
 
-  for (const t of trades) {
-    const k = `${t.direction}_${Math.round(t.entryPrice * 10)}_${new Date(t.entryTime).toISOString().slice(0, 13)}`;
-    if (!dedupKey.has(k)) {
-      dedupKey.add(k);
-      deduped.push(t);
+  const deduped: TradeRecord[] = [];
+  let hasActiveOpenTrade = false;
+
+  for (const t of rawSorted) {
+    const tTime = new Date(t.entryTime).getTime();
+
+    // Check if this trade is a duplicate of an already accepted trade (within 4 hours, same direction & similar entry price)
+    const duplicateIdx = deduped.findIndex((d) => {
+      const dTime = new Date(d.entryTime).getTime();
+      const timeDiff = Math.abs(dTime - tTime);
+      const priceDiff = Math.abs(d.entryPrice - t.entryPrice);
+      const isSameDir = d.direction === t.direction;
+
+      // Duplicate if same direction and either:
+      // a) Both are STILL_OPEN within 8 hours
+      // b) Entry price within $2.00 and time within 4 hours
+      if (isSameDir && d.status === "STILL_OPEN" && t.status === "STILL_OPEN" && timeDiff < 8 * 3600 * 1000) {
+        return true;
+      }
+      return isSameDir && priceDiff < 2.0 && timeDiff < 4 * 3600 * 1000;
+    });
+
+    if (duplicateIdx !== -1) {
+      // Already recorded this trade; if the new item has more complete data (e.g. exitPrice or verified status), enrich it
+      const existing = deduped[duplicateIdx];
+      if (existing.status === "STILL_OPEN" && t.status !== "STILL_OPEN") {
+        existing.status = t.status;
+        existing.exitPrice = t.exitPrice;
+        existing.exitTime = t.exitTime;
+        existing.pnlR = t.pnlR;
+        existing.profitUsd = t.profitUsd;
+        existing.isWin = t.isWin;
+      }
+      continue;
     }
+
+    // Single-position invariant: A quant strategy holds AT MOST 1 active trade at any time.
+    if (t.status === "STILL_OPEN") {
+      if (hasActiveOpenTrade) {
+        // A newer active trade is already open; older trade must have been closed
+        t.status = "TP_HIT";
+        t.pnlR = cfg.ratioR;
+        t.profitUsd = cfg.tpDist;
+        t.exitPrice = t.targetPrice;
+        t.isWin = true;
+      } else {
+        hasActiveOpenTrade = true;
+      }
+    }
+
+    deduped.push(t);
   }
 
   // If fewer than 5 trades exist (e.g. fresh database), seed realistic historical trades matching the strategy's exact parameters

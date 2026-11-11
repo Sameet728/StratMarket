@@ -322,43 +322,34 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
 
           {tabMode === "TRADES" ? (
             <>
-              {/* Active Position Banner if any position is still open */}
+              {/* Minimal Active Position Bar */}
               {openTrades.length > 0 && (
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    background: "linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.05) 100%)",
-                    border: "1px solid rgba(59, 130, 246, 0.35)",
-                    marginBottom: 10,
+                    padding: "6px 10px",
+                    borderRadius: 6,
+                    background: "rgba(59, 130, 246, 0.08)",
+                    border: "1px solid rgba(59, 130, 246, 0.25)",
+                    marginBottom: 8,
+                    fontSize: 10.5,
+                    fontFamily: "'JetBrains Mono', monospace",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span
-                      style={{
-                        display: "inline-block",
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: "#3b82f6",
-                        boxShadow: "0 0 10px #3b82f6",
-                      }}
-                    />
-                    <span style={{ fontSize: 11.5, fontWeight: 700, color: "#93c5fd" }}>
-                      {openTrades.length} Active Position Open
-                    </span>
-                  </div>
-                  <span style={{ fontSize: 10.5, color: "#bfdbfe", fontFamily: "'JetBrains Mono', monospace" }}>
+                  <span style={{ color: "#60a5fa", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#60a5fa" }} />
+                    1 ACTIVE POSITION
+                  </span>
+                  <span style={{ color: "#bfdbfe" }}>
                     {openTrades[0].direction} @ ${openTrades[0].entryPrice.toFixed(2)}
                   </span>
                 </div>
               )}
 
               {/* Status Filter Chips */}
-              <div style={{ display: "flex", gap: 5, marginBottom: 10, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 5, marginBottom: 8, flexWrap: "wrap" }}>
                 {(
                   [
                     { key: "ALL", label: `All (${trades.length})` },
@@ -377,7 +368,7 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
                         fontSize: 10,
                         fontWeight: 600,
                         padding: "3px 8px",
-                        borderRadius: 12,
+                        borderRadius: 6,
                         border: "1px solid",
                         borderColor: isActive
                           ? chip.key === "TP_HIT"
@@ -415,22 +406,23 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
                 })}
               </div>
 
-              {/* Trades List */}
+              {/* Trades List (Professional terminal card matching Raw Signals) */}
               {filteredTrades.length > 0 ? (
-                <div style={{ display: "grid", gap: 8 }}>
-                  {filteredTrades.slice(0, 10).map((t, idx) => {
-                    const isLong = t.direction === "LONG";
+                <div style={{ display: "grid", gap: 6 }}>
+                  {filteredTrades.slice(0, 10).map((t) => {
                     const isOpen = t.status === "STILL_OPEN";
                     const isTP = t.status === "TP_HIT";
                     const isSL = t.status === "SL_HIT";
+                    const isLong = t.direction === "LONG";
 
-                    const statusBg = isOpen
-                      ? "rgba(59, 130, 246, 0.12)"
+                    const color = isOpen ? "#60a5fa" : isTP ? "#10b981" : "#ef4444";
+                    const statusBorder = `${color}30`;
+
+                    const label = isOpen
+                      ? `${t.direction} (STILL OPEN)`
                       : isTP
-                      ? "rgba(16, 185, 129, 0.12)"
-                      : "rgba(239, 68, 68, 0.12)";
-                    const statusColor = isOpen ? "#60a5fa" : isTP ? "#34d399" : "#f87171";
-                    const statusBorder = isOpen ? "rgba(59, 130, 246, 0.35)" : isTP ? "rgba(16, 185, 129, 0.35)" : "rgba(239, 68, 68, 0.35)";
+                      ? `${t.direction} · TP HIT (${t.pnlR})`
+                      : `${t.direction} · SL HIT (${t.pnlR})`;
 
                     const entryDate = new Date(t.entryTime);
                     const timeStr = entryDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
@@ -440,115 +432,48 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
                       <div
                         key={t.id}
                         style={{
-                          padding: "10px 12px",
-                          borderRadius: 9,
-                          background: "rgba(255, 255, 255, 0.025)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "8px 10px",
+                          borderRadius: 8,
+                          background: "rgba(255, 255, 255, 0.02)",
                           border: `1px solid ${statusBorder}`,
-                          boxShadow: isOpen ? "0 0 14px rgba(59, 130, 246, 0.15)" : "none",
                         }}
                       >
-                        {/* Header: Trade # + Direction + Prominent Status Badge */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                        <div>
+                          {/* Top Row: #Trade + Status */}
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                             <span
                               style={{
-                                fontSize: 11,
-                                fontWeight: 800,
-                                color: "#ffffff",
+                                fontSize: 10,
+                                fontWeight: 700,
+                                color: "#71717a",
                                 fontFamily: "'JetBrains Mono', monospace",
-                                background: "rgba(255, 255, 255, 0.08)",
-                                border: "1px solid rgba(255, 255, 255, 0.16)",
-                                padding: "2px 7px",
-                                borderRadius: 4,
-                                letterSpacing: "0.02em",
                               }}
                             >
-                              Trade #{t.tradeNumber}
+                              #{t.tradeNumber}
                             </span>
-                            <span
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 3,
-                                fontSize: 11,
-                                fontWeight: 800,
-                                padding: "2px 7px",
-                                borderRadius: 4,
-                                background: isLong ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
-                                color: isLong ? "#10b981" : "#ef4444",
-                                letterSpacing: "0.04em",
-                              }}
-                            >
-                              {isLong ? "▲ LONG" : "▼ SHORT"}
-                            </span>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: "#ffffff", fontFamily: "'JetBrains Mono', monospace" }}>
-                              @ ${t.entryPrice.toFixed(2)}
+                            <span style={{ fontSize: 11, fontWeight: 700, color }}>
+                              {label}
                             </span>
                           </div>
 
-                          {/* Outcome / Status Badge */}
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 5,
-                              padding: "2px 8px",
-                              borderRadius: 5,
-                              fontSize: 10.5,
-                              fontWeight: 800,
-                              letterSpacing: "0.03em",
-                              background: statusBg,
-                              color: statusColor,
-                              border: `1px solid ${statusBorder}`,
-                            }}
-                          >
-                            {isOpen ? (
-                              <>
-                                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#60a5fa" }} />
-                                STILL OPEN
-                              </>
-                            ) : isTP ? (
-                              <>✓ TP HIT ({t.pnlR})</>
-                            ) : (
-                              <>✕ SL HIT ({t.pnlR})</>
+                          {/* Secondary Row: Risk & Brackets */}
+                          <div style={{ fontSize: 10, color: "#a1a1aa", fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>
+                            @ ${t.entryPrice.toFixed(2)} · SL ${t.stopLoss.toFixed(2)} · TP ${t.targetPrice.toFixed(2)}
+                            {t.exitPrice && (
+                              <span style={{ color: isTP ? "#34d399" : "#f87171" }}>
+                                {` · Exit $${t.exitPrice.toFixed(2)}`}
+                              </span>
                             )}
-                          </span>
+                          </div>
                         </div>
 
-                        {/* Mid Row: TP & SL Bracket Levels */}
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            fontSize: 10.5,
-                            fontFamily: "'JetBrains Mono', monospace",
-                            padding: "5px 8px",
-                            borderRadius: 6,
-                            background: "rgba(0, 0, 0, 0.25)",
-                            marginBottom: 6,
-                          }}
-                        >
-                          <span style={{ color: "#34d399" }}>
-                            TP: ${t.targetPrice.toFixed(2)}
-                          </span>
-                          <span style={{ color: "#f87171" }}>
-                            SL: ${t.stopLoss.toFixed(2)}
-                          </span>
-                          {t.exitPrice && (
-                            <span style={{ color: "#e4e4e7" }}>
-                              Exit: ${t.exitPrice.toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Footer: Date & Trade Reference */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 10, color: "#71717a" }}>
-                          <span>
-                            {isOpen ? "Active Market Position" : isTP ? "Target Payoff Achieved" : "Strict Risk Guard Hit"}
-                          </span>
-                          <span>
-                            {timeStr} · {dateStr}
-                          </span>
+                        {/* Right: Timestamp */}
+                        <div style={{ fontSize: 10, color: "#71717a", textAlign: "right", flexShrink: 0, paddingLeft: 8 }}>
+                          <div>{timeStr}</div>
+                          <div>{dateStr}</div>
                         </div>
                       </div>
                     );
