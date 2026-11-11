@@ -70,15 +70,18 @@ export class TradingViewDataAdapter implements MarketDataProvider {
     const effectiveCount = Math.min(Math.max(count, 10), 5500);
     const cacheKey = `${tvSymbol}:${tvTimeframe}:${effectiveCount}`;
 
+    // Dynamic TTL: 1500ms for real-time streaming polls (count <= 50), 20000ms for deep history
+    const dynamicTtlMs = effectiveCount <= 50 ? 1500 : 20000;
+
     // Stale-While-Revalidate: Return cached bars instantly (0ms)
     const cached = this.cache.get(cacheKey);
     const now = Date.now();
     if (cached) {
       const age = now - cached.timestamp;
-      if (age < this.cacheTtlMs) {
+      if (age < dynamicTtlMs) {
         return cached.candles;
       }
-      // If stale but less than 15 minutes old, return cached immediately & revalidate asynchronously
+      // If stale, return cached immediately & revalidate asynchronously
       if (age < 15 * 60 * 1000) {
         if (!this.isRevalidating.has(cacheKey)) {
           this.isRevalidating.add(cacheKey);
@@ -107,7 +110,7 @@ export class TradingViewDataAdapter implements MarketDataProvider {
       });
 
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`TradingView request timed out after 1200ms`)), 1200)
+        setTimeout(() => reject(new Error(`TradingView request timed out after 5000ms`)), 5000)
       );
 
       const rawCandles = (await Promise.race([fetchPromise, timeoutPromise])) as any[];
@@ -125,7 +128,16 @@ export class TradingViewDataAdapter implements MarketDataProvider {
   }
 
   private generateFallbackBars(symbol: string, count: number, cacheKey?: string): MarketCandle[] {
-    const basePrice = symbol.includes("BTC") ? 68000 : symbol.includes("EUR") ? 1.08 : 4150;
+    let basePrice = symbol.includes("BTC") ? 68000 : symbol.includes("EUR") ? 1.08 : 4042.0;
+    for (const entry of this.cache.values()) {
+      if (entry.candles && entry.candles.length > 0) {
+        const last = entry.candles[entry.candles.length - 1];
+        if (last && last.close) {
+          basePrice = last.close;
+          break;
+        }
+      }
+    }
     const intervalMs = 15 * 60 * 1000;
     const now = Date.now();
     const startTime = now - count * intervalMs;

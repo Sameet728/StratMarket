@@ -609,6 +609,7 @@ export function StrategyChart({
         const prevCandles = candlesRef.current;
         if (prevCandles && prevCandles.length > 0) {
           const lastPrevBar = prevCandles[prevCandles.length - 1];
+          let updated = false;
 
           // 1. Live Forming Bar Tick Update
           if (latestIncomingBar.time === lastPrevBar.time) {
@@ -619,27 +620,28 @@ export function StrategyChart({
             ) {
               prevCandles[prevCandles.length - 1] = latestIncomingBar;
               candlesRef.current = [...prevCandles];
-
-              try {
-                if (typeof workspaceRef.current.chart?.renderer?.updateBar === "function") {
-                  workspaceRef.current.chart.renderer.updateBar(latestIncomingBar);
-                } else if (typeof workspaceRef.current.chart?.updateBar === "function") {
-                  workspaceRef.current.chart.updateBar(latestIncomingBar);
-                }
-              } catch (_) {}
+              updated = true;
             }
           } else if (latestIncomingBar.time > lastPrevBar.time) {
             // New bar closed & next bar opened! Seamlessly append without re-framing
             candlesRef.current = [...prevCandles, latestIncomingBar];
             setCandles(candlesRef.current);
+            updated = true;
+          }
 
+          if (updated && workspaceRef.current) {
             try {
-              if (typeof workspaceRef.current.chart?.renderer?.setBars === "function") {
-                workspaceRef.current.chart.renderer.setBars(candlesRef.current, { preserveView: true });
-              } else if (typeof workspaceRef.current.chart?.renderer?.updateBar === "function") {
-                workspaceRef.current.chart.renderer.updateBar(latestIncomingBar);
+              const ws = workspaceRef.current;
+              if (typeof ws.chart?.setMarket === "function") {
+                void ws.chart.setMarket({ data: candlesRef.current });
               }
-            } catch (_) {}
+              const cell = ws.cell?.("c1") || ws.active?.();
+              if (cell && typeof cell.chart?.setMarket === "function") {
+                void cell.chart.setMarket({ data: candlesRef.current });
+              }
+            } catch (err) {
+              console.warn("Vela live market update note:", err);
+            }
           }
         }
 
