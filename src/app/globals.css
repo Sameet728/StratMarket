@@ -2288,24 +2288,30 @@ footer p {
   padding: 0 16px;
   z-index: 20;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .chart-toolbar-left {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .chart-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  height: 32px;
   color: #a1a1aa;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
-  padding: 6px 10px;
+  padding: 0 10px;
   border-radius: 8px;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box;
   transition: all 0.2s ease;
 }
 
@@ -2318,6 +2324,12 @@ footer p {
   font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.02em;
+  white-space: nowrap !important;
+}
+
+.chart-brand-sub {
+  white-space: nowrap !important;
+}
 }
 
 .chart-divider {
@@ -2461,16 +2473,30 @@ footer p {
 .chart-btn-clean {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 5px 11px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  padding: 0 11px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #a1a1aa;
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+  box-sizing: border-box;
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+.chart-btn-clean *,
+.chart-toolbar button,
+.chart-toolbar a {
+  white-space: nowrap !important;
 }
 
 .chart-btn-clean:hover {
@@ -2505,14 +2531,22 @@ footer p {
 .chart-feed-status {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 5px 10px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  padding: 0 10px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 11.5px;
   font-weight: 600;
   color: #d4d4d8;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+  box-sizing: border-box;
 }
 
 .chart-feed-status .feed-dot {
@@ -2634,7 +2668,31 @@ footer p {
 .chart-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
+  max-height: 34px;
+}
+
+@media (min-width: 769px) and (max-width: 1250px) {
+  .chart-brand-sub {
+    display: none !important;
+  }
+  .chart-btn-text-full {
+    display: none !important;
+  }
+  .chart-btn-text-short {
+    display: inline !important;
+  }
+  .chart-toolbar {
+    padding: 0 10px;
+    gap: 8px;
+  }
+  .chart-toolbar-left {
+    gap: 8px;
+  }
+  .chart-toolbar-right {
+    gap: 6px;
+  }
 }
 
 .chart-status-pill {

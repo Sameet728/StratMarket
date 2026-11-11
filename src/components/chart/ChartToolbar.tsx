@@ -103,12 +103,12 @@ export function ChartToolbar({
     <header className="chart-toolbar">
       <div className="chart-toolbar-left">
         <a href="/market" className="chart-back-btn" title="Back to Marketplace">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ marginRight: "2px" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ marginRight: "2px", flexShrink: 0 }}>
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-          <StratMarketLogo size={17} color="#ffffff" style={{ marginRight: "6px" }} />
-          <span className="chart-brand">StratMarket</span>
-          <span className="chart-brand-sub" style={{ fontSize: "10.5px", color: "#a1a1aa", fontWeight: 500, marginLeft: "4px", opacity: 0.9 }}>by Elvaris Capital</span>
+          <StratMarketLogo size={17} color="#ffffff" style={{ marginRight: "6px", flexShrink: 0 }} />
+          <span className="chart-brand" style={{ whiteSpace: "nowrap" }}>StratMarket</span>
+          <span className="chart-brand-sub" style={{ fontSize: "10.5px", color: "#a1a1aa", fontWeight: 500, marginLeft: "4px", opacity: 0.9, whiteSpace: "nowrap" }}>by Elvaris Capital</span>
         </a>
 
         <div className="chart-divider" />
@@ -170,19 +170,27 @@ export function ChartToolbar({
             style={{ touchAction: "manipulation" }}
             title={browserAlertsEnabled ? "Browser Chrome push alerts active - click to pause" : "Click to enable Chrome browser desktop notifications for trades, TP & SL"}
           >
-            <span>{browserAlertsEnabled ? "🔔 Push ON" : "🔕 Push"}</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill={browserAlertsEnabled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <span>{browserAlertsEnabled ? "Push ON" : "Push"}</span>
           </button>
         )}
 
         {onToggleAlert && (
           <button
             type="button"
-            className={`chart-btn-clean chart-btn-email ${alertEnabled ? "active" : ""}`}
+            className={`chart-btn-clean ${alertEnabled ? "active" : ""}`}
             onClick={onToggleAlert}
             style={{ touchAction: "manipulation" }}
             title={alertEnabled ? "Email alerts active - click to mute" : "Click to enable real-time email trade alerts"}
           >
-            <span>{alertEnabled ? "✉️ Email ON" : "✉️ Email"}</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <rect width="20" height="16" x="2" y="4" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
+            <span>{alertEnabled ? "Email ON" : "Email"}</span>
           </button>
         )}
 
