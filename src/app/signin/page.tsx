@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { StratMarketLogo } from "@/components/StratMarketLogo";
+import { toast } from "@/components/ui/Toast";
 
 function EyeIcon({ size = 18 }: { size?: number }) {
   return (
@@ -144,6 +145,7 @@ function SignInContent() {
       const data = await res.json();
       if (!res.ok) {
         setGlobalError(data.error || "Authentication failed.");
+        toast.error("Authentication Failed", data.error || "Please check your credentials.");
         setLoading(false);
         return;
       }
@@ -153,6 +155,12 @@ function SignInContent() {
           ? "Account registered! Redirecting to your dashboard..."
           : "Signed in! Redirecting..."
       );
+
+      if (isRegister) {
+        toast.success("Account Created", "Your StratMarket institutional account is now active.");
+      } else {
+        toast.success("Authentication Verified", `Welcome back, ${data.user?.name || "Trader"}!`);
+      }
 
       const targetPath = safeRedirect
         ? safeRedirect
@@ -194,11 +202,13 @@ function SignInContent() {
       const data = await res.json();
       if (!res.ok) {
         setForgotError(data.error || "Failed to send verification code.");
+        toast.error("OTP Request Failed", data.error || "Failed to dispatch verification code.");
         setForgotLoading(false);
         return;
       }
 
       setForgotOk(`Verification code sent to ${targetEmail}`);
+      toast.info("Verification Code Dispatched", `A 6-digit OTP code has been delivered to ${targetEmail}.`);
       setForgotStep(2);
       setResendTimer(60); // 60 seconds cooldown
       setForgotLoading(false);
@@ -246,11 +256,13 @@ function SignInContent() {
       const data = await res.json();
       if (!res.ok) {
         setForgotError(data.error || "Failed to reset password.");
+        toast.error("Password Reset Failed", data.error || "Invalid or expired OTP code.");
         setForgotLoading(false);
         return;
       }
 
       setForgotOk("Password reset successfully! Redirecting to your dashboard...");
+      toast.success("Password Updated", "Your institutional password was reset successfully. Redirecting to dashboard...");
 
       const targetPath = safeRedirect ? safeRedirect : "/dashboard";
 

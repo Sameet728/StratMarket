@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { PageTransitionWipe } from "@/components/PageTransitionWipe";
 import { SpotlightCursor } from "@/components/SpotlightCursor";
 import { SiteAnalyticsTracker } from "@/components/SiteAnalyticsTracker";
+import { ToastProvider } from "@/components/ui/Toast";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -168,17 +169,19 @@ export default function RootLayout({
           <i className="a2" />
         </div>
         <TopProgressBar />
-        <Suspense fallback={null}>
-          <SiteAnalyticsTracker />
-        </Suspense>
-        <Suspense fallback={null}>
-          <HeaderNav />
-        </Suspense>
-        <main>{children}</main>
-        <Footer />
-        <Suspense fallback={null}>
-          <DockNav />
-        </Suspense>
+        <ToastProvider>
+          <Suspense fallback={null}>
+            <SiteAnalyticsTracker />
+          </Suspense>
+          <Suspense fallback={null}>
+            <HeaderNav />
+          </Suspense>
+          <main>{children}</main>
+          <Footer />
+          <Suspense fallback={null}>
+            <DockNav />
+          </Suspense>
+        </ToastProvider>
       </body>
     </html>
   );

@@ -18,6 +18,8 @@ interface Props {
   onToggleBoxes: () => void;
   alertEnabled?: boolean;
   onToggleAlert?: () => void;
+  browserAlertsEnabled?: boolean;
+  onToggleBrowserAlerts?: () => void;
   trialStatus?: string;
   daysLeft?: number;
   trialExpiry?: string | null;
@@ -55,6 +57,8 @@ export function ChartToolbar({
   onToggleBoxes,
   alertEnabled = false,
   onToggleAlert,
+  browserAlertsEnabled = false,
+  onToggleBrowserAlerts,
   trialStatus,
   daysLeft,
   trialExpiry,
@@ -165,7 +169,19 @@ export function ChartToolbar({
             style={{ touchAction: "manipulation" }}
             title={alertEnabled ? "Email alerts active - click to mute" : "Click to enable real-time email trade alerts"}
           >
-            <span>{alertEnabled ? "Alerts ON" : "Alerts OFF"}</span>
+            <span>{alertEnabled ? "Email Alerts ON" : "Email Alerts OFF"}</span>
+          </button>
+        )}
+
+        {onToggleBrowserAlerts && (
+          <button
+            type="button"
+            className={`chart-btn-clean ${browserAlertsEnabled ? "active" : ""}`}
+            onClick={onToggleBrowserAlerts}
+            style={{ touchAction: "manipulation" }}
+            title={browserAlertsEnabled ? "Browser Chrome push alerts active - click to pause" : "Click to enable Chrome browser desktop notifications for trades, TP & SL"}
+          >
+            <span>{browserAlertsEnabled ? "🔔 Push ON" : "🔕 Push OFF"}</span>
           </button>
         )}
 

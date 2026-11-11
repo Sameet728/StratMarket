@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "@/components/ui/Toast";
 import { StratMarketLogo } from "@/components/StratMarketLogo";
 
 interface UserProfile {
@@ -249,9 +250,15 @@ export function DashboardClient() {
         }),
       });
 
-      if (!res.ok) {
+      if (res.ok) {
+        if (newEnabled) {
+          toast.success("Signal Alerts Active", `${strategy.name} alerts are now active for your account.`);
+        } else {
+          toast.info("Signal Alerts Paused", `${strategy.name} alerts have been paused.`);
+        }
+      } else {
         const errData = await res.json().catch(() => ({}));
-        alert(errData.error || "Failed to update alert preference. Please try again.");
+        toast.error("Alert Update Failed", errData.error || "Failed to update alert preference. Please try again.");
         // Revert on failure
         setStrategies((prev) =>
           prev.map((s) => (s.id === strategy.id ? { ...s, enabled: strategy.enabled } : s))
@@ -267,6 +274,7 @@ export function DashboardClient() {
       }
     } catch (err) {
       console.error("Toggle alert error:", err);
+      toast.error("Network Error", "Could not reach alert notification service.");
       setStrategies((prev) =>
         prev.map((s) => (s.id === strategy.id ? { ...s, enabled: strategy.enabled } : s))
       );
@@ -302,12 +310,15 @@ export function DashboardClient() {
         setDestinationEmail(emailInput.trim());
         setEditingEmail(false);
         setEmailMessage({ text: "Notification email updated across all strategies!", ok: true });
+        toast.success("Destination Updated", `Trade notifications will now be routed to ${emailInput.trim()}`);
         setTimeout(() => setEmailMessage(null), 4000);
       } else {
         setEmailMessage({ text: data.error || "Failed to update email.", ok: false });
+        toast.error("Update Failed", data.error || "Failed to update notification email.");
       }
     } catch {
       setEmailMessage({ text: "Network error saving email.", ok: false });
+      toast.error("Network Error", "Could not save notification email destination.");
     } finally {
       setSavingEmail(false);
     }
@@ -320,6 +331,7 @@ export function DashboardClient() {
         text: "You have already sent your verification test email (maximum 1 allowed per user).",
         ok: false,
       });
+      toast.warning("Test Quota Reached", "Maximum 1 verification test email allowed per registered account.");
       return;
     }
     setSendingTest(true);
@@ -337,12 +349,22 @@ export function DashboardClient() {
           text: `Sample verification test signal sent to ${destinationEmail || user?.email}! Check your inbox. (Limit: 1/1 test email used)`,
           ok: true,
         });
+        toast.success(
+          "Test Signal Dispatched",
+          `Verification alert delivered to ${destinationEmail || user?.email}! (1/1 test used)`
+        );
       } else {
         if (data.alreadySent) setTestEmailSent(true);
         setTestResult({ text: data.error || "Failed to dispatch test signal.", ok: false });
+        if (data.alreadySent) {
+          toast.warning("Test Quota Reached", "Max 1 test email limit per user has already been reached.");
+        } else {
+          toast.error("Dispatch Failed", data.error || "Failed to dispatch test signal.");
+        }
       }
     } catch {
       setTestResult({ text: "Network error sending test signal.", ok: false });
+      toast.error("Network Error", "Could not dispatch sample verification signal.");
     } finally {
       setSendingTest(false);
     }

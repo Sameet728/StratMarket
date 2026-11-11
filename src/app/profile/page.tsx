@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "@/components/ui/Toast";
 
 interface Trial {
   id: string;
@@ -194,15 +195,18 @@ export default function ProfilePage() {
       const data = await res.json();
       if (res.ok) {
         setEmailStatusMsg({ text: "Signal notification email saved successfully!", ok: true });
+        toast.success("Destination Updated", `Signal notification email set to ${signalEmail}`);
         // Update local alerts destination
         setAlerts((prev) =>
           prev.map((a) => ({ ...a, verifiedDestination: signalEmail }))
         );
       } else {
         setEmailStatusMsg({ text: data.error || "Failed to update email.", ok: false });
+        toast.error("Update Failed", data.error || "Failed to update destination email.");
       }
     } catch {
       setEmailStatusMsg({ text: "Network error. Please try again.", ok: false });
+      toast.error("Network Error", "Could not reach notification service.");
     } finally {
       setSavingEmail(false);
     }
@@ -215,6 +219,7 @@ export default function ProfilePage() {
         text: "You have already sent your verification test email (maximum 1 allowed per user).",
         ok: false,
       });
+      toast.warning("Test Quota Reached", "Maximum 1 verification test email allowed per registered account.");
       return;
     }
     setSendingTest(true);
@@ -232,12 +237,22 @@ export default function ProfilePage() {
           text: `Sample verification test alert sent to ${signalEmail}! Check your inbox. (Limit: 1/1 test email used)`,
           ok: true,
         });
+        toast.success(
+          "Test Signal Dispatched",
+          `Verification alert delivered to ${signalEmail}! (1/1 test used)`
+        );
       } else {
         if (data.alreadySent) setTestEmailSent(true);
         setTestResult({ text: data.error || "Failed to send sample alert.", ok: false });
+        if (data.alreadySent) {
+          toast.warning("Test Quota Reached", "Max 1 test email limit per user has already been reached.");
+        } else {
+          toast.error("Dispatch Failed", data.error || "Failed to send sample alert.");
+        }
       }
     } catch {
       setTestResult({ text: "Network error sending test signal.", ok: false });
+      toast.error("Network Error", "Could not dispatch verification email.");
     } finally {
       setSendingTest(false);
     }
@@ -291,6 +306,7 @@ export default function ProfilePage() {
       });
 
       if (!res.ok) {
+        toast.error("Alert Update Failed", "Failed to update alert preference. Reverting.");
         // Revert on error
         setStrategies((prev) =>
           prev.map((s) =>
@@ -310,6 +326,11 @@ export default function ProfilePage() {
           localStorage.setItem(storageKey, JSON.stringify(currentMap));
         } catch (_) {}
       } else {
+        if (newEnabled) {
+          toast.success("Signal Alerts Active", `${strategyId} notifications enabled.`);
+        } else {
+          toast.info("Signal Alerts Paused", `${strategyId} notifications paused.`);
+        }
         // Silently sync latest trial records in background
         fetch("/api/me/entitlements")
           .then((r) => r.json())
@@ -320,6 +341,7 @@ export default function ProfilePage() {
       }
     } catch (err) {
       console.error("Failed to toggle alert:", err);
+      toast.error("Network Error", "Could not reach alert notification service.");
       // Revert on exception
       setStrategies((prev) =>
         prev.map((s) =>

@@ -6,6 +6,13 @@ import { ChartToolbar } from "./ChartToolbar";
 import { StrategyStatusPanel } from "./StrategyStatusPanel";
 import { StrategyChartContract } from "@/lib/strategy-execution";
 import { MarketCandle } from "@/lib/market-data";
+import { toast } from "@/components/ui/Toast";
+import {
+  getBrowserAlertPreference,
+  setBrowserAlertPreference,
+  requestBrowserNotificationPermission,
+  sendBrowserTradeNotification,
+} from "@/lib/notifications/browser-notifications";
 
 interface StoredSignal {
   id: string;
@@ -44,6 +51,9 @@ export function StrategyChart({
   const workspaceRef = useRef<any>(null);
   const mountedKeyRef = useRef<string>("");
   const tradeBoxDrawingIdsRef = useRef<string[]>([]);
+  const candlesRef = useRef<MarketCandle[]>([]);
+  const contractRef = useRef<StrategyChartContract | null>(null);
+  const latestSignalIdRef = useRef<string>("");
 
   const [contract, setContract] = useState<StrategyChartContract | null>(null);
   const [candles, setCandles] = useState<MarketCandle[]>([]);
@@ -54,6 +64,7 @@ export function StrategyChart({
   const [panelOpen, setPanelOpen] = useState(false);
   const [showBoxes, setShowBoxes] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [browserAlerts, setBrowserAlerts] = useState<boolean>(false);
 
   // Entitlement & Trial states
   const [trialStatus, setTrialStatus] = useState<string>(initialTrialStatus);
@@ -65,6 +76,33 @@ export function StrategyChart({
   const [paywallType, setPaywallType] = useState<"NONE" | "SIGNIN">(
     !initialUser ? "SIGNIN" : "NONE"
   );
+
+  // Sync browser notification preference on mount
+  useEffect(() => {
+    setBrowserAlerts(getBrowserAlertPreference());
+  }, []);
+
+  const handleToggleBrowserAlerts = async () => {
+    if (!browserAlerts) {
+      const granted = await requestBrowserNotificationPermission();
+      if (granted) {
+        setBrowserAlerts(true);
+        toast.success(
+          "Chrome Push Alerts Active",
+          "You will receive desktop browser notifications for Trade Entries, TP Hit, and SL Hit."
+        );
+      } else {
+        toast.warning(
+          "Notification Permission Blocked",
+          "Please allow notifications in Chrome site permissions to receive desktop trade alerts."
+        );
+      }
+    } else {
+      setBrowserAlertPreference(false);
+      setBrowserAlerts(false);
+      toast.info("Browser Push Alerts Paused", "Desktop trade notifications have been disabled.");
+    }
+  };
 
   // Load alert status from backend
   useEffect(() => {
@@ -144,9 +182,23 @@ export function StrategyChart({
       });
       if (res.ok) {
         setAlertEnabled(newEnabled);
+        if (newEnabled) {
+          toast.success(
+            "Email Alerts Active",
+            `Real-time trade signals for ${contract?.name || strategyId} will be delivered to your inbox.`
+          );
+        } else {
+          toast.info(
+            "Email Alerts Paused",
+            `Muted email alerts for ${contract?.name || strategyId}.`
+          );
+        }
+      } else {
+        toast.error("Failed to update alert preference", "Please try again.");
       }
     } catch (err) {
       console.error("Failed to toggle alert in chart:", err);
+      toast.error("Network Error", "Could not reach alert notification service.");
     }
   };
 
@@ -196,8 +248,13 @@ export function StrategyChart({
         if (disposed) return;
 
         setContract(data.contract);
+        contractRef.current = data.contract;
         setCandles(data.candles || []);
+        candlesRef.current = data.candles || [];
         setStoredSignals(data.storedSignals || []);
+        if (data.storedSignals && data.storedSignals.length > 0) {
+          latestSignalIdRef.current = data.storedSignals[0].id;
+        }
         setStatus("LIVE");
         setPaywallType("NONE");
 
@@ -483,6 +540,124 @@ export function StrategyChart({
       } catch (_) {}
     };
   }, [strategyId, timeframe]);
+
+  // Real-time live candle tick & trade lifecycle streaming (no page refresh needed)
+  useEffect(() => {
+    if (!strategyId || paywallType !== "NONE") return;
+
+    let isDisposed = false;
+
+    const streamInterval = setInterval(async () => {
+      if (isDisposed || !workspaceRef.current || !containerRef.current) return;
+
+      try {
+        // Fetch recent bars & latest live signals (cached for 3s to respect TV feed rates)
+        const res = await fetch(`/api/chart/${strategyId}/series?count=10&timeframe=${timeframe}`, {
+          cache: "no-store",
+        });
+
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.success || !data.candles || data.candles.length === 0) return;
+
+        const incomingCandles: MarketCandle[] = data.candles;
+        const latestIncomingBar = incomingCandles[incomingCandles.length - 1];
+
+        const prevCandles = candlesRef.current;
+        if (prevCandles && prevCandles.length > 0) {
+          const lastPrevBar = prevCandles[prevCandles.length - 1];
+
+          // 1. Live Forming Bar Tick Update
+          if (latestIncomingBar.time === lastPrevBar.time) {
+            if (
+              latestIncomingBar.close !== lastPrevBar.close ||
+              latestIncomingBar.high !== lastPrevBar.high ||
+              latestIncomingBar.low !== lastPrevBar.low
+            ) {
+              prevCandles[prevCandles.length - 1] = latestIncomingBar;
+              candlesRef.current = [...prevCandles];
+
+              try {
+                if (typeof workspaceRef.current.chart?.renderer?.updateBar === "function") {
+                  workspaceRef.current.chart.renderer.updateBar(latestIncomingBar);
+                } else if (typeof workspaceRef.current.chart?.updateBar === "function") {
+                  workspaceRef.current.chart.updateBar(latestIncomingBar);
+                }
+              } catch (_) {}
+            }
+          } else if (latestIncomingBar.time > lastPrevBar.time) {
+            // New bar closed & next bar opened! Seamlessly append without re-framing
+            candlesRef.current = [...prevCandles, latestIncomingBar];
+            setCandles(candlesRef.current);
+
+            try {
+              if (typeof workspaceRef.current.chart?.renderer?.setBars === "function") {
+                workspaceRef.current.chart.renderer.setBars(candlesRef.current, { preserveView: true });
+              } else if (typeof workspaceRef.current.chart?.renderer?.updateBar === "function") {
+                workspaceRef.current.chart.renderer.updateBar(latestIncomingBar);
+              }
+            } catch (_) {}
+          }
+        }
+
+        // 2. Update Live Strategy Contract & Active Brackets
+        if (data.contract) {
+          setContract(data.contract);
+          contractRef.current = data.contract;
+        }
+
+        // 3. Detect New Live Trade Signals / Outgoing TP/SL resolutions
+        if (Array.isArray(data.storedSignals) && data.storedSignals.length > 0) {
+          const newestSignal = data.storedSignals[0];
+          setStoredSignals(data.storedSignals);
+
+          if (latestSignalIdRef.current && newestSignal.id !== latestSignalIdRef.current) {
+            latestSignalIdRef.current = newestSignal.id;
+
+            const isTP = newestSignal.signalType === "TAKE_PROFIT";
+            const isSL = newestSignal.signalType === "STOP_LOSS";
+            const isEntry = newestSignal.signalType === "ENTRY";
+
+            // In-app Toast Notification
+            if (isTP) {
+              toast.trade(
+                `🎯 TAKE PROFIT HIT • ${data.contract?.name || strategyId}`,
+                `Target reached! Position closed in profit (${newestSignal.direction}).`
+              );
+            } else if (isSL) {
+              toast.warning(
+                `🛡️ STOP LOSS TRIGGERED • ${data.contract?.name || strategyId}`,
+                `Protective stop touched. Loss strictly contained at -1.00R.`
+              );
+            } else if (isEntry) {
+              toast.trade(
+                `⚡ NEW ORDER EXECUTED • ${data.contract?.name || strategyId}`,
+                `${newestSignal.direction} entered @ $${newestSignal.entryPrice || "market"}.`
+              );
+            }
+
+            // Chrome Desktop Browser Notification
+            sendBrowserTradeNotification({
+              strategyName: data.contract?.name || strategyId,
+              strategyId: strategyId,
+              signalType: newestSignal.signalType,
+              direction: newestSignal.direction,
+              instrument: newestSignal.instrument || "XAUUSD",
+              entryPrice: newestSignal.entryPrice,
+              exitPrice: newestSignal.targetPrice || newestSignal.stopLoss,
+            });
+          } else if (!latestSignalIdRef.current) {
+            latestSignalIdRef.current = newestSignal.id;
+          }
+        }
+      } catch (_) {}
+    }, 4000);
+
+    return () => {
+      isDisposed = true;
+      clearInterval(streamInterval);
+    };
+  }, [strategyId, timeframe, paywallType]);
 
   // Handle tab switching & browser back/forward cache restoration (bfcache)
   useEffect(() => {
