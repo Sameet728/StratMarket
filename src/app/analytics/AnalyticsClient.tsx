@@ -544,7 +544,7 @@ export function AnalyticsClient() {
           </button>
 
           <span className="mono" style={{ fontSize: "11px", color: "var(--mut)" }}>
-            {lastRefreshedAt ? `Updated ${lastRefreshedAt.toLocaleTimeString()}` : "Live Connected"}
+            {lastRefreshedAt ? `Updated ${lastRefreshedAt.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" })} IST` : "Live Connected"}
           </span>
 
           <button

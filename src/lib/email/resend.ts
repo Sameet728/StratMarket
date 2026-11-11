@@ -425,8 +425,8 @@ export async function sendSignalAlertEmail(params: {
   const tradeNum = tradeNumber ? `${tradeNumber}` : "35";
 
   const alertTime = timestamp instanceof Date
-    ? timestamp.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC"
-    : new Date(timestamp).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC";
+    ? timestamp.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }) + " IST"
+    : new Date(timestamp).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }) + " IST";
 
   const cleanSlug = strategyId.toLowerCase();
   const dashboardUrl = `${BASE_URL}/strategies/${cleanSlug}`;
@@ -646,7 +646,16 @@ export async function sendLoginSecurityEmail(params: {
   userAgent?: string;
   time?: string;
 }): Promise<EmailResult> {
-  const { to, name, ip = "Recorded", userAgent = "Web Browser", time = new Date().toUTCString() } = params;
+  const defaultIstTime = new Date().toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }) + " IST";
+  const { to, name, ip = "Recorded", userAgent = "Web Browser", time = defaultIstTime } = params;
   const firstName = name.split(" ")[0] || "Trader";
   const profileUrl = `${BASE_URL}/profile`;
 
@@ -677,7 +686,7 @@ ${getEmailHeader("SECURITY AUDIT")}
       <div style="font-size:13px;line-height:20px;color:#394553;margin-top:4px;">${userAgent}</div>
     </td></tr>
     <tr><td style="padding:16px 18px;">
-      <div class="eyebrow">Timestamp (UTC)</div>
+      <div class="eyebrow">Timestamp (IST · Mumbai)</div>
       <div style="font-size:13px;line-height:20px;color:#394553;margin-top:4px;">${time}</div>
     </td></tr>
   </table>

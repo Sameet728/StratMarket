@@ -50,13 +50,14 @@ function formatDeliveryTime(raw?: string | Date): { formatted: string; relative:
   const d = new Date(raw);
   if (isNaN(d.getTime())) return { formatted: String(raw), relative: "" };
 
-  const formatted = d.toLocaleDateString("en-US", {
+  const formatted = d.toLocaleDateString("en-IN", {
     month: "short",
     day: "numeric",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
+    timeZone: "Asia/Kolkata",
   });
 
   const diffMs = Date.now() - d.getTime();

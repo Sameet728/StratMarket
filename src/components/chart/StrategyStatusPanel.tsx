@@ -425,8 +425,8 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
                       : `${t.direction} · SL HIT (${t.pnlR})`;
 
                     const entryDate = new Date(t.entryTime);
-                    const timeStr = entryDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
-                    const dateStr = entryDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+                    const timeStr = entryDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" });
+                    const dateStr = entryDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
 
                     return (
                       <div
@@ -506,8 +506,8 @@ export function StrategyStatusPanel({ contract, onClose, isOpen, candleCount, st
                 const color = isTP ? "#10b981" : isSL ? "#ef4444" : isLong ? "#10b981" : "#ef4444";
                 const label = isTP ? "TP HIT" : isSL ? "SL HIT" : `${sig.signalType} ${sig.direction}`;
                 const ts = new Date(sig.timestamp);
-                const timeStr = ts.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
-                const dateStr = ts.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+                const timeStr = ts.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" });
+                const dateStr = ts.toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
 
                 return (
                   <div

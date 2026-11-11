@@ -296,6 +296,14 @@ export function StrategyChart({
         workspaceRef.current = ws;
         mountedKeyRef.current = key;
 
+        // Set chart display timezone to Indian Mumbai Timezone (Asia/Kolkata / IST UTC+5:30)
+        try {
+          ws.setTimezone("Asia/Kolkata");
+        } catch (_) {}
+        try {
+          ws.chart?.renderer?.set("timezone", "Asia/Kolkata");
+        } catch (_) {}
+
         // Remove Vela logo & watermark from renderer and DOM
         try {
           ws.chart?.renderer?.set("attribution", false);

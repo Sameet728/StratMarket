@@ -317,7 +317,7 @@ export function AdminClient() {
                 <span className="note">Last Ingested Signal</span>
                 <b style={{ display: "block", fontSize: "14px", marginTop: "4px" }}>
                   {vpsHealth.lastSignalReceived
-                    ? `${new Date(vpsHealth.lastSignalReceived).toLocaleTimeString()} (${vpsHealth.lastSignalAgeMinutes}m ago)`
+                    ? `${new Date(vpsHealth.lastSignalReceived).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" })} (${vpsHealth.lastSignalAgeMinutes}m ago)`
                     : "No signals received yet"}
                 </b>
               </div>
@@ -366,7 +366,7 @@ export function AdminClient() {
                     <span className="badge py">{u.role}</span>
                   </div>
                   <div className="note" style={{ marginTop: "4px" }}>
-                    {u.email} · Account: {u.accountStatus} · Joined {new Date(u.createdAt).toLocaleDateString()}
+                    {u.email} · Account: {u.accountStatus} · Joined {new Date(u.createdAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}
                   </div>
                 </div>
 
@@ -409,7 +409,7 @@ export function AdminClient() {
                   </span>
                   <span>{log.details || log.entityType}</span>
                 </div>
-                <span className="note">{new Date(log.createdAt).toLocaleTimeString()}</span>
+                <span className="note">{new Date(log.createdAt).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" })}</span>
               </div>
             ))}
           </div>

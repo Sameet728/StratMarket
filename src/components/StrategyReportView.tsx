@@ -828,10 +828,12 @@ export function StrategyReportView({ strategy, initialSignals = [] }: Props) {
                   day: "numeric",
                   month: "short",
                   year: "numeric",
+                  timeZone: "Asia/Kolkata",
                 });
                 const timeFormatted = dateObj.toLocaleTimeString("en-IN", {
                   hour: "2-digit",
                   minute: "2-digit",
+                  timeZone: "Asia/Kolkata",
                 });
 
                 return (

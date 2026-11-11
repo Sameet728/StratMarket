@@ -2219,17 +2219,19 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
       try {
         const date = new Date(d);
         return (
-          date.toLocaleDateString("en-US", {
+          date.toLocaleDateString("en-IN", {
             month: "short",
             day: "numeric",
             year: "numeric",
+            timeZone: "Asia/Kolkata",
           }) +
           " " +
-          date.toLocaleTimeString("en-US", {
+          date.toLocaleTimeString("en-IN", {
             hour: "2-digit",
             minute: "2-digit",
             second: "2-digit",
             hour12: true,
+            timeZone: "Asia/Kolkata",
           })
         );
       } catch (_) {
