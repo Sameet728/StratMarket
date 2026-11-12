@@ -1839,6 +1839,49 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
     }
   },
 
+  /**
+   * Update delivery status when a Resend webhook event arrives.
+   * Matches by providerMessageRef (the Resend email ID returned at dispatch time).
+   */
+  async updateDeliveryStatusByMessageId(
+    providerMessageRef: string,
+    status: string,
+    eventType: string
+  ): Promise<void> {
+    const mdb = await getMongoDb();
+    const now = new Date();
+
+    // Update in-memory store
+    for (const [id, del] of globalStore.deliveries.entries()) {
+      if ((del as any).providerMessageRef === providerMessageRef) {
+        globalStore.deliveries.set(id, {
+          ...del,
+          deliveryStatus: status as any,
+          webhookEventType: eventType,
+          deliveredAt: status === "DELIVERED" ? now : (del as any).deliveredAt,
+          updatedAt: now,
+        } as any);
+      }
+    }
+
+    // Update MongoDB — fire-and-forget, non-blocking
+    if (mdb) {
+      mdb.collection("deliveries").updateMany(
+        { providerMessageRef },
+        {
+          $set: {
+            deliveryStatus: status,
+            webhookEventType: eventType,
+            ...(status === "DELIVERED" ? { deliveredAt: now } : {}),
+            updatedAt: now,
+          }
+        }
+      ).catch((err: any) => {
+        console.error("[MongoDB] updateDeliveryStatusByMessageId error:", err?.message || err);
+      });
+    }
+  },
+
   async getUserDeliveries(userId: string, limit: number = 50): Promise<EmailDeliveryRecord[]> {
     const user = await this.getUserById(userId).catch(() => null);
     const userEmails = [userId];

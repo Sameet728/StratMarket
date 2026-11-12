@@ -1,4 +1,4 @@
-﻿/**
+/**
  * StratMarket Institutional Email Service â€” V3 Theme
  * Brand: StratMarket by Elvaris Capital
  * Parent Organization: Elvaris Capital (https://elvariscapital.in)
@@ -24,7 +24,7 @@ function getSanitizedResendKey(): string {
     console.error("[Email Gateway] CRITICAL: RESEND_API_KEY env variable is missing!");
     return "";
   }
-  const cleaned = raw.trim().replace(/^["'`]+|["'`]+$/g, "").trim();
+  const cleaned = raw.trim().replace(/^[\"'`]+|[\"'`]+$/g, "").trim();
   if (cleaned.startsWith("re_") && cleaned.length > 10) {
     return cleaned;
   }
@@ -470,14 +470,14 @@ ${getEmailHead(isTest ? `[TEST EMAIL] StratMarket | Sample Alert â€” ${inst
 <tr><td align="center" class="outer">
 <table role="presentation" class="shell" width="600" cellpadding="0" cellspacing="0">
 ${getEmailHeader(
-  isTest
-    ? "TEST NOTIFICATION â€¢ VERIFICATION ONLY"
-    : isTP
-    ? "TRADING OUTCOME â€¢ TAKE PROFIT HIT ðŸŽ¯"
-    : isSL
-    ? "TRADING OUTCOME â€¢ STOP LOSS TRIGGERED ðŸ›¡ï¸"
-    : "LIVE EXECUTION â€¢ NEW ORDER TRIGGERED âš¡"
-)}
+    isTest
+      ? "TEST NOTIFICATION â€¢ VERIFICATION ONLY"
+      : isTP
+        ? "TRADING OUTCOME â€¢ TAKE PROFIT HIT ðŸŽ¯"
+        : isSL
+          ? "TRADING OUTCOME â€¢ STOP LOSS TRIGGERED ðŸ›¡ï¸"
+          : "LIVE EXECUTION â€¢ NEW ORDER TRIGGERED âš¡"
+  )}
 
 ${isTest ? `
 <tr><td class="pad" style="padding-top:22px;padding-bottom:0;">
@@ -496,9 +496,8 @@ ${isTest ? `
 
 <!-- ANIMATED HERO OUTCOME BANNER -->
 <tr><td class="pad" style="padding-top:16px;padding-bottom:6px;">
-${
-  isTP
-    ? `
+${isTP
+      ? `
   <table role="presentation" width="100%" class="tp-glow" style="background:linear-gradient(135deg, #022c22 0%, #064e3b 50%, #047857 100%);border:2px solid #10b981;border-radius:12px;box-shadow:0 8px 24px -6px rgba(16,185,129,0.4);">
     <tr><td style="padding:24px 20px;text-align:center;">
       <div style="font-size:36px;line-height:40px;margin-bottom:8px;">
@@ -516,8 +515,8 @@ ${
     </td></tr>
   </table>
 `
-    : isSL
-    ? `
+      : isSL
+        ? `
   <table role="presentation" width="100%" class="sl-glow" style="background:linear-gradient(135deg, #450a0a 0%, #7f1d1d 50%, #991b1b 100%);border:2px solid #ef4444;border-radius:12px;box-shadow:0 8px 24px -6px rgba(239,68,68,0.4);">
     <tr><td style="padding:24px 20px;text-align:center;">
       <div style="font-size:36px;line-height:40px;margin-bottom:8px;">
@@ -535,7 +534,7 @@ ${
     </td></tr>
   </table>
 `
-    : `
+        : `
   <table role="presentation" width="100%" class="entry-glow" style="background:linear-gradient(135deg, #082f49 0%, #0369a1 50%, #0284c7 100%);border:2px solid #38bdf8;border-radius:12px;box-shadow:0 8px 24px -6px rgba(14,165,233,0.4);">
     <tr><td style="padding:24px 20px;text-align:center;">
       <div style="font-size:36px;line-height:40px;margin-bottom:8px;">
@@ -553,26 +552,24 @@ ${
     </td></tr>
   </table>
 `
-}
+    }
 </td></tr>
 
 <tr><td class="pad" style="padding-top:14px;padding-bottom:18px;">
   <div class="eyebrow" style="color:#7c8490;">${strategyName} Â· Trade #${tradeNum} Â· ${alertTime}</div>
   <h1 class="headline" style="margin-bottom:7px;">
     ${isTest ? `<span style="display:inline-block;background:#e6f7ff;border:1px solid #91d5ff;color:#096dd9;font-size:12px;font-weight:700;padding:2px 8px;border-radius:3px;vertical-align:middle;margin-right:6px;">TEST SIGNAL</span>` : ""}
-    ${
-      isTP
-        ? `ðŸŽ¯ Trade #${tradeNum} Closed: Take Profit Hit!`
-        : isSL
+    ${isTP
+      ? `ðŸŽ¯ Trade #${tradeNum} Closed: Take Profit Hit!`
+      : isSL
         ? `ðŸ›¡ï¸ Trade #${tradeNum} Closed: Protective Stop Hit`
         : `âš¡ Live Order: Trade #${tradeNum} (${direction})`
     }
   </h1>
   <p class="bodycopy">
-    ${
-      isTP
-        ? `Audited quantitative execution: <strong>Trade #${tradeNum}</strong> (${direction} on ${instrument} Â· ${timeframe}) for <strong>${strategyName} (${strategyId})</strong> has achieved its target payoff at <strong>${formattedTP}</strong>. Position has closed at audited payoff <strong>${effectivePnlR || "+1.16R"}</strong>.`
-        : isSL
+    ${isTP
+      ? `Audited quantitative execution: <strong>Trade #${tradeNum}</strong> (${direction} on ${instrument} Â· ${timeframe}) for <strong>${strategyName} (${strategyId})</strong> has achieved its target payoff at <strong>${formattedTP}</strong>. Position has closed at audited payoff <strong>${effectivePnlR || "+1.16R"}</strong>.`
+      : isSL
         ? `Disciplined risk management: <strong>Trade #${tradeNum}</strong> (${direction} on ${instrument} Â· ${timeframe}) for <strong>${strategyName} (${strategyId})</strong> has triggered its protective stop at <strong>${formattedSL}</strong>. Total loss was strictly capped at <strong>-1.00R</strong>, protecting portfolio equity from extended drawdown.`
         : `Algorithmic execution notice: <strong>${strategyName} (${strategyId})</strong> has initiated <strong>Trade #${tradeNum}</strong> (${direction} on ${instrument} Â· ${timeframe}) at <strong>${formattedEntry}</strong>. Order brackets are live in the market.`
     }

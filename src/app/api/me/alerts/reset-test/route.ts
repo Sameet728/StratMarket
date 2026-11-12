@@ -25,3 +25,4 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Failed to reset quota" }, { status: 500 });
   }
 }
+
