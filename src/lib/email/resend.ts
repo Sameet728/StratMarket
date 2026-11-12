@@ -825,4 +825,115 @@ export async function dispatchSignalAlertEmails(params: {
   return { dispatchedCount, errors, results };
 }
 
+/**
+ * 6. Service Restoration & Operational Advisory Announcement Email
+ * Clean institutional theme — formal, professional, no emojis or gaming gradients.
+ */
+export async function sendServiceRestoredEmail(params: {
+  to: string;
+  name?: string;
+}): Promise<EmailResult> {
+  const { to, name } = params;
+  const firstName = name && name.trim() ? name.split(" ")[0] : "Trader";
+  const dashboardUrl = `${BASE_URL}/dashboard`;
+  const supportUrl = `https://elvariscapital.in`;
+
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+${getEmailHead("StratMarket | Operational Advisory: Signal Delivery Restored")}
+</head>
+<body>
+<table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0">
+<tr><td align="center" class="outer">
+<table role="presentation" class="shell" width="600" cellpadding="0" cellspacing="0">
+${getEmailHeader("OPERATIONAL ADVISORY")}
+
+<!-- HEADLINE & OPENING -->
+<tr><td class="pad" style="padding-top:34px;padding-bottom:14px;">
+  <div class="eyebrow" style="color:#7c8490;">System Status · Infrastructure Resolution</div>
+  <h1 class="headline" style="margin-top:10px;margin-bottom:12px;">Real-time signal delivery restored.</h1>
+  <p class="bodycopy">Hello ${firstName},</p>
+  <p class="bodycopy" style="margin-top:10px;">
+    We are writing to provide a formal operational update regarding StratMarket's real-time trade alert email delivery system.
+  </p>
+</td></tr>
+
+<!-- INSTITUTIONAL STATUS CARD -->
+<tr><td class="pad" style="padding-top:8px;padding-bottom:24px;">
+  <table role="presentation" width="100%" style="border:1px solid #e2e6ea;background:#ffffff;">
+    <tr><td style="padding:16px 20px;border-bottom:1px solid #e9ecef;background:#fafbfc;">
+      <table role="presentation" width="100%"><tr>
+        <td valign="middle">
+          <div class="eyebrow">Gateway status</div>
+          <div style="font-size:14px;font-weight:700;color:#28734d;margin-top:4px;">Operational · All Routes Active</div>
+        </td>
+        <td align="right" valign="middle">
+          <span style="display:inline-block;background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32;font-size:10px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:3px;text-transform:uppercase;">Verified</span>
+        </td>
+      </tr></table>
+    </td></tr>
+
+    <tr><td style="padding:18px 20px;border-bottom:1px solid #e9ecef;">
+      <div class="eyebrow">Incident Summary</div>
+      <div style="font-size:13px;line-height:21px;color:#394553;margin-top:8px;">
+        Earlier today, our upstream transactional email provider experienced an authentication service interruption that caused intermittent delivery delays for certain real-time trade signals. <strong>We sincerely apologize for this disruption and any inconvenience it may have caused your trading operations.</strong> As algorithmic traders, we recognize that timely execution notices are critical to strategy discipline.
+      </div>
+    </td></tr>
+
+    <tr><td style="padding:18px 20px;border-bottom:1px solid #e9ecef;">
+      <div class="eyebrow">Engineering Measures Implemented</div>
+      <div style="font-size:13px;line-height:22px;color:#394553;margin-top:8px;">
+        To eliminate single points of failure and ensure uninterrupted delivery going forward, our engineering team has implemented the following measures:
+      </div>
+      <table role="presentation" width="100%" style="margin-top:10px;font-size:13px;line-height:20px;color:#495057;">
+        <tr>
+          <td valign="top" style="padding:4px 0;width:18px;color:#28734d;font-weight:700;">—</td>
+          <td style="padding:4px 0;"><strong>Dedicated Enterprise Gateway:</strong> Fresh credentials deployed with isolated rate-limit allocation.</td>
+        </tr>
+        <tr>
+          <td valign="top" style="padding:4px 0;width:18px;color:#28734d;font-weight:700;">—</td>
+          <td style="padding:4px 0;"><strong>Bidirectional Webhook Telemetry:</strong> Real-time delivery confirmation pipeline tracking each alert from dispatch to inbox arrival.</td>
+        </tr>
+        <tr>
+          <td valign="top" style="padding:4px 0;width:18px;color:#28734d;font-weight:700;">—</td>
+          <td style="padding:4px 0;"><strong>Exponential-Backoff Retry Engine:</strong> Automatic 3-attempt failover on any upstream network or rate-limit response.</td>
+        </tr>
+        <tr>
+          <td valign="top" style="padding:4px 0;width:18px;color:#28734d;font-weight:700;">—</td>
+          <td style="padding:4px 0;"><strong>End-to-End Verification:</strong> Live trade dispatch paths verified functional across production clusters.</td>
+        </tr>
+      </table>
+    </td></tr>
+
+    <tr><td style="padding:18px 20px;">
+      <div class="eyebrow">Subscriber Impact &amp; Next Steps</div>
+      <div style="font-size:13px;line-height:21px;color:#394553;margin-top:8px;">
+        <strong>No action is required from you.</strong> All active strategy subscriptions (PS-01, PS-02, PS-03) and verified notification destinations remain fully enabled. All subsequent quantitative trade signals will dispatch directly to your inbox on time.
+      </div>
+    </td></tr>
+  </table>
+</td></tr>
+
+<!-- CALL TO ACTION -->
+<tr><td class="pad" style="padding-bottom:34px;">
+  <a class="button" href="${dashboardUrl}">OPEN TRADING DASHBOARD</a>
+  <div class="muted" style="margin-top:16px;">
+    Questions or feedback? Contact <a href="${supportUrl}" style="color:#182331;text-decoration:underline;">our support desk</a>.
+  </div>
+</td></tr>
+
+${getEmailFooter()}
+</td></tr></table>
+</td></tr></table>
+</body></html>`;
+
+  return sendResendMail({
+    to,
+    subject: "StratMarket Operational Advisory: Real-Time Signal Delivery Restored",
+    html,
+  });
+}
+
+
 
