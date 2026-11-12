@@ -39,7 +39,8 @@ const DEFAULT_FROM = (process.env.EMAIL_FROM || "StratMarket Alerts <alerts@elva
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://strat-market-chi.vercel.app";
 
 /**
- * Low-level institutional email HTTP dispatch with automatic API key sanitization and multi-key fallback
+ * Low-level institutional email HTTP dispatch with automatic API key sanitization,
+ * multi-key fallback, and exponential-backoff retry (3 attempts on 429 / 5xx).
  */
 async function sendResendMail(payload: {
   from?: string;
@@ -49,63 +50,83 @@ async function sendResendMail(payload: {
 }): Promise<EmailResult> {
   let activeKey = getSanitizedResendKey();
 
-  try {
-    const toRecipients = Array.isArray(payload.to) ? payload.to : [payload.to];
+  const toRecipients = Array.isArray(payload.to) ? payload.to : [payload.to];
+  const fromAddress = payload.from || DEFAULT_FROM;
+  const finalFrom = fromAddress.includes("elvariscapital.in")
+    ? fromAddress
+    : "StratMarket Alerts <alerts@elvariscapital.in>";
 
-    // Strict domain check: Sender MUST be from @elvariscapital.in
-    const fromAddress = payload.from || DEFAULT_FROM;
-    const finalFrom = fromAddress.includes("elvariscapital.in")
-      ? fromAddress
-      : "StratMarket Alerts <alerts@elvariscapital.in>";
+  const body = JSON.stringify({
+    from: finalFrom,
+    to: toRecipients,
+    subject: payload.subject,
+    html: payload.html,
+  });
 
-    let res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${activeKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: finalFrom,
-        to: toRecipients,
-        subject: payload.subject,
-        html: payload.html,
-      }),
-    });
+  const MAX_ATTEMPTS = 3;
+  const RETRYABLE_STATUSES = [429, 500, 502, 503, 504];
 
-    let data = await res.json();
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${activeKey}`,
+          "Content-Type": "application/json",
+        },
+        body,
+      });
 
-    // If configured key failed due to 401 unauthorized or invalid_api_key, retry once with verified primary fallback
-    if (!res.ok && (res.status === 401 || data.message?.includes("API key") || data.name === "invalid_api_key")) {
-      if (activeKey !== PRIMARY_FALLBACK_KEY) {
-        console.warn("[Email Gateway] Configured API key rejected. Retrying immediately with verified institutional key...");
-        activeKey = PRIMARY_FALLBACK_KEY;
-        res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${activeKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: finalFrom,
-            to: toRecipients,
-            subject: payload.subject,
-            html: payload.html,
-          }),
-        });
-        data = await res.json();
+      const data = await res.json();
+
+      // If configured key was rejected (401 / invalid_api_key), retry once with verified primary fallback key
+      if (!res.ok && (res.status === 401 || data.message?.includes("API key") || data.name === "invalid_api_key")) {
+        if (activeKey !== PRIMARY_FALLBACK_KEY) {
+          console.warn("[Email Gateway] Configured API key rejected. Retrying immediately with verified institutional key...");
+          activeKey = PRIMARY_FALLBACK_KEY;
+          const r2 = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${activeKey}`,
+              "Content-Type": "application/json",
+            },
+            body,
+          });
+          const d2 = await r2.json();
+          if (r2.ok) {
+            return { success: true, messageId: d2.id };
+          }
+          return { success: false, error: d2.message || "Email dispatch failed after key fallback" };
+        }
       }
-    }
 
-    if (!res.ok) {
+      if (res.ok) {
+        return { success: true, messageId: data.id };
+      }
+
+      // Retry on transient / rate-limit errors with exponential backoff
+      if (RETRYABLE_STATUSES.includes(res.status) && attempt < MAX_ATTEMPTS) {
+        const backoffMs = Math.pow(2, attempt) * 1000; // 2s, 4s
+        console.warn(`[Email Gateway] Attempt ${attempt}/${MAX_ATTEMPTS} failed (HTTP ${res.status}). Retrying in ${backoffMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
+        continue;
+      }
+
       console.error("[Email Gateway Error]:", data);
-      return { success: false, error: data.message || "Failed to deliver email" };
+      return { success: false, error: data.message || `HTTP ${res.status} from Resend` };
+    } catch (error: any) {
+      if (attempt < MAX_ATTEMPTS) {
+        const backoffMs = Math.pow(2, attempt) * 1000;
+        console.warn(`[Email Gateway] Attempt ${attempt}/${MAX_ATTEMPTS} threw exception: ${error.message}. Retrying in ${backoffMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
+        continue;
+      }
+      console.error("[Email Gateway Dispatch Exception]:", error);
+      return { success: false, error: error.message || "Email dispatch failed" };
     }
-
-    return { success: true, messageId: data.id };
-  } catch (error: any) {
-    console.error("[Email Gateway Dispatch Exception]:", error);
-    return { success: false, error: error.message || "Email dispatch failed" };
   }
+
+  return { success: false, error: "Email dispatch failed after all retries" };
 }
 
 /**
@@ -711,7 +732,8 @@ ${getEmailFooter()}
 }
 
 /**
- * 5. Broadcast Signal Alert to subscribers & administrators
+ * 5. Broadcast Signal Alert to subscribers & administrators.
+ * Returns per-recipient results so the caller can persist accurate SENT/FAILED delivery statuses.
  */
 export async function dispatchSignalAlertEmails(params: {
   strategyName: string;
@@ -732,7 +754,11 @@ export async function dispatchSignalAlertEmails(params: {
   winRate?: number | string;
   profitFactor?: number | string;
   maxDrawdown?: number | string;
-}): Promise<{ dispatchedCount: number; errors: string[] }> {
+}): Promise<{
+  dispatchedCount: number;
+  errors: string[];
+  results: Array<{ email: string; success: boolean; messageId?: string; error?: string }>;
+}> {
   const recipients = new Set<string>();
 
   // Only dispatch to verified users who explicitly opted in/subscribed to this strategy
@@ -749,16 +775,18 @@ export async function dispatchSignalAlertEmails(params: {
 
   const recipientList = Array.from(recipients);
   if (recipientList.length === 0) {
-    return { dispatchedCount: 0, errors: [] };
+    return { dispatchedCount: 0, errors: [], results: [] };
   }
+
   let dispatchedCount = 0;
   const errors: string[] = [];
+  const results: Array<{ email: string; success: boolean; messageId?: string; error?: string }> = [];
 
   // Batch concurrent dispatch in chunks of 5 for optimal performance and rate-limit compliance
   const CHUNK_SIZE = 5;
   for (let i = 0; i < recipientList.length; i += CHUNK_SIZE) {
     const chunk = recipientList.slice(i, i + CHUNK_SIZE);
-    await Promise.allSettled(
+    const settled = await Promise.allSettled(
       chunk.map(async (recipient) => {
         try {
           const res = await sendSignalAlertEmail({
@@ -784,15 +812,33 @@ export async function dispatchSignalAlertEmails(params: {
 
           if (res.success) {
             dispatchedCount++;
-          } else if (res.error) {
-            errors.push(`${recipient}: ${res.error}`);
+            results.push({ email: recipient, success: true, messageId: res.messageId });
+          } else {
+            const errMsg = res.error || "Unknown dispatch error";
+            errors.push(`${recipient}: ${errMsg}`);
+            results.push({ email: recipient, success: false, error: errMsg });
+            console.error(`[Signal Email FAILED] ${recipient}: ${errMsg}`);
           }
         } catch (err: any) {
-          errors.push(`${recipient}: ${err.message}`);
+          const errMsg = err.message || "Exception during dispatch";
+          errors.push(`${recipient}: ${errMsg}`);
+          results.push({ email: recipient, success: false, error: errMsg });
+          console.error(`[Signal Email EXCEPTION] ${recipient}: ${errMsg}`);
         }
       })
     );
+
+    // Log any Promise.allSettled rejections (shouldn't happen with inner try/catch but be safe)
+    settled.forEach((s, idx) => {
+      if (s.status === "rejected") {
+        console.error(`[Signal Email allSettled rejection] chunk[${i + idx}]:`, s.reason);
+      }
+    });
   }
 
-  return { dispatchedCount, errors };
+  if (errors.length > 0) {
+    console.error(`[Signal Email Dispatch Summary] ${dispatchedCount} sent, ${errors.length} failed:`, errors);
+  }
+
+  return { dispatchedCount, errors, results };
 }

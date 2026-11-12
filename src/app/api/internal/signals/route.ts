@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
         tradeNumber = baseTrades + Math.floor(existingSignals.length / 2) + 1;
       }
 
-      let emailResult: { dispatchedCount: number; errors: string[] } = { dispatchedCount: 0, errors: [] };
+      let emailResult: { dispatchedCount: number; errors: string[]; results?: Array<{ email: string; success: boolean; messageId?: string; error?: string }> } = { dispatchedCount: 0, errors: [], results: [] };
       if (isPublicOnUi && result.subscriberEmails && result.subscriberEmails.length > 0) {
         try {
           emailResult = await dispatchSignalAlertEmails({
@@ -196,8 +196,36 @@ export async function POST(request: NextRequest) {
             sourceEventId: parsed.data.sourceEventId,
             extraRecipients: result.subscriberEmails,
           });
+
+          // ✅ Update delivery records with REAL outcomes (SENT/FAILED) from Resend response
+          if (emailResult.results && emailResult.results.length > 0) {
+            db.updateDeliveryStatuses(
+              emailResult.results.map(r => ({
+                recipientEmail: r.email,
+                signalId: result.signal.id,
+                status: r.success ? "SENT" : "FAILED",
+                providerMessageRef: r.messageId,
+                failureReason: r.error,
+                attemptCount: 1,
+              }))
+            ).catch(err => console.error("[Delivery Status Update Failed]:", err));
+          }
+
+          if (emailResult.errors.length > 0) {
+            console.error(`[Signal Route] Email dispatch errors for signal ${result.signal.id}:`, emailResult.errors);
+          }
         } catch (err) {
           console.error("[Signal Email Dispatch Failed]:", err);
+          // Mark all subscriber deliveries as FAILED
+          db.updateDeliveryStatuses(
+            result.subscriberEmails.map(email => ({
+              recipientEmail: email,
+              signalId: result.signal.id,
+              status: "FAILED" as const,
+              failureReason: (err as any)?.message || "Dispatch exception",
+              attemptCount: 1,
+            }))
+          ).catch(() => {});
         }
       }
 

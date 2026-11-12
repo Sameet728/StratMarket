@@ -1472,6 +1472,8 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
         }).toArray();
 
         for (const pref of enabledPrefs) {
+          // Only skip if alertTypes is non-empty AND does NOT include this signal type.
+          // Empty alertTypes [] means "all types" — do NOT skip.
           if (Array.isArray(pref.alertTypes) && pref.alertTypes.length > 0) {
             if (!pref.alertTypes.includes(payload.signalType)) {
               continue;
@@ -1551,7 +1553,8 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
       }
     }
 
-    // Create delivery records ONLY for explicitly subscribed users
+    // Create delivery records ONLY for explicitly subscribed users.
+    // Status starts as PENDING — updated to SENT/FAILED after actual dispatch.
     for (const sub of subscribedMap.values()) {
       const delivery: EmailDeliveryRecord = {
         id: "del_" + Math.random().toString(36).substring(2, 11),
@@ -1567,9 +1570,9 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
         entryPrice: newSignal.entryPrice,
         stopLoss: newSignal.stopLoss,
         targetPrice: newSignal.targetPrice,
-        deliveryStatus: "SENT",
-        attemptCount: 1,
-        providerMessageRef: "msg_" + Math.random().toString(36).substring(2, 14),
+        deliveryStatus: "PENDING" as any,
+        attemptCount: 0,
+        providerMessageRef: undefined,
         sentAt: now,
       };
 
@@ -1579,12 +1582,16 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
       subscriberEmails.push(sub.email);
     }
 
-    // Persist deliveries to MongoDB Atlas
+    // Persist PENDING delivery records to MongoDB Atlas BEFORE dispatching emails,
+    // so a crash/timeout during Resend call still leaves an auditable PENDING record.
     if (mdb && deliveriesToInsert.length > 0) {
       await mdb.collection("deliveries").insertMany(deliveriesToInsert.map(d => ({ ...d }))).catch(err => {
         console.warn("[MongoDB] Batch insert deliveries warning:", err?.message || err);
       });
     }
+
+    // Eagerly mark in-memory records as awaiting dispatch (non-blocking)
+    // Actual SENT/FAILED status is updated by the signals route after Resend responds.
 
     await this.createAuditEvent({
       action: "VPS_SIGNAL_INGESTED",
@@ -1754,6 +1761,56 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
     }
 
     return updatedCount;
+  },
+
+  /**
+   * Update delivery status for a batch of delivery records after actual Resend dispatch completes.
+   * Called by the signals route so PENDING records become SENT or FAILED with real provider messageId.
+   */
+  async updateDeliveryStatuses(updates: Array<{
+    recipientEmail: string;
+    signalId: string;
+    status: "SENT" | "FAILED" | "RETRYING";
+    providerMessageRef?: string;
+    failureReason?: string;
+    attemptCount?: number;
+  }>): Promise<void> {
+    const mdb = await getMongoDb();
+    const now = new Date();
+
+    for (const upd of updates) {
+      // Update in-memory store
+      for (const [id, del] of globalStore.deliveries.entries()) {
+        if (del.recipientEmail === upd.recipientEmail && del.signalId === upd.signalId) {
+          globalStore.deliveries.set(id, {
+            ...del,
+            deliveryStatus: upd.status,
+            providerMessageRef: upd.providerMessageRef || del.providerMessageRef,
+            failureReason: upd.failureReason,
+            attemptCount: upd.attemptCount ?? del.attemptCount,
+            sentAt: upd.status === "SENT" ? now : del.sentAt,
+          } as any);
+        }
+      }
+
+      // Update MongoDB
+      if (mdb) {
+        mdb.collection("deliveries").updateMany(
+          { recipientEmail: upd.recipientEmail, signalId: upd.signalId },
+          {
+            $set: {
+              deliveryStatus: upd.status,
+              ...(upd.providerMessageRef ? { providerMessageRef: upd.providerMessageRef } : {}),
+              ...(upd.failureReason ? { failureReason: upd.failureReason } : {}),
+              ...(upd.attemptCount !== undefined ? { attemptCount: upd.attemptCount } : {}),
+              updatedAt: now,
+            }
+          }
+        ).catch(err => {
+          console.error("[MongoDB] updateDeliveryStatuses error:", err?.message || err);
+        });
+      }
+    }
   },
 
   async getUserDeliveries(userId: string, limit: number = 50): Promise<EmailDeliveryRecord[]> {
