@@ -70,6 +70,8 @@ export function HeaderNav() {
     router.refresh();
   };
 
+  const isDashboardOrProfile = pathname?.startsWith("/dashboard") || pathname?.startsWith("/profile");
+
   return (
     <header id="nav" className={scrolled ? "s" : ""}>
       <div className="nav-left">
@@ -97,12 +99,16 @@ export function HeaderNav() {
       </span>
 
       <div className="r">
-        <Link href="/blog" className="pill g sm nav-desktop-only">
-          Blog
-        </Link>
-        <Link href="/docs" className="pill g sm nav-docs-link">
-          Docs
-        </Link>
+        {!isDashboardOrProfile && (
+          <>
+            <Link href="/blog" className="pill g sm nav-desktop-only">
+              Blog
+            </Link>
+            <Link href="/docs" className="pill g sm nav-docs-link">
+              Docs
+            </Link>
+          </>
+        )}
         {!loading && (
           <>
             {user ? (

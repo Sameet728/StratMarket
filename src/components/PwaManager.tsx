@@ -109,7 +109,7 @@ export function PwaManager() {
     setDismissed(true);
     try {
       localStorage.setItem("stratmarket_pwa_dismissed", Date.now().toString());
-    } catch (_) {}
+    } catch (_) { }
   };
 
   // Do not render anything if already installed as app or dismissed
@@ -301,3 +301,4 @@ export function PwaManager() {
     </>
   );
 }
+

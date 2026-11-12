@@ -44,7 +44,9 @@ export function DockNav() {
   };
 
   const isActive = (path: string) => {
+    if (!pathname) return false;
     if (path === "/" && pathname === "/") return true;
+    if (path === "/chart/all" && pathname.startsWith("/chart")) return true;
     if (path !== "/" && pathname.startsWith(path)) return true;
     return false;
   };
@@ -53,10 +55,11 @@ export function DockNav() {
     <nav
       id="dock"
       ref={dockRef}
-      aria-label="Main"
+      aria-label="Main Navigation Dock"
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
     >
+      {/* 1. Home */}
       <Link
         href="/"
         className="l"
@@ -78,6 +81,7 @@ export function DockNav() {
         </svg>
       </Link>
 
+      {/* 2. Marketplace */}
       <Link
         href="/market"
         className="l"
@@ -102,12 +106,13 @@ export function DockNav() {
         </svg>
       </Link>
 
+      {/* 3. Dashboard */}
       <Link
-        href="/research"
+        href="/dashboard"
         className="l"
-        data-t="Research"
-        aria-label="Research"
-        aria-current={isActive("/research") ? "true" : undefined}
+        data-t="Dashboard"
+        aria-label="Dashboard"
+        aria-current={isActive("/dashboard") ? "true" : undefined}
       >
         <svg
           width="20"
@@ -119,18 +124,19 @@ export function DockNav() {
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <circle cx="12" cy="12" r="2.4" />
-          <ellipse cx="12" cy="12" rx="10" ry="4" />
-          <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)" />
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M3 9h18" />
+          <path d="M9 21V9" />
         </svg>
       </Link>
 
+      {/* 4. Chart */}
       <Link
-        href="/blog"
+        href="/chart/all"
         className="l"
-        data-t="Blog"
-        aria-label="Quantitative Trading Blog"
-        aria-current={isActive("/blog") ? "true" : undefined}
+        data-t="Charts"
+        aria-label="Charts"
+        aria-current={isActive("/chart/all") ? "true" : undefined}
       >
         <svg
           width="20"
@@ -142,40 +148,17 @@ export function DockNav() {
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <path d="M12 20h9" />
-          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+          <path d="M3 3v18h18" />
+          <path d="M19 9l-5 5-4-4-3 3" />
         </svg>
       </Link>
 
-      <Link
-        href="/docs"
-        className="l"
-        data-t="Documentation"
-        aria-label="Documentation"
-        aria-current={isActive("/docs") ? "true" : undefined}
-      >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-          <path d="M9 7h6" />
-          <path d="M9 11h6" />
-        </svg>
-      </Link>
-
+      {/* 5. Profile */}
       <Link
         href="/profile"
         className="l"
         data-t="Profile"
-        aria-label="Account Profile & Alerts"
+        aria-label="Profile"
         aria-current={isActive("/profile") ? "true" : undefined}
       >
         <svg

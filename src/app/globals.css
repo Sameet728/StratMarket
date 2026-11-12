@@ -3962,15 +3962,17 @@ button, a, input, select, textarea, .chip, .card {
 }
 
 /* Standalone App Mode (Chrome App, Android PWA, iOS Home Screen App) */
-html.pwa-standalone {
-  -webkit-touch-callout: none;
-  overscroll-behavior-y: none;
-  -webkit-font-smoothing: antialiased;
+html.pwa-standalone,
+html.pwa-standalone body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
-html.pwa-standalone body {
-  /* Prevent rubber-band pulling over headers/footers in app mode */
-  overscroll-behavior-y: none;
+html, body {
+  overflow-y: auto !important;
 }
 
 /* Safe Area Insets for standalone window padding */
