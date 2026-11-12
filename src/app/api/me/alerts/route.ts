@@ -318,12 +318,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid recipient email address" }, { status: 400 });
     }
 
-    // Strict Limit: Check if user has already sent a test email (max 1 allowed per user)
+    // Check test email limit — but allow resend if DB flag is old (> 30 days) so user can re-verify
     const userRecord = await db.getUserById(user.id);
+    const testSentAt = (userRecord as any)?.testEmailSentAt ? new Date((userRecord as any).testEmailSentAt) : null;
+    const testSentAgeDays = testSentAt ? (Date.now() - testSentAt.getTime()) / (1000 * 60 * 60 * 24) : 999;
     const alreadySent = Boolean(
       (userRecord as any)?.testEmailSent ||
       ((userRecord as any)?.testEmailSentCount && (userRecord as any)?.testEmailSentCount >= 1)
-    );
+    ) && testSentAgeDays < 30; // Allow resend after 30 days
 
     if (alreadySent) {
       return NextResponse.json(
@@ -336,37 +338,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send sample signal email via verified institutional gateway with isTest: true
-    const emailRes = await sendSignalAlertEmail({
+    // Mark as sent BEFORE dispatching so the response is instant and doesn't risk Vercel timeout
+    await db.markUserTestEmailSent(user.id, targetEmail);
+
+    // Dispatch email non-blocking (fire-and-forget after response is sent)
+    // Using void to intentionally not await — Vercel will keep the lambda alive briefly after response
+    void sendSignalAlertEmail({
       to: targetEmail,
-      strategyName: "Grandmaster (82.6% WR)",
+      strategyName: "Grandmaster Dual 10R / 8R (80.0% WR)",
       strategyId: "PS-01",
       instrument: "XAUUSD",
       timeframe: "M15",
       signalType: "ENTRY",
-      direction: "LONG",
-      entryPrice: 3895.50,
-      stopLoss: 3881.50,
-      targetPrice: 3913.50,
+      direction: "SHORT",
+      entryPrice: 3995.16,
+      stopLoss: 4008.91,
+      targetPrice: 3981.00,
       timestamp: new Date(),
       sourceEventId: "evt_sample_test_" + Date.now(),
+      tradeNumber: 36,
       isTest: true,
+    }).then((emailRes) => {
+      if (!emailRes.success) {
+        console.error("[Test Email Dispatch Failed]:", emailRes.error, "→ recipient:", targetEmail);
+      } else {
+        console.log("[Test Email Sent] messageId:", emailRes.messageId, "→", targetEmail);
+      }
+    }).catch((err) => {
+      console.error("[Test Email Exception]:", err?.message || err);
     });
-
-    if (!emailRes.success) {
-      return NextResponse.json(
-        { error: emailRes.error || "Failed to dispatch sample signal email" },
-        { status: 502 }
-      );
-    }
-
-    // Atomically mark test email as sent in database
-    await db.markUserTestEmailSent(user.id, targetEmail);
 
     return NextResponse.json({
       success: true,
-      message: `Sample verification test email sent successfully to ${targetEmail}! Check your inbox. (Limit: 1/1 test email used)`,
-      messageId: emailRes.messageId,
+      message: `Sample verification test email dispatched to ${targetEmail}! Check your inbox within 30 seconds. (Limit: 1/1 test email used)`,
       alreadySent: true,
       testEmailSent: true,
     });
