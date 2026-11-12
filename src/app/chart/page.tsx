@@ -11,9 +11,9 @@ function ChartRedirectContent() {
     const target =
       searchParams.get("strategy") ||
       searchParams.get("id") ||
-      searchParams.get("s") ||
-      "PS-01";
-    router.replace(`/chart/${encodeURIComponent(target)}`);
+      searchParams.get("s");
+    // If no specific strategy is requested, go to the combined all-strategies chart
+    router.replace(target ? `/chart/${encodeURIComponent(target)}` : "/chart/all");
   }, [router, searchParams]);
 
   return (

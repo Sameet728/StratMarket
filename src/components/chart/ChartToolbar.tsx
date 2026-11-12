@@ -206,6 +206,22 @@ export function ChartToolbar({
           <span style={{ color: isLive ? "#a3e635" : "inherit" }}>{isLive ? "Live" : "Connecting"}</span>
         </div>
 
+        {/* Direct Link to Combined All-Strategies Chart */}
+        <Link
+          href="/chart/all"
+          className="chart-btn-clean chart-nav-link"
+          style={{ touchAction: "manipulation", textDecoration: "none" }}
+          title="View all strategies on one combined chart"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+          <span>All</span>
+        </Link>
+
         {/* Direct Link to Profile */}
         <Link
           href="/profile"
