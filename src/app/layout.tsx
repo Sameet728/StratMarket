@@ -10,17 +10,25 @@ import { PageTransitionWipe } from "@/components/PageTransitionWipe";
 import { SpotlightCursor } from "@/components/SpotlightCursor";
 import { SiteAnalyticsTracker } from "@/components/SiteAnalyticsTracker";
 import { ToastProvider } from "@/components/ui/Toast";
+import { PwaManager } from "@/components/PwaManager";
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#000000",
+  themeColor: "#09090b",
   viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://stratmarket.elvariscapital.in"),
+  manifest: "/manifest.webmanifest",
+  applicationName: "StratMarket",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "StratMarket",
+  },
   title: {
     default: "StratMarket by Elvaris Capital — Quantitative Trading Strategy Marketplace",
     template: "%s | StratMarket by Elvaris Capital (elvariscapital.in)",
@@ -75,9 +83,12 @@ export const metadata: Metadata = {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
       { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/logo.png", type: "image/png" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
     ],
-    apple: "/logo.png",
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
@@ -170,6 +181,7 @@ export default function RootLayout({
         </div>
         <TopProgressBar />
         <ToastProvider>
+          <PwaManager />
           <Suspense fallback={null}>
             <SiteAnalyticsTracker />
           </Suspense>

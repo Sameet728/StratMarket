@@ -11,6 +11,32 @@ export function HeaderNav() {
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<{ id: string; name: string; role: string; email: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [canInstall, setCanInstall] = useState(false);
+
+  useEffect(() => {
+    if (pathname?.startsWith("/chart")) return;
+
+    // Check if running in standalone mode
+    const isStandalone =
+      typeof window !== "undefined" &&
+      (window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true);
+    if (!isStandalone) {
+      const onPrompt = () => setCanInstall(true);
+      window.addEventListener("beforeinstallprompt", onPrompt);
+      return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+    }
+  }, [pathname]);
+
+  const handleInstallApp = async () => {
+    const prompt = (window as any).__stratmarket_pwa_prompt;
+    if (prompt) {
+      prompt.prompt();
+      const res = await prompt.userChoice;
+      if (res.outcome === "accepted") {
+        setCanInstall(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (pathname?.startsWith("/chart")) return;
@@ -112,6 +138,30 @@ export function HeaderNav() {
               </Link>
             )}
           </>
+        )}
+        {canInstall && (
+          <button
+            type="button"
+            onClick={handleInstallApp}
+            className="pill sm nav-desktop-only"
+            style={{
+              background: "rgba(163, 230, 53, 0.08)",
+              borderColor: "rgba(163, 230, 53, 0.35)",
+              color: "var(--lime)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "5px",
+              cursor: "pointer",
+            }}
+            title="Install StratMarket as Chrome / Desktop App"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span>Install App</span>
+          </button>
         )}
         <Link href="/market" className="pill sm nav-explore-btn">
           <span className="nav-explore-full">Explore strategies</span>

@@ -3945,3 +3945,37 @@ button, a, input, select, textarea, .chip, .card {
     padding-bottom: max(60px, calc(40px + env(safe-area-inset-bottom, 0px))) !important;
   }
 }
+
+/* =========================================================================
+   PROGRESSIVE WEB APP (PWA) & STANDALONE APP OPTIMIZATIONS
+   ========================================================================= */
+
+@keyframes pwaSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Standalone App Mode (Chrome App, Android PWA, iOS Home Screen App) */
+html.pwa-standalone {
+  -webkit-touch-callout: none;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+html.pwa-standalone body {
+  /* Prevent rubber-band pulling over headers/footers in app mode */
+  overscroll-behavior-y: none;
+}
+
+/* Safe Area Insets for standalone window padding */
+@supports (padding-top: env(safe-area-inset-top)) {
+  html.pwa-standalone header#nav {
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+}
