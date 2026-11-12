@@ -467,6 +467,32 @@ export const db = {
     }
   },
 
+  async resetUserTestEmailQuota(userId: string, userEmail?: string): Promise<void> {
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        const orConditions: any[] = [{ id: userId }, { email: userId }];
+        if (userEmail) {
+          orConditions.push({ email: userEmail.toLowerCase().trim() });
+        }
+        await mdb.collection("users").updateMany(
+          { $or: orConditions },
+          { $set: { testEmailSent: false, testEmailSentCount: 0, testEmailSentAt: null } }
+        );
+      } catch (e) {
+        console.error("Failed to reset testEmailSent quota:", e);
+      }
+    }
+    // Reset in-memory store too
+    for (const user of globalStore.users.values()) {
+      if (user.id === userId || (userEmail && user.email.toLowerCase() === userEmail.toLowerCase().trim())) {
+        (user as any).testEmailSent = false;
+        (user as any).testEmailSentCount = 0;
+        (user as any).testEmailSentAt = null;
+      }
+    }
+  },
+
   async createUser(data: {
     name: string;
     email: string;

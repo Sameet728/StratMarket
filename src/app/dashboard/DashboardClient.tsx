@@ -389,17 +389,15 @@ export function DashboardClient() {
 
   // Send sample test signal to destination email
   const handleSendTestSignal = async () => {
-    if (testEmailSent) {
-      setTestResult({
-        text: "You have already sent your verification test email (maximum 1 allowed per user).",
-        ok: false,
-      });
-      toast.warning("Test Quota Reached", "Maximum 1 verification test email allowed per registered account.");
-      return;
-    }
     setSendingTest(true);
     setTestResult(null);
     try {
+      // If quota was used before, auto-reset it first (handles API key rotation scenario)
+      if (testEmailSent) {
+        await fetch("/api/me/alerts/reset-test", { method: "DELETE" }).catch(() => {});
+        setTestEmailSent(false);
+      }
+
       const res = await fetch("/api/me/alerts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -409,21 +407,17 @@ export function DashboardClient() {
       if (res.ok && data.success) {
         setTestEmailSent(true);
         setTestResult({
-          text: `Sample verification test signal sent to ${destinationEmail || user?.email}! Check your inbox. (Limit: 1/1 test email used)`,
+          text: `Sample verification test signal dispatched to ${destinationEmail || user?.email}! Check your inbox within 30 seconds.`,
           ok: true,
         });
         toast.success(
           "Test Signal Dispatched",
-          `Verification alert delivered to ${destinationEmail || user?.email}! (1/1 test used)`
+          `Verification alert sent to ${destinationEmail || user?.email}!`
         );
       } else {
         if (data.alreadySent) setTestEmailSent(true);
         setTestResult({ text: data.error || "Failed to dispatch test signal.", ok: false });
-        if (data.alreadySent) {
-          toast.warning("Test Quota Reached", "Max 1 test email limit per user has already been reached.");
-        } else {
-          toast.error("Dispatch Failed", data.error || "Failed to dispatch test signal.");
-        }
+        toast.error("Dispatch Failed", data.error || "Failed to dispatch test signal.");
       }
     } catch {
       setTestResult({ text: "Network error sending test signal.", ok: false });
