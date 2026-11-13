@@ -3,6 +3,7 @@ import { isAuthorizedVpsOrWebhookRequest } from "@/lib/vps/security";
 import { db } from "@/lib/db";
 import { dispatchSignalAlertEmails } from "@/lib/email/resend";
 import { dispatchMt5WebhookRelays } from "@/lib/trading/mt5-relay";
+import { dispatchTelegramSignalAlert } from "@/lib/notifications/telegram";
 import { STRATEGY_BASE_TRADES } from "@/lib/trade-lifecycle";
 import { z } from "zod";
 
@@ -275,6 +276,27 @@ export async function POST(request: NextRequest) {
           timestamp: parsed.data.timestamp,
         }).catch((relayErr) => {
           console.error("[Signal Route] MT5 Webhook Relay Error:", relayErr);
+        });
+      }
+
+      // 6. Automated Telegram Instant Alerts: Dispatch to connected Telegram users (only for fresh signals)
+      if (isPublicOnUi && isFreshSignal && !isCooldownActive) {
+        dispatchTelegramSignalAlert({
+          strategyName,
+          strategyId: parsed.data.strategyId,
+          instrument: parsed.data.instrument,
+          timeframe: parsed.data.timeframe,
+          signalType: parsed.data.signalType,
+          direction: parsed.data.direction,
+          entryPrice: parsed.data.entryPrice,
+          stopLoss: parsed.data.stopLoss,
+          targetPrice: parsed.data.targetPrice,
+          exitPrice: typeof bodyData.exitPrice === "number" ? bodyData.exitPrice : undefined,
+          pnlR: bodyData.pnlR || bodyData.pnl_r,
+          tradeNumber,
+          timestamp: parsed.data.timestamp,
+        }).catch((tgErr) => {
+          console.error("[Signal Route] Telegram Dispatch Error:", tgErr);
         });
       }
 

@@ -166,6 +166,14 @@ export default function ProfilePage() {
   const [showBridgeModal, setShowBridgeModal] = useState(false);
   const [copiedScript, setCopiedScript] = useState(false);
 
+  // Telegram Bot Alerts State
+  const [telegramChatId, setTelegramChatId] = useState("1095699880");
+  const [telegramEnabled, setTelegramEnabled] = useState(true);
+  const [telegramBotUsername, setTelegramBotUsername] = useState("Stratmarket_ElvarisCapitalBot");
+  const [savingTelegram, setSavingTelegram] = useState(false);
+  const [testingTelegram, setTestingTelegram] = useState(false);
+  const [telegramStatusMsg, setTelegramStatusMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
   // Sync browser notification preference on mount
   useEffect(() => {
     setBrowserAlertsSupported(isNotificationSupported());
@@ -223,11 +231,12 @@ export default function ProfilePage() {
         setSignalEmail(meData.user.email);
         setLoading(false); // Instantly dismiss full-page spinner! User sees profile banner in <100ms
 
-        // 2. Fetch entitlements, alerts, and MT5 VPS trading webhook asynchronously in parallel
-        const [entRes, alertRes, webhookRes] = await Promise.all([
+        // 2. Fetch entitlements, alerts, MT5 VPS trading webhook, and Telegram settings in parallel
+        const [entRes, alertRes, webhookRes, tgRes] = await Promise.all([
           fetch("/api/me/entitlements"),
           fetch("/api/me/alerts"),
           fetch("/api/me/trading-webhook"),
+          fetch("/api/me/telegram"),
         ]);
 
         // Load trials, entitlements and purchase orders
@@ -317,6 +326,16 @@ export default function ProfilePage() {
         } catch (wbErr) {
           console.warn("Failed to load MT5 webhook config:", wbErr);
         }
+
+        // Load Telegram preferences
+        try {
+          const tgData = await tgRes.json().catch(() => ({}));
+          if (tgData) {
+            if (tgData.chatId) setTelegramChatId(tgData.chatId);
+            if (tgData.enabled !== undefined) setTelegramEnabled(Boolean(tgData.enabled));
+            if (tgData.botUsername) setTelegramBotUsername(tgData.botUsername);
+          }
+        } catch (_) {}
 
         // Cache full profile snapshot for instant 0ms restoration on subsequent visits
         try {
@@ -654,6 +673,63 @@ export default function ProfilePage() {
     }).catch(() => {
       toast.error("Copy Failed", "Please manually select and copy the code.");
     });
+  };
+
+  // ── Telegram Handlers ─────────────────────────────────────────────────────
+  const handleSaveTelegramSettings = async () => {
+    setSavingTelegram(true);
+    setTelegramStatusMsg(null);
+    try {
+      const res = await fetch("/api/me/telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chatId: telegramChatId.trim(), enabled: telegramEnabled }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTelegramStatusMsg({ text: "Telegram alerts saved successfully!", ok: true });
+        toast.success("Telegram Connected", "Trade alerts will now be sent to your Telegram.");
+      } else {
+        setTelegramStatusMsg({ text: data.error || "Failed to save.", ok: false });
+        toast.error("Save Failed", data.error || "Could not save Telegram settings.");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Network error";
+      setTelegramStatusMsg({ text: msg, ok: false });
+      toast.error("Network Error", "Failed to reach server.");
+    } finally {
+      setSavingTelegram(false);
+    }
+  };
+
+  const handleTestTelegramAlert = async () => {
+    if (!telegramChatId.trim()) {
+      toast.warning("Chat ID Required", "Enter your Telegram Chat ID first. Get it from @userinfobot");
+      return;
+    }
+    setTestingTelegram(true);
+    setTelegramStatusMsg(null);
+    try {
+      const res = await fetch("/api/me/telegram/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chatId: telegramChatId.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTelegramStatusMsg({ text: "✓ Test message sent! Check your Telegram.", ok: true });
+        toast.success("Telegram Test Sent!", "Check your Telegram for the test alert.");
+      } else {
+        setTelegramStatusMsg({ text: data.error || "Failed to send test.", ok: false });
+        toast.error("Test Failed", data.error || "Could not reach your Telegram chat. Make sure you started the bot first.");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Network error";
+      setTelegramStatusMsg({ text: msg, ok: false });
+      toast.error("Network Error", "Failed to reach server.");
+    } finally {
+      setTestingTelegram(false);
+    }
   };
 
   if (loading) {
@@ -1568,7 +1644,279 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* 3. CONNECT REAL TRADING ACCOUNT • MT5 VPS WEBHOOK RELAY */}
+            {/* 3. TELEGRAM INSTANT ALERTS */}
+            <div
+              className="card profile-section-card"
+              id="telegram-alerts"
+              style={{
+                padding: "28px",
+                border: "1px solid var(--line)",
+                borderRadius: 16,
+                background: "rgba(255, 255, 255, 0.02)",
+              }}
+            >
+              {/* Card Header */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 20,
+                  flexWrap: "wrap",
+                  gap: 10,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 10,
+                      background: "linear-gradient(135deg, #229ED9 0%, #1a7ab8 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 20,
+                      flexShrink: 0,
+                    }}
+                  >
+                    ✈️
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>
+                      Telegram Instant Alerts
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>
+                      Get live trade signals directly in your Telegram
+                    </div>
+                  </div>
+                </div>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    padding: "4px 10px",
+                    borderRadius: 20,
+                    background: telegramEnabled && telegramChatId
+                      ? "rgba(132, 204, 22, 0.15)"
+                      : "rgba(113, 113, 122, 0.15)",
+                    color: telegramEnabled && telegramChatId
+                      ? "var(--lime)"
+                      : "var(--mut)",
+                    border: `1px solid ${telegramEnabled && telegramChatId ? "rgba(132,204,22,0.3)" : "rgba(113,113,122,0.3)"}`,
+                  }}
+                >
+                  {telegramEnabled && telegramChatId ? "● ACTIVE" : "○ NOT CONNECTED"}
+                </span>
+              </div>
+
+              {/* Setup instructions */}
+              <div
+                style={{
+                  background: "rgba(34, 158, 217, 0.08)",
+                  border: "1px solid rgba(34, 158, 217, 0.2)",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  marginBottom: 20,
+                  fontSize: 13,
+                  color: "var(--mut)",
+                  lineHeight: 1.6,
+                }}
+              >
+                <span style={{ color: "#fff", fontWeight: 600 }}>Setup in 2 steps:</span>
+                <br />
+                1. Open Telegram → search{" "}
+                <a
+                  href={`https://t.me/${telegramBotUsername}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#229ED9", textDecoration: "none", fontWeight: 600 }}
+                >
+                  @{telegramBotUsername}
+                </a>{" "}
+                → tap <strong style={{ color: "#fff" }}>START</strong>
+                <br />
+                2. Message{" "}
+                <a
+                  href="https://t.me/userinfobot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#229ED9", textDecoration: "none", fontWeight: 600 }}
+                >
+                  @userinfobot
+                </a>{" "}
+                to get your Chat ID → paste it below
+              </div>
+
+              {/* Chat ID Input */}
+              <div style={{ marginBottom: 16 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "var(--mut)",
+                    marginBottom: 6,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  Your Telegram Chat ID
+                </label>
+                <input
+                  type="text"
+                  value={telegramChatId}
+                  onChange={(e) => setTelegramChatId(e.target.value)}
+                  placeholder="e.g. 1095699880"
+                  style={{
+                    width: "100%",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid var(--line)",
+                    borderRadius: 8,
+                    padding: "10px 14px",
+                    fontSize: 14,
+                    color: "#fff",
+                    outline: "none",
+                    boxSizing: "border-box",
+                    fontFamily: "monospace",
+                  }}
+                />
+              </div>
+
+              {/* Enable toggle */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 20,
+                  padding: "12px 14px",
+                  background: "rgba(255,255,255,0.03)",
+                  borderRadius: 8,
+                  border: "1px solid var(--line)",
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>
+                    Enable Telegram Alerts
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 2 }}>
+                    Receive PS-01, PS-02, PS-03 trade signals instantly
+                  </div>
+                </div>
+                <button
+                  onClick={() => setTelegramEnabled(!telegramEnabled)}
+                  style={{
+                    width: 44,
+                    height: 24,
+                    borderRadius: 12,
+                    border: "none",
+                    cursor: "pointer",
+                    background: telegramEnabled ? "var(--lime)" : "rgba(113,113,122,0.4)",
+                    position: "relative",
+                    transition: "background 0.2s",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 3,
+                      left: telegramEnabled ? 22 : 3,
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      background: "#fff",
+                      transition: "left 0.2s",
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Status Message */}
+              {telegramStatusMsg && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 8,
+                    marginBottom: 16,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    background: telegramStatusMsg.ok
+                      ? "rgba(132, 204, 22, 0.1)"
+                      : "rgba(239, 68, 68, 0.1)",
+                    border: `1px solid ${telegramStatusMsg.ok ? "rgba(132,204,22,0.3)" : "rgba(239,68,68,0.3)"}`,
+                    color: telegramStatusMsg.ok ? "var(--lime)" : "#f87171",
+                  }}
+                >
+                  {telegramStatusMsg.text}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button
+                  onClick={handleSaveTelegramSettings}
+                  disabled={savingTelegram}
+                  style={{
+                    flex: 1,
+                    minWidth: 140,
+                    padding: "11px 20px",
+                    borderRadius: 8,
+                    border: "none",
+                    background: savingTelegram ? "rgba(132,204,22,0.4)" : "var(--lime)",
+                    color: "#000",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: savingTelegram ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                  }}
+                >
+                  {savingTelegram ? (
+                    <>
+                      <span className="chart-spinner" style={{ width: 14, height: 14, border: "2px solid #000", borderTopColor: "transparent" }} />
+                      Saving...
+                    </>
+                  ) : (
+                    "💾 Save Settings"
+                  )}
+                </button>
+                <button
+                  onClick={handleTestTelegramAlert}
+                  disabled={testingTelegram || !telegramChatId.trim()}
+                  style={{
+                    flex: 1,
+                    minWidth: 140,
+                    padding: "11px 20px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(34,158,217,0.4)",
+                    background: "rgba(34,158,217,0.1)",
+                    color: testingTelegram || !telegramChatId.trim() ? "var(--mut)" : "#229ED9",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: testingTelegram || !telegramChatId.trim() ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                  }}
+                >
+                  {testingTelegram ? (
+                    <>
+                      <span className="chart-spinner" style={{ width: 14, height: 14, border: "2px solid #229ED9", borderTopColor: "transparent" }} />
+                      Sending...
+                    </>
+                  ) : (
+                    "✈️ Send Test Alert"
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* 4. CONNECT REAL TRADING ACCOUNT • MT5 VPS WEBHOOK RELAY */}
             <div
               className="card profile-section-card"
               id="mt5-trading-relay"

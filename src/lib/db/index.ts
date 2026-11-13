@@ -140,6 +140,17 @@ export interface UserTradingWebhookRecord {
   updatedAt: Date;
 }
 
+export interface UserTelegramPreferenceRecord {
+  id: string;
+  userId: string;
+  userEmail: string;
+  chatId: string;
+  enabled: boolean;
+  strategyAlerts?: Record<string, boolean>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface AuditEventRecord {
   id: string;
   userId?: string | null;
@@ -209,6 +220,7 @@ class RepositoryStore {
   deliveries: Map<string, EmailDeliveryRecord> = new Map();
   connections: Map<string, TradingConnectionRecord> = new Map();
   userTradingWebhooks: Map<string, UserTradingWebhookRecord> = new Map();
+  telegramPreferences: Map<string, UserTelegramPreferenceRecord> = new Map();
   auditEvents: AuditEventRecord[] = [];
   subscriptions: Map<string, SubscriptionRecord> = new Map();
   orders: Map<string, any> = new Map();
@@ -361,6 +373,18 @@ class RepositoryStore {
       },
     ];
     defaultAlerts.forEach((a) => this.alerts.set(a.id, a));
+
+    // Pre-seed Telegram Alerts for primary trader account
+    this.telegramPreferences.set("usr_sam_01", {
+      id: "tg_pref_usr_sam_01",
+      userId: "usr_sam_01",
+      userEmail: "sameetpisal728@gmail.com",
+      chatId: "1095699880",
+      enabled: true,
+      strategyAlerts: { "PS-01": true, "PS-02": true, "PS-03": true },
+      createdAt: new Date("2026-01-01"),
+      updatedAt: new Date(),
+    });
 
     // Initial signals for demonstration
     const sampleSignals: SignalRecord[] = [
@@ -2333,6 +2357,155 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
       inMemory.lastError = outcome.error;
       inMemory.recentRelays = [outcome, ...(inMemory.recentRelays || [])].slice(0, 20);
     }
+  },
+
+  // USER TELEGRAM ALERTS
+  async getUserTelegramSettings(userId: string, userEmail?: string): Promise<UserTelegramPreferenceRecord> {
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        const query: any[] = [{ userId }];
+        if (userEmail && userEmail.includes("@")) {
+          query.push({ userEmail: userEmail.toLowerCase() });
+        }
+        const doc = await mdb.collection("user_telegram_preferences").findOne({
+          $or: query,
+        });
+        if (doc) {
+          return {
+            id: doc.id || doc._id?.toString(),
+            userId: doc.userId || userId,
+            userEmail: doc.userEmail || userEmail || "",
+            chatId: doc.chatId || "",
+            enabled: Boolean(doc.enabled),
+            strategyAlerts: doc.strategyAlerts,
+            createdAt: new Date(doc.createdAt || Date.now()),
+            updatedAt: new Date(doc.updatedAt || Date.now()),
+          };
+        }
+      } catch (err) {
+        console.warn("[MongoDB] getUserTelegramSettings note:", err);
+      }
+    }
+
+    if (!globalStore.telegramPreferences) globalStore.telegramPreferences = new Map();
+    const inMemory = globalStore.telegramPreferences.get(userId);
+    if (inMemory) return { ...inMemory };
+
+    // Default pre-seeded for primary owner sameetpisal728@gmail.com
+    const isOwner = userEmail?.toLowerCase() === "sameetpisal728@gmail.com" || userId === "usr_sam_01";
+    return {
+      id: "tg_pref_" + userId,
+      userId,
+      userEmail: userEmail || "",
+      chatId: isOwner ? "1095699880" : "",
+      enabled: isOwner,
+      strategyAlerts: { "PS-01": true, "PS-02": true, "PS-03": true },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  },
+
+  async saveUserTelegramSettings(
+    userId: string,
+    data: { chatId: string; enabled: boolean; userEmail?: string; strategyAlerts?: Record<string, boolean> }
+  ): Promise<UserTelegramPreferenceRecord> {
+    const existing = await this.getUserTelegramSettings(userId, data.userEmail);
+    const mdb = await getMongoDb();
+    const user = await this.getUserById(userId);
+    const resolvedEmail = data.userEmail || user?.email || existing?.userEmail || "";
+
+    const record: UserTelegramPreferenceRecord = {
+      id: existing?.id || "tg_pref_" + Math.random().toString(36).substring(2, 11),
+      userId,
+      userEmail: resolvedEmail.toLowerCase(),
+      chatId: data.chatId.trim(),
+      enabled: Boolean(data.enabled),
+      strategyAlerts: data.strategyAlerts || existing?.strategyAlerts || { "PS-01": true, "PS-02": true, "PS-03": true },
+      createdAt: existing?.createdAt || new Date(),
+      updatedAt: new Date(),
+    };
+
+    if (mdb) {
+      try {
+        await mdb.collection("user_telegram_preferences").updateOne(
+          { userId },
+          { $set: { ...record } },
+          { upsert: true }
+        );
+      } catch (err) {
+        console.warn("[MongoDB] saveUserTelegramSettings error:", err);
+      }
+    }
+
+    if (!globalStore.telegramPreferences) globalStore.telegramPreferences = new Map();
+    globalStore.telegramPreferences.set(userId, record);
+
+    await this.createAuditEvent({
+      userId,
+      action: "TELEGRAM_ALERTS_UPDATED",
+      entityType: "TELEGRAM",
+      entityId: record.id,
+      details: JSON.stringify({
+        enabled: record.enabled,
+        chatId: record.chatId ? record.chatId.slice(0, 3) + "***" : "none",
+      }),
+    });
+
+    return record;
+  },
+
+  async getAllActiveTelegramRecipients(strategyId?: string): Promise<Array<{ userId: string; userEmail: string; chatId: string }>> {
+    const normalized = strategyId?.trim().toUpperCase();
+    const mdb = await getMongoDb();
+    const results: Array<{ userId: string; userEmail: string; chatId: string }> = [];
+
+    if (mdb) {
+      try {
+        const docs = await mdb.collection("user_telegram_preferences").find({
+          enabled: true,
+          chatId: { $exists: true, $ne: "" },
+        }).toArray();
+
+        for (const doc of docs) {
+          if (!doc.chatId) continue;
+          if (normalized && doc.strategyAlerts && doc.strategyAlerts[normalized] === false) continue;
+          results.push({
+            userId: doc.userId,
+            userEmail: doc.userEmail,
+            chatId: doc.chatId,
+          });
+        }
+      } catch (err) {
+        console.warn("[MongoDB] getAllActiveTelegramRecipients note:", err);
+      }
+    }
+
+    if (globalStore.telegramPreferences) {
+      for (const pref of globalStore.telegramPreferences.values()) {
+        if (pref.enabled && pref.chatId) {
+          if (normalized && pref.strategyAlerts && pref.strategyAlerts[normalized] === false) continue;
+          if (!results.some(r => r.chatId === pref.chatId)) {
+            results.push({
+              userId: pref.userId,
+              userEmail: pref.userEmail,
+              chatId: pref.chatId,
+            });
+          }
+        }
+      }
+    }
+
+    // Guaranteed fallback for sameetpisal728@gmail.com
+    if (!results.some(r => r.chatId === "1095699880")) {
+      results.push({
+        userId: "usr_sam_01",
+        userEmail: "sameetpisal728@gmail.com",
+        chatId: "1095699880",
+      });
+    }
+
+    return results;
   },
 
   // PLANS & SUBSCRIPTIONS
