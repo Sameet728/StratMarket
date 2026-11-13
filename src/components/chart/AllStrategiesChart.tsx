@@ -126,9 +126,15 @@ export function AllStrategiesChart({ initialUser }: Props) {
   const [tooltip, setTooltip] = useState<TooltipState>({ visible: false, x: 0, y: 0, strategyId: "", tradeType: "", direction: "", entry: 0, tp: 0, sl: 0 });
   const [livePrice, setLivePrice] = useState<number | null>(null);
   const [browserAlerts, setBrowserAlerts] = useState(false);
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
 
   useEffect(() => {
     setBrowserAlerts(getBrowserAlertPreference());
+    const handleResize = () => setIsMobileScreen(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleToggleBrowserAlerts = async () => {
@@ -441,224 +447,431 @@ export function AllStrategiesChart({ initialUser }: Props) {
   return (
     <div className="chart-layout-root">
       {/* ── TOP TOOLBAR ─────────────────────────────────────────────────── */}
-      <div
-        className="chart-toolbar"
-        style={{ height: "auto", minHeight: 54, flexWrap: "wrap", gap: 6, padding: "0 12px" }}
-      >
-        {/* Left — brand + back */}
-        <div className="chart-toolbar-left" style={{ gap: 8 }}>
-          <Link href="/dashboard" className="chart-back-btn" aria-label="Dashboard">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </Link>
-          <StratMarketLogo size={22} />
-          <div className="chart-brand" style={{ fontSize: 14 }}>STRATMARKET</div>
-          <div className="chart-divider" />
-
-          {/* Strategy badge */}
+      {isMobileScreen ? (
+        <>
+          {/* Mobile Compact Top Bar */}
           <div
             style={{
+              height: 46,
               display: "flex",
               alignItems: "center",
-              gap: 6,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 8,
-              padding: "4px 10px",
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#ffffff",
-              whiteSpace: "nowrap",
+              justifyContent: "space-between",
+              padding: "0 10px",
+              background: "#09090b",
+              borderBottom: "1px solid #18181b",
+              gap: 8,
             }}
           >
-            ALL STRATEGIES · XAUUSD 15m
-          </div>
-        </div>
+            {/* Left: Back + Logo + Title */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+              <Link href="/dashboard" className="chart-back-btn" aria-label="Dashboard" style={{ width: 28, height: 28 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </Link>
+              <StratMarketLogo size={18} />
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.2px", whiteSpace: "nowrap" }}>
+                ALL <span style={{ color: "var(--lime)", fontSize: 11 }}>15m</span>
+              </div>
+            </div>
 
-        {/* Center — per-strategy filter pills */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          {STRATEGIES.map((id) => {
-            const p = STRATEGY_PALETTE[id];
-            const active = activeFilters.has(id);
-            return (
-              <button
-                key={id}
-                onClick={() => toggleStrategy(id)}
+            {/* Right: Price + Boxes + Legend Info Toggle */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+              {/* Live price */}
+              <div
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 6,
-                  height: 32,
-                  padding: "0 10px",
-                  border: `1px solid ${active ? p.dot : "rgba(255,255,255,0.12)"}`,
-                  borderRadius: 8,
-                  background: active ? `${p.dot}22` : "transparent",
-                  color: active ? p.dot : "#52525b",
+                  gap: 5,
+                  height: 28,
+                  padding: "0 8px",
+                  border: "1px solid rgba(163,230,53,0.3)",
+                  borderRadius: 6,
+                  background: "rgba(163,230,53,0.08)",
                   fontSize: 11,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  transition: "all 0.15s",
+                  fontWeight: 800,
+                  color: "#a3e635",
+                  fontFamily: "JetBrains Mono, monospace",
                   whiteSpace: "nowrap",
                 }}
               >
                 <span
                   style={{
-                    width: 8,
-                    height: 8,
+                    width: 5,
+                    height: 5,
                     borderRadius: "50%",
-                    background: active ? p.dot : "#52525b",
-                    flexShrink: 0,
+                    background: "#a3e635",
+                    animation: "pulse-dot 1.4s infinite",
                   }}
                 />
-                {id}
+                {livePrice ? `$${livePrice.toFixed(2)}` : "XAUUSD"}
+              </div>
+
+              {/* Boxes button */}
+              <button
+                type="button"
+                onClick={toggleBoxes}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  height: 28,
+                  padding: "0 8px",
+                  border: `1px solid ${showBoxes ? "#a3e635" : "rgba(255,255,255,0.15)"}`,
+                  borderRadius: 6,
+                  background: showBoxes ? "rgba(163,230,53,0.12)" : "transparent",
+                  color: showBoxes ? "#a3e635" : "#71717a",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <line x1="3" y1="9" x2="21" y2="9" />
+                  <line x1="9" y1="21" x2="9" y2="9" />
+                </svg>
+                Boxes
               </button>
-            );
-          })}
-        </div>
 
-        {/* Right — controls */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto", flexShrink: 0 }}>
-          {/* Position Boxes toggle */}
-          <button
-            onClick={toggleBoxes}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              height: 32,
-              padding: "0 10px",
-              border: `1px solid ${showBoxes ? "#a3e635" : "rgba(255,255,255,0.15)"}`,
-              borderRadius: 8,
-              background: showBoxes ? "rgba(163,230,53,0.1)" : "transparent",
-              color: showBoxes ? "#a3e635" : "#71717a",
-              fontSize: 11,
-              fontWeight: 700,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <line x1="3" y1="9" x2="21" y2="9" />
-              <line x1="9" y1="21" x2="9" y2="9" />
-            </svg>
-            Boxes
-          </button>
-
-          {/* Live price */}
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              height: 32,
-              padding: "0 10px",
-              border: "1px solid rgba(163,230,53,0.3)",
-              borderRadius: 8,
-              background: "rgba(163,230,53,0.08)",
-              fontSize: 12,
-              fontWeight: 800,
-              color: "#a3e635",
-              fontFamily: "JetBrains Mono, monospace",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: "50%",
-                background: "#a3e635",
-                animation: "pulse-dot 1.4s infinite",
-              }}
-            />
-            {livePrice ? `$${livePrice.toFixed(2)}` : "XAUUSD"}
+              {/* Info / Legend Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowLegend((v) => !v)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 28,
+                  height: 28,
+                  border: `1px solid ${showLegend ? "#a3e635" : "rgba(255,255,255,0.15)"}`,
+                  borderRadius: 6,
+                  background: showLegend ? "rgba(163,230,53,0.18)" : "transparent",
+                  color: showLegend ? "#a3e635" : "#a1a1aa",
+                  cursor: "pointer",
+                }}
+                title="Toggle Strategy Details & Trade Counts"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+              </button>
+            </div>
           </div>
 
-          {/* Individual chart links */}
-          {STRATEGIES.map((id) => (
-            <Link
-              key={id}
-              href={`/chart/${id}`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                height: 32,
-                padding: "0 10px",
-                border: `1px solid ${STRATEGY_PALETTE[id].dot}44`,
-                borderRadius: 8,
-                background: `${STRATEGY_PALETTE[id].dot}11`,
-                color: STRATEGY_PALETTE[id].dot,
-                fontSize: 11,
-                fontWeight: 700,
-                textDecoration: "none",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {id} →
-            </Link>
-          ))}
-        </div>
-      </div>
+          {/* Mobile Scrollable Strategy Pills Row */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 10px",
+              overflowX: "auto",
+              whiteSpace: "nowrap",
+              background: "#0a0a0c",
+              borderBottom: "1px solid #1f1f23",
+              scrollbarWidth: "none",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
+            {STRATEGIES.map((id) => {
+              const p = STRATEGY_PALETTE[id];
+              const active = activeFilters.has(id);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => toggleStrategy(id)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 5,
+                    height: 28,
+                    padding: "0 8px",
+                    border: `1px solid ${active ? p.dot : "rgba(255,255,255,0.12)"}`,
+                    borderRadius: 6,
+                    background: active ? `${p.dot}22` : "transparent",
+                    color: active ? p.dot : "#71717a",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: active ? p.dot : "#52525b",
+                      flexShrink: 0,
+                    }}
+                  />
+                  {id}
+                </button>
+              );
+            })}
 
-      {/* ── LEGEND BAR ─────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 20,
-          padding: "6px 16px",
-          background: "#0a0a0b",
-          borderBottom: "1px solid #1f1f23",
-          flexWrap: "wrap",
-        }}
-      >
-        {STRATEGIES.map((id) => {
-          const p = STRATEGY_PALETTE[id];
-          const d = strategyData[id];
-          const count = d?.tradeBoxes?.length || 0;
-          const active = activeFilters.has(id);
-          return (
+            <div style={{ width: 1, height: 16, background: "#27272a", margin: "0 2px", flexShrink: 0 }} />
+
+            {STRATEGIES.map((id) => (
+              <Link
+                key={id}
+                href={`/chart/${id}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  height: 28,
+                  padding: "0 8px",
+                  border: `1px solid ${STRATEGY_PALETTE[id].dot}44`,
+                  borderRadius: 6,
+                  background: `${STRATEGY_PALETTE[id].dot}11`,
+                  color: STRATEGY_PALETTE[id].dot,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                {id} →
+              </Link>
+            ))}
+          </div>
+        </>
+      ) : (
+        /* Desktop Toolbar */
+        <div
+          className="chart-toolbar"
+          style={{ height: "auto", minHeight: 54, flexWrap: "wrap", gap: 6, padding: "0 12px" }}
+        >
+          {/* Left — brand + back */}
+          <div className="chart-toolbar-left" style={{ gap: 8 }}>
+            <Link href="/dashboard" className="chart-back-btn" aria-label="Dashboard">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </Link>
+            <StratMarketLogo size={22} />
+            <div className="chart-brand" style={{ fontSize: 14 }}>STRATMARKET</div>
+            <div className="chart-divider" />
+
+            {/* Strategy badge */}
             <div
-              key={id}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
-                opacity: active ? 1 : 0.35,
-                fontSize: 11,
-                color: "#a1a1aa",
+                gap: 6,
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 8,
+                padding: "4px 10px",
+                fontSize: 12,
+                fontWeight: 700,
+                color: "#ffffff",
+                whiteSpace: "nowrap",
               }}
             >
-              {/* Color swatch */}
-              <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
-                <div style={{ width: 20, height: 10, background: p.tpFill, border: `1px solid ${p.tpBorder}`, borderRadius: 2 }} />
-                <div style={{ width: 20, height: 10, background: p.slFill, border: `1px solid ${p.slBorder}`, borderRadius: 2 }} />
-              </div>
-              <span style={{ fontWeight: 700, color: p.dot }}>{id}</span>
-              <span style={{ color: "#52525b" }}>·</span>
-              <span>{p.name}</span>
+              ALL STRATEGIES · XAUUSD 15m
+            </div>
+          </div>
+
+          {/* Center — per-strategy filter pills */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            {STRATEGIES.map((id) => {
+              const p = STRATEGY_PALETTE[id];
+              const active = activeFilters.has(id);
+              return (
+                <button
+                  key={id}
+                  onClick={() => toggleStrategy(id)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    height: 32,
+                    padding: "0 10px",
+                    border: `1px solid ${active ? p.dot : "rgba(255,255,255,0.12)"}`,
+                    borderRadius: 8,
+                    background: active ? `${p.dot}22` : "transparent",
+                    color: active ? p.dot : "#52525b",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: active ? p.dot : "#52525b",
+                      flexShrink: 0,
+                    }}
+                  />
+                  {id}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right — controls */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto", flexShrink: 0 }}>
+            {/* Position Boxes toggle */}
+            <button
+              onClick={toggleBoxes}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                height: 32,
+                padding: "0 10px",
+                border: `1px solid ${showBoxes ? "#a3e635" : "rgba(255,255,255,0.15)"}`,
+                borderRadius: 8,
+                background: showBoxes ? "rgba(163,230,53,0.1)" : "transparent",
+                color: showBoxes ? "#a3e635" : "#71717a",
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="3" y1="9" x2="21" y2="9" />
+                <line x1="9" y1="21" x2="9" y2="9" />
+              </svg>
+              Boxes
+            </button>
+
+            {/* Live price */}
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                height: 32,
+                padding: "0 10px",
+                border: "1px solid rgba(163,230,53,0.3)",
+                borderRadius: 8,
+                background: "rgba(163,230,53,0.08)",
+                fontSize: 12,
+                fontWeight: 800,
+                color: "#a3e635",
+                fontFamily: "JetBrains Mono, monospace",
+                whiteSpace: "nowrap",
+              }}
+            >
               <span
                 style={{
-                  background: `${p.dot}22`,
-                  color: p.dot,
-                  border: `1px solid ${p.dot}44`,
-                  borderRadius: 4,
-                  padding: "1px 6px",
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: "#a3e635",
+                  animation: "pulse-dot 1.4s infinite",
+                }}
+              />
+              {livePrice ? `$${livePrice.toFixed(2)}` : "XAUUSD"}
+            </div>
+
+            {/* Individual chart links */}
+            {STRATEGIES.map((id) => (
+              <Link
+                key={id}
+                href={`/chart/${id}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  height: 32,
+                  padding: "0 10px",
+                  border: `1px solid ${STRATEGY_PALETTE[id].dot}44`,
+                  borderRadius: 8,
+                  background: `${STRATEGY_PALETTE[id].dot}11`,
+                  color: STRATEGY_PALETTE[id].dot,
+                  fontSize: 11,
                   fontWeight: 700,
-                  fontSize: 10,
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
                 }}
               >
-                {count} trades
-              </span>
-            </div>
-          );
-        })}
-        <div style={{ marginLeft: "auto", fontSize: 10, color: "#52525b" }}>
-          XAUUSD · 15m · IST · Hover boxes for strategy info
+                {id} →
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ── LEGEND BAR ─────────────────────────────────────────────────────── */}
+      {(!isMobileScreen || showLegend) && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: isMobileScreen ? 10 : 20,
+            padding: isMobileScreen ? "8px 12px" : "6px 16px",
+            background: "#0a0a0b",
+            borderBottom: "1px solid #1f1f23",
+            flexWrap: "wrap",
+            fontSize: isMobileScreen ? 10 : 11,
+          }}
+        >
+          {STRATEGIES.map((id) => {
+            const p = STRATEGY_PALETTE[id];
+            const d = strategyData[id];
+            const count = d?.tradeBoxes?.length || 0;
+            const active = activeFilters.has(id);
+            return (
+              <div
+                key={id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  opacity: active ? 1 : 0.35,
+                  color: "#a1a1aa",
+                }}
+              >
+                {/* Color swatch */}
+                <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
+                  <div style={{ width: 16, height: 8, background: p.tpFill, border: `1px solid ${p.tpBorder}`, borderRadius: 2 }} />
+                  <div style={{ width: 16, height: 8, background: p.slFill, border: `1px solid ${p.slBorder}`, borderRadius: 2 }} />
+                </div>
+                <span style={{ fontWeight: 700, color: p.dot }}>{id}</span>
+                {!isMobileScreen && (
+                  <>
+                    <span style={{ color: "#52525b" }}>·</span>
+                    <span>{p.name}</span>
+                  </>
+                )}
+                <span
+                  style={{
+                    background: `${p.dot}22`,
+                    color: p.dot,
+                    border: `1px solid ${p.dot}44`,
+                    borderRadius: 4,
+                    padding: "1px 5px",
+                    fontWeight: 700,
+                    fontSize: 9,
+                  }}
+                >
+                  {count} trades
+                </span>
+              </div>
+            );
+          })}
+          {!isMobileScreen && (
+            <div style={{ marginLeft: "auto", fontSize: 10, color: "#52525b" }}>
+              XAUUSD · 15m · IST · Hover boxes for strategy info
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── CHART BODY ─────────────────────────────────────────────────────── */}
       <div className="chart-main-body">

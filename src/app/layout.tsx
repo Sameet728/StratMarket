@@ -11,6 +11,7 @@ import { SpotlightCursor } from "@/components/SpotlightCursor";
 import { SiteAnalyticsTracker } from "@/components/SiteAnalyticsTracker";
 import { ToastProvider } from "@/components/ui/Toast";
 import { PwaManager } from "@/components/PwaManager";
+import { AppSplashScreen } from "@/components/AppSplashScreen";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -181,6 +182,7 @@ export default function RootLayout({
         </div>
         <TopProgressBar />
         <ToastProvider>
+          <AppSplashScreen />
           <PwaManager />
           <Suspense fallback={null}>
             <SiteAnalyticsTracker />

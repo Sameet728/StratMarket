@@ -397,19 +397,19 @@ a {
 /* Floating Dock Navigation */
 #dock {
   position: fixed;
-  bottom: 18px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 45;
   display: flex;
   align-items: flex-end;
-  gap: 20px;
-  padding: 10px 16px;
+  gap: 16px;
+  padding: 10px 18px;
   border: 1px solid #2c2c2c;
-  border-radius: 24px;
-  background: rgba(10, 10, 10, 0.75);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  border-radius: 28px;
+  background: rgba(10, 10, 10, 0.78);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   box-shadow: 0 20px 70px -10px rgba(255, 255, 255, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   animation: dk 1s 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
@@ -420,10 +420,10 @@ a {
 
 #dock a.l {
   position: relative;
-  width: 46px;
-  height: 46px;
+  width: 52px;
+  height: 52px;
   padding: 0;
-  border-radius: 14px;
+  border-radius: 16px;
   background: #111;
   box-shadow: inset 0 0 0 1px #2a2a2a;
   display: grid;
@@ -432,6 +432,11 @@ a {
   transform-origin: 50% 100%;
   transform: scale(calc(1 + var(--g, 0) * 0.65));
   transition: transform 0.12s, background 0.3s, color 0.3s;
+}
+
+#dock a.l svg {
+  width: 22px;
+  height: 22px;
 }
 
 #dock a.l[aria-current="true"] {
@@ -3547,30 +3552,36 @@ button, a, input, select, textarea, .chip, .card {
     display: inline !important;
   }
 
-  /* Dock Navigation - Responsive, Centered & Safe Area Aware */
+  /* Dock Navigation - Responsive, Centered & Safe Area Aware with iOS-style Scroll */
   #dock {
-    bottom: max(10px, calc(6px + env(safe-area-inset-bottom, 0px))) !important;
-    gap: 6px !important;
-    padding: 6px 8px !important;
-    max-width: calc(100vw - 20px) !important;
+    bottom: max(14px, calc(10px + env(safe-area-inset-bottom, 0px))) !important;
+    gap: 12px !important;
+    padding: 8px 14px !important;
+    max-width: calc(100vw - 24px) !important;
     overflow-x: auto !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     scrollbar-width: none !important;
     -webkit-overflow-scrolling: touch !important;
-    border-radius: 18px !important;
+    scroll-snap-type: x proximity !important;
+    border-radius: 24px !important;
+    background: rgba(12, 12, 14, 0.88) !important;
+    backdrop-filter: blur(28px) !important;
+    -webkit-backdrop-filter: blur(28px) !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
   }
   #dock::-webkit-scrollbar {
     display: none !important;
   }
   #dock a.l {
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 10px !important;
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 15px !important;
     flex-shrink: 0 !important;
+    scroll-snap-align: center !important;
   }
   #dock a.l svg {
-    width: 17px !important;
-    height: 17px !important;
+    width: 22px !important;
+    height: 22px !important;
   }
   #dock a.l::after {
     display: none !important;
