@@ -1,5 +1,5 @@
 /**
- * StratMarket Institutional Email Service â€” V3 Theme
+ * StratMarket Institutional Email Service — V3 Theme
  * Brand: StratMarket by Elvaris Capital
  * Parent Organization: Elvaris Capital (https://elvariscapital.in)
  * Verified Sender Domain: elvariscapital.in
@@ -226,7 +226,7 @@ function getEmailFooter(): string {
     <a href="https://elvariscapital.in" style="color:#697482;text-decoration:underline;">elvariscapital.in</a>
   </div>
   <div style="font-size:10px;line-height:17px;color:#9aa2ab;margin-top:12px;">
-    Â© 2026 Elvaris Capital. All rights reserved.<br>
+    © 2026 Elvaris Capital. All rights reserved.<br>
     This is an automated notification from StratMarket. Please do not reply directly.
   </div>
 </td></tr>
@@ -289,7 +289,7 @@ ${getEmailFooter()}
 
   return sendResendMail({
     to,
-    subject: "Welcome to StratMarket â€” Account Active",
+    subject: "Welcome to StratMarket — Account Active",
     html,
   });
 }
@@ -320,7 +320,7 @@ ${getEmailHeader("ACCOUNT SECURITY")}
 
 <tr><td class="pad" style="padding-top:34px;padding-bottom:10px;">
   <div class="eyebrow" style="color:#7c8490;">Identity verification</div>
-  <h1 class="headline">Confirm itâ€™s you</h1>
+  <h1 class="headline">Confirm it's you</h1>
   <p class="bodycopy">Hello ${firstName}, enter the one-time verification code below to securely continue with your StratMarket account.</p>
 </td></tr>
 <tr><td class="pad" style="padding-top:20px;padding-bottom:18px;">
@@ -438,32 +438,32 @@ export async function sendSignalAlertEmail(params: {
   const dashboardUrl = `${BASE_URL}/strategies/${cleanSlug}`;
   const chartUrl = `${BASE_URL}/chart/${cleanSlug}`;
   const signalId = sourceEventId || `SIG-${strategyId}-${Date.now().toString().slice(-6)}`;
-  const marketStatus = isEntry ? "Active Session â€¢ Position Running" : "Closed Position";
+  const marketStatus = isEntry ? "Active Session • Position Running" : "Closed Position";
 
   // Dynamic Subject with Trade Number and Outcome
   let emailSubject = "";
   if (isTest) {
     if (isTP) {
-      emailSubject = `[TEST EMAIL] ðŸŽ¯ Sample TP Hit â€¢ Trade #${tradeNum} Target Reached â€¢ ${strategyName}`;
+      emailSubject = `[TEST EMAIL] 🎯 Sample TP Hit • Trade #${tradeNum} Target Reached • ${strategyName}`;
     } else if (isSL) {
-      emailSubject = `[TEST EMAIL] ðŸ›¡ï¸ Sample SL Hit â€¢ Trade #${tradeNum} Capital Protected â€¢ ${strategyName}`;
+      emailSubject = `[TEST EMAIL] 🛡️ï¸ Sample SL Hit • Trade #${tradeNum} Capital Protected • ${strategyName}`;
     } else {
-      emailSubject = `[TEST EMAIL] âš¡ Sample Signal Alert â€¢ Trade #${tradeNum} ${direction} ${instrument} â€¢ ${strategyName}`;
+      emailSubject = `[TEST EMAIL] ⚡ Sample Signal Alert • Trade #${tradeNum} ${direction} ${instrument} • ${strategyName}`;
     }
   } else {
     if (isTP) {
-      emailSubject = `ðŸŽ¯ [TP HIT] ${strategyName} (${strategyId}) â€¢ Trade #${tradeNum} Target Reached! (${effectivePnlR || "+1.16R"})`;
+      emailSubject = `🎯 [TP HIT] ${strategyName} (${strategyId}) • Trade #${tradeNum} Target Reached! (${effectivePnlR || "+1.16R"})`;
     } else if (isSL) {
-      emailSubject = `ðŸ›¡ï¸ [SL HIT] ${strategyName} (${strategyId}) â€¢ Trade #${tradeNum} Capital Protected (-1.00R Risk Guard)`;
+      emailSubject = `🛡️ï¸ [SL HIT] ${strategyName} (${strategyId}) • Trade #${tradeNum} Capital Protected (-1.00R Risk Guard)`;
     } else {
-      emailSubject = `âš¡ [ENTRY ${direction}] ${strategyName} (${strategyId}) â€¢ Trade #${tradeNum} Triggered (${instrument})`;
+      emailSubject = `⚡ [ENTRY ${direction}] ${strategyName} (${strategyId}) • Trade #${tradeNum} Triggered (${instrument})`;
     }
   }
 
   const html = `<!doctype html>
 <html lang="en">
 <head>
-${getEmailHead(isTest ? `[TEST EMAIL] StratMarket | Sample Alert â€” ${instrument}` : `StratMarket | Trade #${tradeNum} Alert â€” ${instrument}`)}
+${getEmailHead(isTest ? `[TEST EMAIL] StratMarket | Sample Alert — ${instrument}` : `StratMarket | Trade #${tradeNum} Alert — ${instrument}`)}
 </head>
 <body>
 <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0">
@@ -471,12 +471,12 @@ ${getEmailHead(isTest ? `[TEST EMAIL] StratMarket | Sample Alert â€” ${inst
 <table role="presentation" class="shell" width="600" cellpadding="0" cellspacing="0">
 ${getEmailHeader(
     isTest
-      ? "TEST NOTIFICATION â€¢ VERIFICATION ONLY"
+      ? "TEST NOTIFICATION • VERIFICATION ONLY"
       : isTP
-        ? "TRADING OUTCOME â€¢ TAKE PROFIT HIT ðŸŽ¯"
+        ? "TRADING OUTCOME • TAKE PROFIT HIT 🎯"
         : isSL
-          ? "TRADING OUTCOME â€¢ STOP LOSS TRIGGERED ðŸ›¡ï¸"
-          : "LIVE EXECUTION â€¢ NEW ORDER TRIGGERED âš¡"
+          ? "TRADING OUTCOME • STOP LOSS TRIGGERED 🛡️ï¸"
+          : "LIVE EXECUTION • NEW ORDER TRIGGERED ⚡"
   )}
 
 ${isTest ? `
@@ -484,7 +484,7 @@ ${isTest ? `
   <table role="presentation" width="100%" style="background:#fffbe6;border:1px solid #ffe58f;border-left:4px solid #faad14;border-radius:6px;">
     <tr><td style="padding:14px 18px;">
       <div style="font-size:13px;font-weight:700;color:#d46b08;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:4px;">
-        âš ï¸ THIS IS A SAMPLE TEST EMAIL (VERIFICATION ONLY)
+        ⚠️ï¸ THIS IS A SAMPLE TEST EMAIL (VERIFICATION ONLY)
       </div>
       <div style="font-size:13px;line-height:20px;color:#595959;">
         This test message was dispatched from your <strong>StratMarket</strong> account to verify deliverability for <strong>Trade #${tradeNum}</strong>. <strong>No real trade or order has been executed.</strong> Live institutional trade signals will arrive in this identical format.
@@ -501,16 +501,16 @@ ${isTP
   <table role="presentation" width="100%" class="tp-glow" style="background:linear-gradient(135deg, #022c22 0%, #064e3b 50%, #047857 100%);border:2px solid #10b981;border-radius:12px;box-shadow:0 8px 24px -6px rgba(16,185,129,0.4);">
     <tr><td style="padding:24px 20px;text-align:center;">
       <div style="font-size:36px;line-height:40px;margin-bottom:8px;">
-        <span class="emoji-anim">ðŸŽ¯</span> ðŸš€ ðŸ’° âœ¨
+        <span class="emoji-anim">🎯</span> 🚀 💰 ✨
       </div>
       <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#a7f3d0;text-transform:uppercase;">
-        TAKE PROFIT ACHIEVED â€¢ TARGET HIT
+        TAKE PROFIT ACHIEVED • TARGET HIT
       </div>
       <div style="font-size:26px;font-weight:800;color:#ffffff;margin:8px 0 4px;font-family:Arial,Helvetica,sans-serif;">
-        ${strategyName} Â· Trade #${tradeNum}
+        ${strategyName} · Trade #${tradeNum}
       </div>
       <div style="display:inline-block;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);color:#ffffff;padding:5px 16px;border-radius:99px;font-size:14px;font-weight:700;margin-top:8px;">
-        âœ“ Gain Realized: ${effectivePnlR || "+1.16R"} Payoff
+        ✓ Gain Realized: ${effectivePnlR || "+1.16R"} Payoff
       </div>
     </td></tr>
   </table>
@@ -520,16 +520,16 @@ ${isTP
   <table role="presentation" width="100%" class="sl-glow" style="background:linear-gradient(135deg, #450a0a 0%, #7f1d1d 50%, #991b1b 100%);border:2px solid #ef4444;border-radius:12px;box-shadow:0 8px 24px -6px rgba(239,68,68,0.4);">
     <tr><td style="padding:24px 20px;text-align:center;">
       <div style="font-size:36px;line-height:40px;margin-bottom:8px;">
-        <span class="emoji-anim">ðŸ›¡ï¸</span> ðŸ›‘ âš ï¸
+        <span class="emoji-anim">🛡️ï¸</span> 🛑 ⚠️ï¸
       </div>
       <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#fecaca;text-transform:uppercase;">
-        STOP LOSS TRIGGERED â€¢ CAPITAL DEFENSE ENFORCED
+        STOP LOSS TRIGGERED • CAPITAL DEFENSE ENFORCED
       </div>
       <div style="font-size:26px;font-weight:800;color:#ffffff;margin:8px 0 4px;font-family:Arial,Helvetica,sans-serif;">
-        ${strategyName} Â· Trade #${tradeNum}
+        ${strategyName} · Trade #${tradeNum}
       </div>
       <div style="display:inline-block;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);color:#ffffff;padding:5px 16px;border-radius:99px;font-size:14px;font-weight:700;margin-top:8px;">
-        âœ• Capped Loss: -1.00R Fixed Risk Preserved
+        ✕ Capped Loss: -1.00R Fixed Risk Preserved
       </div>
     </td></tr>
   </table>
@@ -538,13 +538,13 @@ ${isTP
   <table role="presentation" width="100%" class="entry-glow" style="background:linear-gradient(135deg, #082f49 0%, #0369a1 50%, #0284c7 100%);border:2px solid #38bdf8;border-radius:12px;box-shadow:0 8px 24px -6px rgba(14,165,233,0.4);">
     <tr><td style="padding:24px 20px;text-align:center;">
       <div style="font-size:36px;line-height:40px;margin-bottom:8px;">
-        <span class="emoji-anim">âš¡</span> ${direction === "LONG" ? "ðŸ“ˆ ðŸŸ¢" : "ðŸ“‰ ðŸ”´"}
+        <span class="emoji-anim">⚡</span> ${direction === "LONG" ? "📈 🟢" : "📉 🔴"}
       </div>
       <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#bae6fd;text-transform:uppercase;">
-        LIVE ORDER EXECUTED â€¢ TRADE #${tradeNum} ACTIVE
+        LIVE ORDER EXECUTED • TRADE #${tradeNum} ACTIVE
       </div>
       <div style="font-size:26px;font-weight:800;color:#ffffff;margin:8px 0 4px;font-family:Arial,Helvetica,sans-serif;">
-        ${strategyName} Â· Trade #${tradeNum}
+        ${strategyName} · Trade #${tradeNum}
       </div>
       <div style="display:inline-block;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);color:#ffffff;padding:5px 16px;border-radius:99px;font-size:14px;font-weight:700;margin-top:8px;">
         ${direction} Execution @ ${formattedEntry}
@@ -556,22 +556,22 @@ ${isTP
 </td></tr>
 
 <tr><td class="pad" style="padding-top:14px;padding-bottom:18px;">
-  <div class="eyebrow" style="color:#7c8490;">${strategyName} Â· Trade #${tradeNum} Â· ${alertTime}</div>
+  <div class="eyebrow" style="color:#7c8490;">${strategyName} · Trade #${tradeNum} · ${alertTime}</div>
   <h1 class="headline" style="margin-bottom:7px;">
     ${isTest ? `<span style="display:inline-block;background:#e6f7ff;border:1px solid #91d5ff;color:#096dd9;font-size:12px;font-weight:700;padding:2px 8px;border-radius:3px;vertical-align:middle;margin-right:6px;">TEST SIGNAL</span>` : ""}
     ${isTP
-      ? `ðŸŽ¯ Trade #${tradeNum} Closed: Take Profit Hit!`
+      ? `🎯 Trade #${tradeNum} Closed: Take Profit Hit!`
       : isSL
-        ? `ðŸ›¡ï¸ Trade #${tradeNum} Closed: Protective Stop Hit`
-        : `âš¡ Live Order: Trade #${tradeNum} (${direction})`
+        ? `🛡️ï¸ Trade #${tradeNum} Closed: Protective Stop Hit`
+        : `⚡ Live Order: Trade #${tradeNum} (${direction})`
     }
   </h1>
   <p class="bodycopy">
     ${isTP
-      ? `Audited quantitative execution: <strong>Trade #${tradeNum}</strong> (${direction} on ${instrument} Â· ${timeframe}) for <strong>${strategyName} (${strategyId})</strong> has achieved its target payoff at <strong>${formattedTP}</strong>. Position has closed at audited payoff <strong>${effectivePnlR || "+1.16R"}</strong>.`
+      ? `Audited quantitative execution: <strong>Trade #${tradeNum}</strong> (${direction} on ${instrument} · ${timeframe}) for <strong>${strategyName} (${strategyId})</strong> has achieved its target payoff at <strong>${formattedTP}</strong>. Position has closed at audited payoff <strong>${effectivePnlR || "+1.16R"}</strong>.`
       : isSL
-        ? `Disciplined risk management: <strong>Trade #${tradeNum}</strong> (${direction} on ${instrument} Â· ${timeframe}) for <strong>${strategyName} (${strategyId})</strong> has triggered its protective stop at <strong>${formattedSL}</strong>. Total loss was strictly capped at <strong>-1.00R</strong>, protecting portfolio equity from extended drawdown.`
-        : `Algorithmic execution notice: <strong>${strategyName} (${strategyId})</strong> has initiated <strong>Trade #${tradeNum}</strong> (${direction} on ${instrument} Â· ${timeframe}) at <strong>${formattedEntry}</strong>. Order brackets are live in the market.`
+        ? `Disciplined risk management: <strong>Trade #${tradeNum}</strong> (${direction} on ${instrument} · ${timeframe}) for <strong>${strategyName} (${strategyId})</strong> has triggered its protective stop at <strong>${formattedSL}</strong>. Total loss was strictly capped at <strong>-1.00R</strong>, protecting portfolio equity from extended drawdown.`
+        : `Algorithmic execution notice: <strong>${strategyName} (${strategyId})</strong> has initiated <strong>Trade #${tradeNum}</strong> (${direction} on ${instrument} · ${timeframe}) at <strong>${formattedEntry}</strong>. Order brackets are live in the market.`
     }
   </p>
 </td></tr>
@@ -587,7 +587,7 @@ ${isTP
       <td width="50%" style="padding:16px 17px;border-bottom:1px solid #e9ecef;">
         <div class="eyebrow">Take profit</div>
         <div class="metric" style="font-size:22px;font-weight:700;color:#28734d;margin-top:8px;">
-          ${formattedTP} ${isTP ? "âœ“" : ""}
+          ${formattedTP} ${isTP ? "✓" : ""}
         </div>
       </td>
     </tr>
@@ -595,7 +595,7 @@ ${isTP
       <td width="50%" style="padding:16px 17px;border-right:1px solid #e9ecef;">
         <div class="eyebrow">Stop loss</div>
         <div class="metric" style="font-size:22px;font-weight:700;color:#a44747;margin-top:8px;">
-          ${formattedSL} ${isSL ? "âœ•" : ""}
+          ${formattedSL} ${isSL ? "✕" : ""}
         </div>
       </td>
       <td width="50%" style="padding:16px 17px;">
@@ -614,7 +614,7 @@ ${isTP
     <tr><td style="padding:14px 16px;">
       <div class="eyebrow">${isTest ? "Test Reference ID" : "Trade & Signal Reference"}</div>
       <div style="font-size:12px;line-height:20px;color:#56616e;margin-top:5px;">
-        <strong>Trade #${tradeNum}</strong> &nbsp;Â·&nbsp; ${signalId} &nbsp;Â·&nbsp; ${marketStatus}
+        <strong>Trade #${tradeNum}</strong> &nbsp;·&nbsp; ${signalId} &nbsp;·&nbsp; ${marketStatus}
       </div>
     </td></tr>
   </table>
@@ -689,7 +689,7 @@ ${getEmailHeader("SECURITY AUDIT")}
       <div style="font-size:13px;line-height:20px;color:#394553;margin-top:4px;">${userAgent}</div>
     </td></tr>
     <tr><td style="padding:16px 18px;">
-      <div class="eyebrow">Timestamp (IST Â· Mumbai)</div>
+      <div class="eyebrow">Timestamp (IST · Mumbai)</div>
       <div style="font-size:13px;line-height:20px;color:#394553;margin-top:4px;">${time}</div>
     </td></tr>
   </table>

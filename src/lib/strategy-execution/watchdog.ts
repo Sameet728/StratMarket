@@ -1,12 +1,11 @@
-// StratMarket Autonomous Trade Reconciliation & Alert Watchdog
-// Guarantees 100% parity between chart execution boxes and subscriber email alerts.
-// If any trade is detected on the chart that has not been dispatched, it auto-synthesizes and sends the alert immediately.
+// StratMarket Autonomous Trade Reconciliation Watchdog
+// Reconciles database signal history with visual chart execution boxes.
+// NOTE: Reconciled historical signals are recorded into the database for audit/chart parity ONLY.
+// They DO NOT dispatch subscriber emails or execute live MT5 broker orders.
 
 import { db } from "@/lib/db";
 import { tradingViewAdapter } from "@/lib/market-data";
 import { strategyExecutionRunner } from "./runner";
-import { dispatchSignalAlertEmails } from "@/lib/email/resend";
-import { dispatchMt5WebhookRelays } from "@/lib/trading/mt5-relay";
 import { STRATEGY_BASE_TRADES } from "@/lib/trade-lifecycle";
 
 let isReconciling = false;
@@ -74,7 +73,6 @@ export async function reconcileStrategySignals(rawStrategyId: string): Promise<R
       const entryTimeMs = typeof box.entryTime === "number" ? box.entryTime : new Date(box.entryTime).getTime();
       const exitTimeMs = box.exitTime ? (typeof box.exitTime === "number" ? box.exitTime : new Date(box.exitTime).getTime()) : undefined;
 
-      const tradeNumber = baseTrades + idx + 1;
       const direction: "LONG" | "SHORT" = box.type === "LONG" ? "LONG" : "SHORT";
 
       // ─── A. CHECK & RECONCILE MISSING ENTRY ─────────────────────────────
@@ -87,9 +85,9 @@ export async function reconcileStrategySignals(rawStrategyId: string): Promise<R
       });
 
       if (!hasEntrySignal) {
-        console.warn(`[Watchdog Engine] ⚡ Missing ENTRY signal detected for ${strategy.id} @ $${box.entryPrice} (${new Date(entryTimeMs).toISOString()}). Auto-reconciling...`);
         try {
           const entryEventId = `auto_rec_${strategy.id.toLowerCase()}_entry_${entryTimeMs}`;
+          // Ingest into database quietly for chart parity (NO email alert, NO MT5 relay)
           const ingestResult = await db.ingestVpsSignal({
             sourceEventId: entryEventId,
             strategyId: strategy.id,
@@ -102,60 +100,14 @@ export async function reconcileStrategySignals(rawStrategyId: string): Promise<R
             entryPrice: box.entryPrice,
             stopLoss: box.slPrice,
             targetPrice: box.tpPrice,
-            signalProvenance: "STRATMARKET_AUTONOMOUS_WATCHDOG_PARITY_ENGINE",
+            signalProvenance: "STRATMARKET_HISTORICAL_PARITY_SYNC",
           });
-
-          if (ingestResult.subscriberEmails && ingestResult.subscriberEmails.length > 0) {
-            const emailResult = await dispatchSignalAlertEmails({
-              strategyName: strategy.name,
-              strategyId: strategy.id,
-              instrument: strategy.instrument,
-              timeframe: `M${strategy.timeframe}`,
-              signalType: "ENTRY",
-              direction,
-              entryPrice: box.entryPrice,
-              stopLoss: box.slPrice,
-              targetPrice: box.tpPrice,
-              tradeNumber,
-              sourceEventId: entryEventId,
-              extraRecipients: ingestResult.subscriberEmails,
-            });
-
-            if (emailResult.results && emailResult.results.length > 0) {
-              db.updateDeliveryStatuses(
-                emailResult.results.map((r) => ({
-                  recipientEmail: r.email,
-                  signalId: ingestResult.signal.id,
-                  status: r.success ? "SENT" : "FAILED",
-                  providerMessageRef: r.messageId,
-                  failureReason: r.error,
-                  attemptCount: 1,
-                }))
-              ).catch(() => {});
-            }
-          }
-
-          // Automated Real Trading: Dispatch to connected user MT5 VPSs
-          dispatchMt5WebhookRelays({
-            strategyId: strategy.id,
-            strategyName: strategy.name,
-            action: "ENTRY",
-            symbol: strategy.instrument,
-            direction,
-            price: box.entryPrice,
-            stopLoss: box.slPrice,
-            takeProfit: box.tpPrice,
-            tradeNumber,
-            timeframe: `M${strategy.timeframe}`,
-            sourceEventId: entryEventId,
-            timestamp: new Date(entryTimeMs).toISOString(),
-          }).catch((err) => console.error("[Watchdog Engine] MT5 Relay Entry Error:", err));
 
           report.missingEntriesDispatched++;
           existingSignals.unshift(ingestResult.signal);
         } catch (err: any) {
           if (err?.message !== "DUPLICATE_SOURCE_EVENT_ID") {
-            report.errors.push(`Entry dispatch error for ${strategy.id}: ${err?.message || err}`);
+            report.errors.push(`Entry sync error for ${strategy.id}: ${err?.message || err}`);
           }
         }
       }
@@ -172,9 +124,9 @@ export async function reconcileStrategySignals(rawStrategyId: string): Promise<R
         });
 
         if (!hasExitSignal) {
-          console.warn(`[Watchdog Engine] 🛡️ Missing ${exitSignalType} signal detected for ${strategy.id} @ $${box.exitPrice}. Auto-reconciling...`);
           try {
             const exitEventId = `auto_rec_${strategy.id.toLowerCase()}_${box.isWin ? "tp" : "sl"}_${exitTimeMs}`;
+            // Ingest into database quietly for chart parity (NO email alert, NO MT5 relay)
             const ingestResult = await db.ingestVpsSignal({
               sourceEventId: exitEventId,
               strategyId: strategy.id,
@@ -187,63 +139,14 @@ export async function reconcileStrategySignals(rawStrategyId: string): Promise<R
               entryPrice: box.entryPrice,
               stopLoss: exitSignalType === "STOP_LOSS" ? box.exitPrice : undefined,
               targetPrice: exitSignalType === "TAKE_PROFIT" ? box.exitPrice : undefined,
-              signalProvenance: "STRATMARKET_AUTONOMOUS_WATCHDOG_PARITY_ENGINE",
+              signalProvenance: "STRATMARKET_HISTORICAL_PARITY_SYNC",
             });
-
-            if (ingestResult.subscriberEmails && ingestResult.subscriberEmails.length > 0) {
-              const emailResult = await dispatchSignalAlertEmails({
-                strategyName: strategy.name,
-                strategyId: strategy.id,
-                instrument: strategy.instrument,
-                timeframe: `M${strategy.timeframe}`,
-                signalType: exitSignalType,
-                direction,
-                entryPrice: box.entryPrice,
-                stopLoss: exitSignalType === "STOP_LOSS" ? box.exitPrice : undefined,
-                targetPrice: exitSignalType === "TAKE_PROFIT" ? box.exitPrice : undefined,
-                pnlR: box.isWin ? "+1.02R" : "-1.00R",
-                profitUsd: box.profitUsd,
-                tradeNumber,
-                sourceEventId: exitEventId,
-                extraRecipients: ingestResult.subscriberEmails,
-              });
-
-              if (emailResult.results && emailResult.results.length > 0) {
-                db.updateDeliveryStatuses(
-                  emailResult.results.map((r) => ({
-                    recipientEmail: r.email,
-                    signalId: ingestResult.signal.id,
-                    status: r.success ? "SENT" : "FAILED",
-                    providerMessageRef: r.messageId,
-                    failureReason: r.error,
-                    attemptCount: 1,
-                  }))
-                ).catch(() => {});
-              }
-            }
-
-            // Automated Real Trading: Dispatch to connected user MT5 VPSs
-            dispatchMt5WebhookRelays({
-              strategyId: strategy.id,
-              strategyName: strategy.name,
-              action: exitSignalType,
-              symbol: strategy.instrument,
-              direction,
-              price: box.exitPrice,
-              stopLoss: exitSignalType === "STOP_LOSS" ? box.exitPrice : undefined,
-              takeProfit: exitSignalType === "TAKE_PROFIT" ? box.exitPrice : undefined,
-              riskR: box.isWin ? 1.02 : -1.0,
-              tradeNumber,
-              timeframe: `M${strategy.timeframe}`,
-              sourceEventId: exitEventId,
-              timestamp: new Date(exitTimeMs).toISOString(),
-            }).catch((err) => console.error("[Watchdog Engine] MT5 Relay Exit Error:", err));
 
             report.missingExitsDispatched++;
             existingSignals.unshift(ingestResult.signal);
           } catch (err: any) {
             if (err?.message !== "DUPLICATE_SOURCE_EVENT_ID") {
-              report.errors.push(`Exit dispatch error for ${strategy.id}: ${err?.message || err}`);
+              report.errors.push(`Exit sync error for ${strategy.id}: ${err?.message || err}`);
             }
           }
         }
@@ -259,21 +162,32 @@ export async function reconcileStrategySignals(rawStrategyId: string): Promise<R
 }
 
 export async function reconcileAllPublicStrategies(): Promise<ReconciliationReport[]> {
-  if (isReconciling) return [];
+  if (isReconciling) {
+    return [];
+  }
+
   isReconciling = true;
-
   try {
-    const publicStrategySlugs = ["ps-01", "ps-02", "ps-03"];
-    const results: ReconciliationReport[] = [];
+    const publicStrategies = ["PS-01", "PS-02", "PS-03"];
+    const reports: ReconciliationReport[] = [];
 
-    for (const slug of publicStrategySlugs) {
-      const rep = await reconcileStrategySignals(slug);
-      results.push(rep);
+    for (const sid of publicStrategies) {
+      try {
+        const rep = await reconcileStrategySignals(sid);
+        reports.push(rep);
+      } catch (err: any) {
+        reports.push({
+          strategyId: sid,
+          checkedTrades: 0,
+          missingEntriesDispatched: 0,
+          missingExitsDispatched: 0,
+          errors: [err?.message || String(err)],
+        });
+      }
     }
 
-    return results;
+    return reports;
   } finally {
     isReconciling = false;
   }
 }
-

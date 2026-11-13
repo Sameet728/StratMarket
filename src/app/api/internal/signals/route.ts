@@ -4,8 +4,10 @@ import { db } from "@/lib/db";
 import { dispatchSignalAlertEmails } from "@/lib/email/resend";
 import { dispatchMt5WebhookRelays } from "@/lib/trading/mt5-relay";
 import { STRATEGY_BASE_TRADES } from "@/lib/trade-lifecycle";
-import { reconcileStrategySignals } from "@/lib/strategy-execution";
 import { z } from "zod";
+
+// Anti-spam & rapid-fire duplicate dispatch prevention cache
+const recentDispatches = new Map<string, number>();
 
 const SignalPayloadSchema = z.object({
   sourceEventId: z.string().min(1, "sourceEventId is required for idempotency"),
@@ -179,8 +181,32 @@ export async function POST(request: NextRequest) {
         tradeNumber = baseTrades + Math.floor(existingSignals.length / 2) + 1;
       }
 
+      // Check signal freshness (only send live alerts for signals generated within the last 15 minutes)
+      const signalTimestampMs = parsed.data.timestamp ? new Date(parsed.data.timestamp).getTime() : Date.now();
+      const signalAgeMinutes = (Date.now() - signalTimestampMs) / (1000 * 60);
+      const isFreshSignal = !isNaN(signalAgeMinutes) && signalAgeMinutes >= -5 && signalAgeMinutes <= 20;
+
+      // Anti-spam deduplication: check if exact strategy + action + tradeNumber was alerted within 60s
+      const dispatchKey = `${stratId}_${parsed.data.signalType}_${tradeNumber}`;
+      const lastSentTime = recentDispatches.get(dispatchKey) || 0;
+      const isCooldownActive = Date.now() - lastSentTime < 60_000;
+
       let emailResult: { dispatchedCount: number; errors: string[]; results?: Array<{ email: string; success: boolean; messageId?: string; error?: string }> } = { dispatchedCount: 0, errors: [], results: [] };
-      if (isPublicOnUi && result.subscriberEmails && result.subscriberEmails.length > 0) {
+
+      if (isCooldownActive) {
+        console.warn(`[Signal Route] ⚠️ Suppressing rapid duplicate alert for ${dispatchKey} (sent ${((Date.now() - lastSentTime) / 1000).toFixed(1)}s ago)`);
+      } else if (!isFreshSignal) {
+        console.warn(`[Signal Route] ⏱️ Ingested stale historical signal (${signalAgeMinutes.toFixed(1)}m old) without email dispatch to prevent inbox spam.`);
+      } else if (isPublicOnUi && result.subscriberEmails && result.subscriberEmails.length > 0) {
+        recentDispatches.set(dispatchKey, Date.now());
+        // Clean up old entries from recentDispatches cache
+        if (recentDispatches.size > 200) {
+          const cut = Date.now() - 300_000;
+          for (const [k, v] of recentDispatches.entries()) {
+            if (v < cut) recentDispatches.delete(k);
+          }
+        }
+
         try {
           emailResult = await dispatchSignalAlertEmails({
             strategyName,
@@ -231,8 +257,8 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // 5. Automated Real Trading Execution: Dispatch webhook relays to connected user MT5 VPSs
-      if (isPublicOnUi) {
+      // 5. Automated Real Trading Execution: Dispatch webhook relays to connected user MT5 VPSs (only for fresh signals)
+      if (isPublicOnUi && isFreshSignal && !isCooldownActive) {
         dispatchMt5WebhookRelays({
           strategyId: parsed.data.strategyId,
           strategyName,
@@ -250,11 +276,6 @@ export async function POST(request: NextRequest) {
         }).catch((relayErr) => {
           console.error("[Signal Route] MT5 Webhook Relay Error:", relayErr);
         });
-      }
-
-      // Background Parity Watchdog: Ensure all preceding trades for this strategy are fully reconciled
-      if (isPublicOnUi) {
-        reconcileStrategySignals(parsed.data.strategyId).catch(() => {});
       }
 
       return NextResponse.json({
