@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { tradingViewAdapter } from "@/lib/market-data";
-import { strategyExecutionRunner } from "@/lib/strategy-execution";
+import { strategyExecutionRunner, reconcileStrategySignals } from "@/lib/strategy-execution";
 
 interface Props {
   params: Promise<{
@@ -53,6 +53,11 @@ export async function GET(request: NextRequest, { params }: Props) {
 
     // Fetch live signals stored in the database (ingested from 24x7 VPS runner)
     const storedSignals = await db.getSignals(strategy.id, 50);
+
+    // Autonomous Watchdog: Verify parity between visual chart trades and dispatched alerts
+    reconcileStrategySignals(strategy.id).catch((err) => {
+      console.warn("[Chart Watchdog Note]:", err?.message || err);
+    });
 
     return NextResponse.json({
       success: true,

@@ -50,19 +50,21 @@ const MONGODB_URI =
 
 const DB_NAME = process.env.MONGODB_DB_NAME || "stratmarket";
 
-let client: MongoClient | null = null;
-let clientPromise: Promise<MongoClient> | null = null;
-let isConnected = false;
-let isSeeded = false;
-let lastFailedAttempt = 0;
+// Global singleton cache across Next.js serverless invocations
+declare global {
+  var _mongoClient: MongoClient | undefined;
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
+  var _mongoIndexesEnsured: boolean | undefined;
+}
+
 let lastConnectionError: string | null = null;
-const RETRY_COOLDOWN_MS = 2000; // 2s cooldown between connection retries
 
 export function getMongoDiagnostics() {
   const sanitizedTarget = MONGODB_URI.split("@").pop()?.split("?")[0] || "unknown";
+  const isConnected = Boolean(global._mongoClient);
   return {
     isConnected,
-    isSeeded,
+    isSeeded: Boolean(global._mongoIndexesEnsured),
     targetHost: sanitizedTarget,
     dbName: DB_NAME,
     lastError: lastConnectionError,
@@ -70,95 +72,118 @@ export function getMongoDiagnostics() {
 }
 
 /**
- * Initializes and caches the singleton MongoDB client
+ * Initializes and caches the singleton MongoDB client across serverless lambdas
  */
 export async function getMongoClient(): Promise<MongoClient | null> {
-  if (client && isConnected) {
-    return client;
+  // If already connected, return cached client immediately
+  if (global._mongoClient) {
+    return global._mongoClient;
   }
 
-  // If we already attempted and failed recently, return null immediately without delay
-  if (!isConnected && performance.now() - lastFailedAttempt < RETRY_COOLDOWN_MS) {
-    return null;
-  }
-
-  // In test environment or when VITEST is active, use immediate in-memory repository to prevent polluting production Atlas database
+  // In test environment or when VITEST is active, use in-memory repository
   if (process.env.NODE_ENV === "test" || process.env.VITEST === "true" || process.env.USE_IN_MEMORY_DB === "true") {
     return null;
   }
 
-  if (!clientPromise) {
+  if (!global._mongoClientPromise) {
     try {
       const options = {
-        serverSelectionTimeoutMS: 8000,
-        connectTimeoutMS: 8000,
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000,
         maxPoolSize: 10,
       };
 
       const newClient = new MongoClient(MONGODB_URI, options);
-      clientPromise = newClient
+      global._mongoClientPromise = newClient
         .connect()
-        .then(async (c) => {
-          client = c;
-          isConnected = true;
+        .then((c) => {
+          global._mongoClient = c;
           lastConnectionError = null;
           console.log(`[MongoDB] Connected successfully to ${DB_NAME} at ${MONGODB_URI.split("@").pop()?.split("?")[0]}`);
-          await ensureIndexesAndSeed(c.db(DB_NAME));
+
+          // Trigger non-blocking asynchronous background index verification
+          if (!global._mongoIndexesEnsured) {
+            ensureIndexesAndSeed(c.db(DB_NAME))
+              .then(() => {
+                global._mongoIndexesEnsured = true;
+              })
+              .catch((err) => {
+                console.warn("[MongoDB] Background indexing note:", err?.message || err);
+              });
+          }
+
           return c;
         })
         .catch((err) => {
           const errMsg = err?.message || String(err);
           lastConnectionError = errMsg;
-          console.warn("[MongoDB] Connection attempt failed, falling back to in-memory store:", errMsg);
-          isConnected = false;
-          lastFailedAttempt = performance.now();
-          clientPromise = null;
-          client = null;
+          console.warn("[MongoDB] Connection attempt failed:", errMsg);
+          global._mongoClient = undefined;
+          global._mongoClientPromise = undefined;
           return null as any;
         });
     } catch (err: any) {
       const errMsg = err?.message || String(err);
       lastConnectionError = errMsg;
       console.warn("[MongoDB] Client initialization error:", errMsg);
-      isConnected = false;
-      lastFailedAttempt = performance.now();
-      clientPromise = null;
+      global._mongoClient = undefined;
+      global._mongoClientPromise = undefined;
       return null;
     }
   }
 
-  return clientPromise;
+  try {
+    const client = await global._mongoClientPromise;
+    if (client) {
+      global._mongoClient = client;
+      return client;
+    }
+    return null;
+  } catch (err: any) {
+    lastConnectionError = err?.message || String(err);
+    global._mongoClient = undefined;
+    global._mongoClientPromise = undefined;
+    return null;
+  }
 }
 
 /**
  * Returns the active MongoDB database instance, or null if offline
  */
 export async function getMongoDb(): Promise<Db | null> {
-  const c = await getMongoClient();
-  if (!c || !isConnected) return null;
-  return c.db(DB_NAME);
+  try {
+    const c = await getMongoClient();
+    if (!c) return null;
+    return c.db(DB_NAME);
+  } catch (err) {
+    return null;
+  }
 }
 
 export function isMongoActive(): boolean {
-  return isConnected;
+  return Boolean(global._mongoClient);
 }
 
 /**
  * Creates required indexes and seeds initial dataset on first connection
  */
 async function ensureIndexesAndSeed(db: Db): Promise<void> {
-  if (isSeeded) return;
+  if (global._mongoIndexesEnsured) return;
 
   try {
-    // 1. Ensure Indexes
-    await db.collection("users").createIndex({ email: 1 }, { unique: true });
-    await db.collection("strategies").createIndex({ id: 1 }, { unique: true });
-    await db.collection("strategies").createIndex({ slug: 1 }, { unique: true });
-    await db.collection("signals").createIndex({ sourceEventId: 1 }, { unique: true, sparse: true });
-    await db.collection("signals").createIndex({ strategyId: 1, timestamp: -1 });
-    await db.collection("trials").createIndex({ userId: 1, strategyId: 1 });
-    await db.collection("entitlements").createIndex({ userId: 1, strategyId: 1 });
-    await db.collection("alert_preferences").createIndex({ userId: 1, strategyId: 1 }, { unique: true });
+    // 1. Ensure Indexes safely
+    const indexPromises = [
+      db.collection("users").createIndex({ email: 1 }, { unique: true }).catch(() => {}),
+      db.collection("strategies").createIndex({ id: 1 }, { unique: true }).catch(() => {}),
+      db.collection("strategies").createIndex({ slug: 1 }, { unique: true }).catch(() => {}),
+      db.collection("signals").createIndex({ sourceEventId: 1 }, { unique: true, sparse: true }).catch(() => {}),
+      db.collection("signals").createIndex({ strategyId: 1, timestamp: -1 }).catch(() => {}),
+      db.collection("trials").createIndex({ userId: 1, strategyId: 1 }).catch(() => {}),
+      db.collection("entitlements").createIndex({ userId: 1, strategyId: 1 }).catch(() => {}),
+      db.collection("alert_preferences").createIndex({ userId: 1, strategyId: 1 }, { unique: true }).catch(() => {}),
+      db.collection("deliveries").createIndex({ signalId: 1, recipientEmail: 1 }).catch(() => {}),
+    ];
+    await Promise.all(indexPromises);
 
     // 2. Ensure all canonical strategies are synchronized and up-to-date in MongoDB Atlas
     for (const s of INITIAL_STRATEGIES) {
@@ -166,7 +191,7 @@ async function ensureIndexesAndSeed(db: Db): Promise<void> {
         { id: s.id },
         { $set: { ...s } },
         { upsert: true }
-      );
+      ).catch(() => {});
     }
 
     // 3. Ensure evaluation and primary accounts exist
@@ -215,10 +240,40 @@ async function ensureIndexesAndSeed(db: Db): Promise<void> {
           },
         },
         { upsert: true }
-      );
+      ).catch(() => {});
     }
 
-    isSeeded = true;
+    // 4. Ensure guaranteed alert preferences for active strategies exist in Atlas
+    const guaranteedPrefs = [
+      { userId: "usr_sam_01", strategyId: "PS-01", destination: "sameetpisal728@gmail.com" },
+      { userId: "usr_sam_01", strategyId: "PS-02", destination: "sameetpisal728@gmail.com" },
+      { userId: "usr_sam_01", strategyId: "PS-03", destination: "sameetpisal728@gmail.com" },
+      { userId: "usr_sam_01", strategyId: "ALL", destination: "sameetpisal728@gmail.com" },
+      { userId: "usr_7aqty30mf", strategyId: "PS-01", destination: "geminivedant1@gmail.com" },
+      { userId: "usr_7aqty30mf", strategyId: "PS-02", destination: "geminivedant1@gmail.com" },
+      { userId: "usr_7aqty30mf", strategyId: "PS-03", destination: "geminivedant1@gmail.com" },
+    ];
+
+    for (const gp of guaranteedPrefs) {
+      await db.collection("alert_preferences").updateOne(
+        { userId: gp.userId, strategyId: gp.strategyId },
+        {
+          $set: {
+            enabled: true,
+            alertTypes: ["ENTRY", "EXIT", "STOP_LOSS", "TAKE_PROFIT"],
+            verifiedDestination: gp.destination,
+            updatedAt: new Date(),
+          },
+          $setOnInsert: {
+            id: "alt_" + Math.random().toString(36).substring(2, 11),
+            createdAt: new Date(),
+          },
+        },
+        { upsert: true }
+      ).catch(() => {});
+    }
+
+    global._mongoIndexesEnsured = true;
   } catch (err: any) {
     console.warn("[MongoDB] Index/Seed check completed with note:", err?.message || err);
   }

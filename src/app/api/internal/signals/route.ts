@@ -3,6 +3,7 @@ import { isAuthorizedVpsOrWebhookRequest } from "@/lib/vps/security";
 import { db } from "@/lib/db";
 import { dispatchSignalAlertEmails } from "@/lib/email/resend";
 import { STRATEGY_BASE_TRADES } from "@/lib/trade-lifecycle";
+import { reconcileStrategySignals } from "@/lib/strategy-execution";
 import { z } from "zod";
 
 const SignalPayloadSchema = z.object({
@@ -227,6 +228,11 @@ export async function POST(request: NextRequest) {
             }))
           ).catch(() => {});
         }
+      }
+
+      // Background Parity Watchdog: Ensure all preceding trades for this strategy are fully reconciled
+      if (isPublicOnUi) {
+        reconcileStrategySignals(parsed.data.strategyId).catch(() => {});
       }
 
       return NextResponse.json({
