@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { tradingViewAdapter } from "@/lib/market-data";
 import { strategyExecutionRunner } from "./runner";
 import { dispatchSignalAlertEmails } from "@/lib/email/resend";
+import { dispatchMt5WebhookRelays } from "@/lib/trading/mt5-relay";
 import { STRATEGY_BASE_TRADES } from "@/lib/trade-lifecycle";
 
 let isReconciling = false;
@@ -134,6 +135,22 @@ export async function reconcileStrategySignals(rawStrategyId: string): Promise<R
             }
           }
 
+          // Automated Real Trading: Dispatch to connected user MT5 VPSs
+          dispatchMt5WebhookRelays({
+            strategyId: strategy.id,
+            strategyName: strategy.name,
+            action: "ENTRY",
+            symbol: strategy.instrument,
+            direction,
+            price: box.entryPrice,
+            stopLoss: box.slPrice,
+            takeProfit: box.tpPrice,
+            tradeNumber,
+            timeframe: `M${strategy.timeframe}`,
+            sourceEventId: entryEventId,
+            timestamp: new Date(entryTimeMs).toISOString(),
+          }).catch((err) => console.error("[Watchdog Engine] MT5 Relay Entry Error:", err));
+
           report.missingEntriesDispatched++;
           existingSignals.unshift(ingestResult.signal);
         } catch (err: any) {
@@ -205,6 +222,23 @@ export async function reconcileStrategySignals(rawStrategyId: string): Promise<R
               }
             }
 
+            // Automated Real Trading: Dispatch to connected user MT5 VPSs
+            dispatchMt5WebhookRelays({
+              strategyId: strategy.id,
+              strategyName: strategy.name,
+              action: exitSignalType,
+              symbol: strategy.instrument,
+              direction,
+              price: box.exitPrice,
+              stopLoss: exitSignalType === "STOP_LOSS" ? box.exitPrice : undefined,
+              takeProfit: exitSignalType === "TAKE_PROFIT" ? box.exitPrice : undefined,
+              riskR: box.isWin ? 1.02 : -1.0,
+              tradeNumber,
+              timeframe: `M${strategy.timeframe}`,
+              sourceEventId: exitEventId,
+              timestamp: new Date(exitTimeMs).toISOString(),
+            }).catch((err) => console.error("[Watchdog Engine] MT5 Relay Exit Error:", err));
+
             report.missingExitsDispatched++;
             existingSignals.unshift(ingestResult.signal);
           } catch (err: any) {
@@ -242,3 +276,4 @@ export async function reconcileAllPublicStrategies(): Promise<ReconciliationRepo
     isReconciling = false;
   }
 }
+

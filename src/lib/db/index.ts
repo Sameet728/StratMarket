@@ -106,6 +106,40 @@ export interface TradingConnectionRecord {
   updatedAt: Date;
 }
 
+export interface WebhookRelayLogItem {
+  id: string;
+  strategyId: string;
+  signalType: string;
+  direction: string;
+  price: number;
+  statusCode?: number;
+  latencyMs?: number;
+  success: boolean;
+  error?: string;
+  timestamp: Date;
+}
+
+export interface UserTradingWebhookRecord {
+  id: string;
+  userId: string;
+  userEmail: string;
+  webhookUrl: string;
+  secretToken?: string;
+  enabled: boolean;
+  strategySettings: Record<string, {
+    enabled: boolean;
+    magicNumber?: number;
+    customLotSize?: number;
+  }>;
+  lastTriggeredAt?: Date;
+  lastStatusCode?: number;
+  lastLatencyMs?: number;
+  lastError?: string;
+  recentRelays?: WebhookRelayLogItem[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface AuditEventRecord {
   id: string;
   userId?: string | null;
@@ -174,6 +208,7 @@ class RepositoryStore {
   alerts: Map<string, AlertPreferenceRecord> = new Map();
   deliveries: Map<string, EmailDeliveryRecord> = new Map();
   connections: Map<string, TradingConnectionRecord> = new Map();
+  userTradingWebhooks: Map<string, UserTradingWebhookRecord> = new Map();
   auditEvents: AuditEventRecord[] = [];
   subscriptions: Map<string, SubscriptionRecord> = new Map();
   orders: Map<string, any> = new Map();
@@ -2107,6 +2142,197 @@ if (!globalStore.passwordResets) globalStore.passwordResets = new Map();
     const safe = { ...record };
     delete safe.encryptedCredentialRef;
     return safe;
+  },
+
+  // USER MT5 VPS WEBHOOK RELAY
+  async getUserTradingWebhook(userId: string): Promise<UserTradingWebhookRecord | null> {
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        const doc = await mdb.collection("user_trading_webhooks").findOne({ userId });
+        if (doc) {
+          return {
+            id: doc.id || doc._id?.toString(),
+            userId: doc.userId,
+            userEmail: doc.userEmail,
+            webhookUrl: doc.webhookUrl,
+            secretToken: doc.secretToken,
+            enabled: Boolean(doc.enabled),
+            strategySettings: doc.strategySettings || {},
+            lastTriggeredAt: doc.lastTriggeredAt ? new Date(doc.lastTriggeredAt) : undefined,
+            lastStatusCode: doc.lastStatusCode,
+            lastLatencyMs: doc.lastLatencyMs,
+            lastError: doc.lastError,
+            recentRelays: doc.recentRelays || [],
+            createdAt: new Date(doc.createdAt || Date.now()),
+            updatedAt: new Date(doc.updatedAt || Date.now()),
+          };
+        }
+      } catch (err) {
+        console.warn("[MongoDB] getUserTradingWebhook note:", err);
+      }
+    }
+
+    const inMemory = globalStore.userTradingWebhooks.get(userId);
+    return inMemory ? { ...inMemory } : null;
+  },
+
+  async saveUserTradingWebhook(
+    userId: string,
+    data: {
+      userEmail?: string;
+      webhookUrl: string;
+      secretToken?: string;
+      enabled: boolean;
+      strategySettings: Record<string, {
+        enabled: boolean;
+        magicNumber?: number;
+        customLotSize?: number;
+      }>;
+    }
+  ): Promise<UserTradingWebhookRecord> {
+    const existing = await this.getUserTradingWebhook(userId);
+    const mdb = await getMongoDb();
+    const user = await this.getUserById(userId);
+    const resolvedEmail = data.userEmail || user?.email || existing?.userEmail || "user@stratmarket.com";
+
+    const record: UserTradingWebhookRecord = {
+      id: existing?.id || "mt5hook_" + Math.random().toString(36).substring(2, 11),
+      userId,
+      userEmail: resolvedEmail,
+      webhookUrl: data.webhookUrl.trim(),
+      secretToken: data.secretToken?.trim() || undefined,
+      enabled: Boolean(data.enabled),
+      strategySettings: data.strategySettings || {
+        "PS-01": { enabled: true, magicNumber: 10101, customLotSize: 0.01 },
+        "PS-02": { enabled: true, magicNumber: 10102, customLotSize: 0.01 },
+        "PS-03": { enabled: true, magicNumber: 10103, customLotSize: 0.01 },
+      },
+      lastTriggeredAt: existing?.lastTriggeredAt,
+      lastStatusCode: existing?.lastStatusCode,
+      lastLatencyMs: existing?.lastLatencyMs,
+      lastError: existing?.lastError,
+      recentRelays: existing?.recentRelays || [],
+      createdAt: existing?.createdAt || new Date(),
+      updatedAt: new Date(),
+    };
+
+    if (mdb) {
+      try {
+        await mdb.collection("user_trading_webhooks").updateOne(
+          { userId },
+          { $set: { ...record } },
+          { upsert: true }
+        );
+      } catch (err) {
+        console.warn("[MongoDB] saveUserTradingWebhook error:", err);
+      }
+    }
+
+    globalStore.userTradingWebhooks.set(userId, record);
+
+    await this.createAuditEvent({
+      userId,
+      action: "USER_TRADING_WEBHOOK_UPDATED",
+      entityType: "MT5_WEBHOOK",
+      entityId: record.id,
+      details: JSON.stringify({
+        enabled: record.enabled,
+        webhookUrl: record.webhookUrl.replace(/\/\/[^@]*@/, "//***@"),
+        strategies: Object.keys(record.strategySettings).filter(k => record.strategySettings[k]?.enabled),
+      }),
+    });
+
+    return record;
+  },
+
+  async getActiveTradingWebhooksForStrategy(strategyId: string): Promise<UserTradingWebhookRecord[]> {
+    const normalized = strategyId.trim().toUpperCase();
+    const mdb = await getMongoDb();
+    const results: UserTradingWebhookRecord[] = [];
+
+    if (mdb) {
+      try {
+        const docs = await mdb.collection("user_trading_webhooks").find({ enabled: true }).toArray();
+        for (const doc of docs) {
+          const settings = doc.strategySettings || {};
+          const stratSetting = settings[normalized] || settings[normalized.replace("-", "")];
+          if (stratSetting && stratSetting.enabled) {
+            results.push({
+              id: doc.id || doc._id?.toString(),
+              userId: doc.userId,
+              userEmail: doc.userEmail,
+              webhookUrl: doc.webhookUrl,
+              secretToken: doc.secretToken,
+              enabled: true,
+              strategySettings: doc.strategySettings,
+              lastTriggeredAt: doc.lastTriggeredAt ? new Date(doc.lastTriggeredAt) : undefined,
+              lastStatusCode: doc.lastStatusCode,
+              lastLatencyMs: doc.lastLatencyMs,
+              lastError: doc.lastError,
+              recentRelays: doc.recentRelays || [],
+              createdAt: new Date(doc.createdAt || Date.now()),
+              updatedAt: new Date(doc.updatedAt || Date.now()),
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("[MongoDB] getActiveTradingWebhooksForStrategy query note:", err);
+      }
+    }
+
+    for (const hook of globalStore.userTradingWebhooks.values()) {
+      if (hook.enabled) {
+        const stratSetting = hook.strategySettings?.[normalized] || hook.strategySettings?.[normalized.replace("-", "")];
+        if (stratSetting && stratSetting.enabled) {
+          if (!results.some(r => r.userId === hook.userId)) {
+            results.push({ ...hook });
+          }
+        }
+      }
+    }
+
+    return results;
+  },
+
+  async recordWebhookRelayOutcome(
+    userId: string,
+    outcome: WebhookRelayLogItem
+  ): Promise<void> {
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        await mdb.collection("user_trading_webhooks").updateOne(
+          { userId },
+          {
+            $set: {
+              lastTriggeredAt: outcome.timestamp,
+              lastStatusCode: outcome.statusCode,
+              lastLatencyMs: outcome.latencyMs,
+              lastError: outcome.error,
+              updatedAt: new Date(),
+            },
+            $push: {
+              recentRelays: {
+                $each: [outcome],
+                $slice: -20,
+              },
+            } as any,
+          }
+        );
+      } catch (err) {
+        console.warn("[MongoDB] recordWebhookRelayOutcome note:", err);
+      }
+    }
+
+    const inMemory = globalStore.userTradingWebhooks.get(userId);
+    if (inMemory) {
+      inMemory.lastTriggeredAt = outcome.timestamp;
+      inMemory.lastStatusCode = outcome.statusCode;
+      inMemory.lastLatencyMs = outcome.latencyMs;
+      inMemory.lastError = outcome.error;
+      inMemory.recentRelays = [outcome, ...(inMemory.recentRelays || [])].slice(0, 20);
+    }
   },
 
   // PLANS & SUBSCRIPTIONS

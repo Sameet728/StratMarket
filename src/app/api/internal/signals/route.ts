@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAuthorizedVpsOrWebhookRequest } from "@/lib/vps/security";
 import { db } from "@/lib/db";
 import { dispatchSignalAlertEmails } from "@/lib/email/resend";
+import { dispatchMt5WebhookRelays } from "@/lib/trading/mt5-relay";
 import { STRATEGY_BASE_TRADES } from "@/lib/trade-lifecycle";
 import { reconcileStrategySignals } from "@/lib/strategy-execution";
 import { z } from "zod";
@@ -228,6 +229,27 @@ export async function POST(request: NextRequest) {
             }))
           ).catch(() => {});
         }
+      }
+
+      // 5. Automated Real Trading Execution: Dispatch webhook relays to connected user MT5 VPSs
+      if (isPublicOnUi) {
+        dispatchMt5WebhookRelays({
+          strategyId: parsed.data.strategyId,
+          strategyName,
+          action: parsed.data.signalType,
+          symbol: parsed.data.instrument,
+          direction: parsed.data.direction,
+          price: parsed.data.entryPrice || parsed.data.targetPrice || parsed.data.stopLoss || 0,
+          stopLoss: parsed.data.stopLoss,
+          takeProfit: parsed.data.targetPrice,
+          tradeNumber,
+          riskR: bodyData.pnlR || bodyData.pnl_r,
+          timeframe: parsed.data.timeframe,
+          sourceEventId: parsed.data.sourceEventId,
+          timestamp: parsed.data.timestamp,
+        }).catch((relayErr) => {
+          console.error("[Signal Route] MT5 Webhook Relay Error:", relayErr);
+        });
       }
 
       // Background Parity Watchdog: Ensure all preceding trades for this strategy are fully reconciled

@@ -52,6 +52,40 @@ interface EmailDelivery {
   targetPrice?: number;
 }
 
+interface Mt5StrategySetting {
+  enabled: boolean;
+  magicNumber?: number;
+  customLotSize?: number;
+}
+
+interface Mt5WebhookRelayItem {
+  id: string;
+  strategyId: string;
+  signalType: string;
+  direction: string;
+  price: number;
+  statusCode?: number;
+  latencyMs?: number;
+  success: boolean;
+  error?: string;
+  timestamp: string | Date;
+}
+
+interface Mt5WebhookConfig {
+  id?: string;
+  userId?: string;
+  userEmail?: string;
+  webhookUrl: string;
+  secretToken?: string;
+  enabled: boolean;
+  strategySettings: Record<string, Mt5StrategySetting>;
+  lastTriggeredAt?: string | Date;
+  lastStatusCode?: number;
+  lastLatencyMs?: number;
+  lastError?: string;
+  recentRelays?: Mt5WebhookRelayItem[];
+}
+
 function formatDeliveryTime(raw?: string | Date): { formatted: string; relative: string } {
   if (!raw) return { formatted: "Just now", relative: "Recent" };
   const d = new Date(raw);
@@ -114,6 +148,24 @@ export default function ProfilePage() {
   const [browserAlertsEnabled, setBrowserAlertsEnabled] = useState(false);
   const [browserAlertsSupported, setBrowserAlertsSupported] = useState(false);
 
+  // MT5 VPS Webhook Relay State
+  const [mt5Webhook, setMt5Webhook] = useState<Mt5WebhookConfig | null>(null);
+  const [mt5WebhookUrl, setMt5WebhookUrl] = useState("");
+  const [mt5SecretToken, setMt5SecretToken] = useState("");
+  const [showSecretToken, setShowSecretToken] = useState(false);
+  const [mt5Enabled, setMt5Enabled] = useState(false);
+  const [mt5StrategySettings, setMt5StrategySettings] = useState<Record<string, Mt5StrategySetting>>({
+    "PS-01": { enabled: true, magicNumber: 10101, customLotSize: 0.01 },
+    "PS-02": { enabled: false, magicNumber: 10102, customLotSize: 0.01 },
+    "PS-03": { enabled: false, magicNumber: 10103, customLotSize: 0.01 },
+  });
+  const [savingMt5, setSavingMt5] = useState(false);
+  const [testingMt5, setTestingMt5] = useState(false);
+  const [testMt5Result, setTestMt5Result] = useState<{ ok: boolean; message: string; latency?: number } | null>(null);
+  const [pythonScriptCode, setPythonScriptCode] = useState("");
+  const [showBridgeModal, setShowBridgeModal] = useState(false);
+  const [copiedScript, setCopiedScript] = useState(false);
+
   // Sync browser notification preference on mount
   useEffect(() => {
     setBrowserAlertsSupported(isNotificationSupported());
@@ -171,10 +223,11 @@ export default function ProfilePage() {
         setSignalEmail(meData.user.email);
         setLoading(false); // Instantly dismiss full-page spinner! User sees profile banner in <100ms
 
-        // 2. Fetch entitlements and alerts asynchronously in parallel
-        const [entRes, alertRes] = await Promise.all([
+        // 2. Fetch entitlements, alerts, and MT5 VPS trading webhook asynchronously in parallel
+        const [entRes, alertRes, webhookRes] = await Promise.all([
           fetch("/api/me/entitlements"),
           fetch("/api/me/alerts"),
+          fetch("/api/me/trading-webhook"),
         ]);
 
         // Load trials, entitlements and purchase orders
@@ -239,6 +292,30 @@ export default function ProfilePage() {
           setSignalEmail(destEmail);
         } else {
           setSignalEmail(meData.user.email);
+        }
+
+        // Load MT5 VPS Webhook configuration
+        try {
+          const webhookData = await webhookRes.json().catch(() => ({}));
+          if (webhookData?.webhook) {
+            const wb = webhookData.webhook;
+            setMt5Webhook(wb);
+            setMt5WebhookUrl(wb.webhookUrl || "");
+            setMt5SecretToken(wb.secretToken || "");
+            setMt5Enabled(Boolean(wb.enabled));
+            if (wb.strategySettings) {
+              setMt5StrategySettings({
+                "PS-01": wb.strategySettings["PS-01"] || { enabled: true, magicNumber: 10101, customLotSize: 0.01 },
+                "PS-02": wb.strategySettings["PS-02"] || { enabled: false, magicNumber: 10102, customLotSize: 0.01 },
+                "PS-03": wb.strategySettings["PS-03"] || { enabled: false, magicNumber: 10103, customLotSize: 0.01 },
+              });
+            }
+          }
+          if (webhookData?.pythonScript) {
+            setPythonScriptCode(webhookData.pythonScript);
+          }
+        } catch (wbErr) {
+          console.warn("Failed to load MT5 webhook config:", wbErr);
         }
 
         // Cache full profile snapshot for instant 0ms restoration on subsequent visits
@@ -493,6 +570,90 @@ export default function ProfilePage() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/signin");
     router.refresh();
+  };
+
+  const handleSaveMt5Settings = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setSavingMt5(true);
+    setTestMt5Result(null);
+    try {
+      const res = await fetch("/api/me/trading-webhook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          webhookUrl: mt5WebhookUrl,
+          secretToken: mt5SecretToken,
+          enabled: mt5Enabled,
+          strategySettings: mt5StrategySettings,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMt5Webhook(data.webhook);
+        if (data.pythonScript) setPythonScriptCode(data.pythonScript);
+        toast.success("MT5 Settings Saved", "Your MT5 VPS Webhook configuration is now saved and active.");
+      } else {
+        toast.error("Save Failed", data.error || "Could not save MT5 VPS settings.");
+      }
+    } catch (err: any) {
+      toast.error("Network Error", err.message || "Failed to reach server.");
+    } finally {
+      setSavingMt5(false);
+    }
+  };
+
+  const handleTestMt5Handshake = async () => {
+    if (!mt5WebhookUrl.trim()) {
+      toast.warning("URL Required", "Please enter your MT5 VPS Webhook POST URL first.");
+      return;
+    }
+    setTestingMt5(true);
+    setTestMt5Result(null);
+    try {
+      const res = await fetch("/api/me/trading-webhook/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          webhookUrl: mt5WebhookUrl,
+          secretToken: mt5SecretToken,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTestMt5Result({
+          ok: true,
+          message: `Handshake successful! Response received in ${data.latencyMs}ms (HTTP ${data.statusCode}).`,
+          latency: data.latencyMs,
+        });
+        toast.success("Handshake Verified", `VPS responded in ${data.latencyMs}ms.`);
+      } else {
+        setTestMt5Result({
+          ok: false,
+          message: data.error || "Could not connect to MT5 VPS endpoint.",
+          latency: data.latencyMs,
+        });
+        toast.error("Handshake Failed", data.error || "Unable to reach VPS endpoint.");
+      }
+    } catch (err: any) {
+      setTestMt5Result({
+        ok: false,
+        message: err.message || "Network error testing VPS handshake.",
+      });
+      toast.error("Connection Failed", "Network error reaching test endpoint.");
+    } finally {
+      setTestingMt5(false);
+    }
+  };
+
+  const handleCopyPythonScript = () => {
+    if (!pythonScriptCode) return;
+    navigator.clipboard.writeText(pythonScriptCode).then(() => {
+      setCopiedScript(true);
+      toast.success("Copied to Clipboard", "Paste mt5_bridge.py onto your Windows MT5 VPS.");
+      setTimeout(() => setCopiedScript(false), 3000);
+    }).catch(() => {
+      toast.error("Copy Failed", "Please manually select and copy the code.");
+    });
   };
 
   if (loading) {
@@ -1407,7 +1568,885 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* 3. ACCOUNT SECURITY & PLAN TIERS */}
+            {/* 3. CONNECT REAL TRADING ACCOUNT • MT5 VPS WEBHOOK RELAY */}
+            <div
+              className="card profile-section-card"
+              id="mt5-trading-relay"
+              style={{
+                padding: "28px",
+                border: "1px solid var(--line)",
+                borderRadius: 16,
+                background: "rgba(255, 255, 255, 0.02)",
+              }}
+            >
+              {/* Card Header */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  flexWrap: "wrap",
+                  gap: 16,
+                  marginBottom: 24,
+                  paddingBottom: 20,
+                  borderBottom: "1px solid var(--line)",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 34,
+                        height: 34,
+                        borderRadius: 8,
+                        background: "rgba(56, 189, 248, 0.15)",
+                        border: "1px solid rgba(56, 189, 248, 0.3)",
+                        color: "#38bdf8",
+                        fontWeight: 800,
+                        fontSize: 14,
+                      }}
+                    >
+                      MT5
+                    </div>
+                    <h3 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: "#ffffff" }}>
+                      Connect Real Trading Account • MT5 VPS Webhook Relay
+                    </h3>
+                    {mt5Enabled && mt5WebhookUrl ? (
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: "3px 10px",
+                          borderRadius: 20,
+                          background: "rgba(34, 197, 94, 0.15)",
+                          color: "#22c55e",
+                          border: "1px solid rgba(34, 197, 94, 0.3)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 8px #22c55e" }} />
+                        LIVE AUTO-EXECUTION ACTIVE
+                      </span>
+                    ) : mt5WebhookUrl ? (
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: "3px 10px",
+                          borderRadius: 20,
+                          background: "rgba(245, 158, 11, 0.15)",
+                          color: "#f59e0b",
+                          border: "1px solid rgba(245, 158, 11, 0.3)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#f59e0b" }} />
+                        RELAY PAUSED / DISABLED
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: "3px 10px",
+                          borderRadius: 20,
+                          background: "rgba(255, 255, 255, 0.05)",
+                          color: "var(--mut)",
+                          border: "1px solid var(--line)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#71717a" }} />
+                        NOT CONFIGURED
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--mut)", maxWidth: 720, lineHeight: 1.5 }}>
+                    Execute trades automatically on your own broker MT5 account (FTMO, IC Markets, Funding Pips, etc.). Whenever StratMarket generates a trade signal, our backend immediately hits your personal Windows MT5 VPS webhook POST URL with complete execution parameters.
+                  </p>
+                </div>
+
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowBridgeModal(true)}
+                    className="pill sm"
+                    style={{
+                      fontSize: 12,
+                      background: "rgba(255, 255, 255, 0.06)",
+                      border: "1px solid var(--line)",
+                      color: "#ffffff",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <span>⚡</span> View MT5 Python Bridge Script
+                  </button>
+                </div>
+              </div>
+
+              {/* Master Relay Toggle Bar */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 16,
+                  padding: "16px 20px",
+                  background: mt5Enabled ? "rgba(34, 197, 94, 0.05)" : "rgba(255, 255, 255, 0.02)",
+                  border: `1px solid ${mt5Enabled ? "rgba(34, 197, 94, 0.25)" : "var(--line)"}`,
+                  borderRadius: 12,
+                  marginBottom: 24,
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#ffffff", marginBottom: 3 }}>
+                    Master MT5 Webhook Automated Execution Relay
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--mut)" }}>
+                    {mt5Enabled
+                      ? "Automated signal forwarding is ON. StratMarket will dispatch all generated trade events to your VPS."
+                      : "Automated signal forwarding is paused. No HTTP POST requests will be sent to your VPS."}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setMt5Enabled(!mt5Enabled)}
+                  style={{
+                    padding: "8px 20px",
+                    borderRadius: 30,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    border: mt5Enabled ? "1px solid #22c55e" : "1px solid var(--line)",
+                    background: mt5Enabled ? "#22c55e" : "rgba(255, 255, 255, 0.06)",
+                    color: mt5Enabled ? "#000000" : "var(--tx)",
+                    boxShadow: mt5Enabled ? "0 0 16px rgba(34, 197, 94, 0.3)" : "none",
+                    transition: "all 0.15s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: mt5Enabled ? "#000" : "#71717a",
+                    }}
+                  />
+                  {mt5Enabled ? "RELAY ENABLED" : "RELAY PAUSED"}
+                </button>
+              </div>
+
+              {/* Server Connection Form */}
+              <form onSubmit={handleSaveMt5Settings}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
+                    gap: 20,
+                    marginBottom: 24,
+                  }}
+                >
+                  {/* Webhook POST URL */}
+                  <div>
+                    <label
+                      htmlFor="mt5WebhookUrl"
+                      style={{
+                        display: "block",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: "#ffffff",
+                        marginBottom: 6,
+                      }}
+                    >
+                      MT5 VPS Webhook POST URL <span style={{ color: "var(--lime)" }}>*</span>
+                    </label>
+                    <input
+                      id="mt5WebhookUrl"
+                      type="text"
+                      value={mt5WebhookUrl}
+                      onChange={(e) => setMt5WebhookUrl(e.target.value)}
+                      placeholder="http://your-vps-ip:5000/trade"
+                      style={{
+                        width: "100%",
+                        padding: "12px 14px",
+                        borderRadius: 8,
+                        background: "rgba(0, 0, 0, 0.4)",
+                        border: "1px solid var(--line)",
+                        color: "#ffffff",
+                        fontSize: 13,
+                        fontFamily: "monospace",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                    <div style={{ fontSize: 11.5, color: "var(--mut)", marginTop: 5 }}>
+                      The HTTP endpoint of your personal Windows MT5 VPS Python bridge (e.g. <code>http://123.45.67.89:5000/trade</code>).
+                    </div>
+                  </div>
+
+                  {/* Secret Token */}
+                  <div>
+                    <label
+                      htmlFor="mt5SecretToken"
+                      style={{
+                        display: "block",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: "#ffffff",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Secret Authorization Passphrase (Optional)
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        id="mt5SecretToken"
+                        type={showSecretToken ? "text" : "password"}
+                        value={mt5SecretToken}
+                        onChange={(e) => setMt5SecretToken(e.target.value)}
+                        placeholder="e.g. MyVpsSecretPassphrase123"
+                        style={{
+                          width: "100%",
+                          padding: "12px 42px 12px 14px",
+                          borderRadius: 8,
+                          background: "rgba(0, 0, 0, 0.4)",
+                          border: "1px solid var(--line)",
+                          color: "#ffffff",
+                          fontSize: 13,
+                          fontFamily: "monospace",
+                          outline: "none",
+                          boxSizing: "border-box",
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSecretToken(!showSecretToken)}
+                        style={{
+                          position: "absolute",
+                          right: 10,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          background: "none",
+                          border: "none",
+                          color: "var(--mut)",
+                          cursor: "pointer",
+                          fontSize: 12,
+                          padding: 4,
+                        }}
+                        title={showSecretToken ? "Hide Secret" : "Show Secret"}
+                      >
+                        {showSecretToken ? "Hide" : "Show"}
+                      </button>
+                    </div>
+                    <div style={{ fontSize: 11.5, color: "var(--mut)", marginTop: 5 }}>
+                      StratMarket sends this in the <code>Authorization: Bearer</code> header and payload <code>secret</code> field.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Strategy Specific Execution Controls */}
+                <div style={{ marginBottom: 24, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+                  <div style={{ marginBottom: 16 }}>
+                    <h4 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 4px", color: "#ffffff" }}>
+                      Strategy-Specific Automated Trading Controls
+                    </h4>
+                    <p style={{ margin: 0, fontSize: 12.5, color: "var(--mut)" }}>
+                      Select which strategies execute on your MT5 VPS, and customize each strategy&apos;s unique MT5 Magic Number and default lot size.
+                    </p>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
+                      gap: 16,
+                    }}
+                  >
+                    {[
+                      {
+                        id: "PS-01",
+                        name: "Grandmaster Dual 10R / 8R",
+                        instrument: "XAUUSD · M15",
+                        color: "#38bdf8",
+                        defaultMagic: 10101,
+                      },
+                      {
+                        id: "PS-02",
+                        name: "US Afternoon Reversal",
+                        instrument: "XAUUSD · M15",
+                        color: "#f59e0b",
+                        defaultMagic: 10102,
+                      },
+                      {
+                        id: "PS-03",
+                        name: "London Core Expansion",
+                        instrument: "XAUUSD · M15",
+                        color: "#84cc16",
+                        defaultMagic: 10103,
+                      },
+                    ].map((strat) => {
+                      const currentSetting = mt5StrategySettings[strat.id] || {
+                        enabled: strat.id === "PS-01",
+                        magicNumber: strat.defaultMagic,
+                        customLotSize: 0.01,
+                      };
+
+                      return (
+                        <div
+                          key={strat.id}
+                          style={{
+                            padding: "16px 18px",
+                            borderRadius: 12,
+                            border: `1px solid ${currentSetting.enabled ? strat.color + "40" : "var(--line)"}`,
+                            background: currentSetting.enabled
+                              ? "rgba(255, 255, 255, 0.03)"
+                              : "rgba(255, 255, 255, 0.01)",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                            <div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    fontWeight: 800,
+                                    padding: "2px 7px",
+                                    borderRadius: 4,
+                                    background: strat.color + "20",
+                                    color: strat.color,
+                                    border: `1px solid ${strat.color}40`,
+                                  }}
+                                >
+                                  {strat.id}
+                                </span>
+                                <span style={{ fontSize: 12, color: "var(--mut)" }}>{strat.instrument}</span>
+                              </div>
+                              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#ffffff", marginTop: 4 }}>
+                                {strat.name}
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setMt5StrategySettings((prev) => ({
+                                  ...prev,
+                                  [strat.id]: {
+                                    ...currentSetting,
+                                    enabled: !currentSetting.enabled,
+                                  },
+                                }));
+                              }}
+                              style={{
+                                padding: "4px 10px",
+                                borderRadius: 16,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                cursor: "pointer",
+                                border: currentSetting.enabled ? `1px solid ${strat.color}` : "1px solid var(--line)",
+                                background: currentSetting.enabled ? strat.color : "transparent",
+                                color: currentSetting.enabled ? "#000000" : "var(--mut)",
+                                transition: "all 0.15s ease",
+                              }}
+                            >
+                              {currentSetting.enabled ? "● Auto ON" : "○ Auto OFF"}
+                            </button>
+                          </div>
+
+                          {/* Strategy Inputs: Magic Number & Lot Size */}
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+                            <div>
+                              <label style={{ display: "block", fontSize: 11, color: "var(--mut)", marginBottom: 4 }}>
+                                Magic Number
+                              </label>
+                              <input
+                                type="number"
+                                value={currentSetting.magicNumber ?? strat.defaultMagic}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10);
+                                  setMt5StrategySettings((prev) => ({
+                                    ...prev,
+                                    [strat.id]: {
+                                      ...currentSetting,
+                                      magicNumber: isNaN(val) ? strat.defaultMagic : val,
+                                    },
+                                  }));
+                                }}
+                                style={{
+                                  width: "100%",
+                                  padding: "6px 10px",
+                                  borderRadius: 6,
+                                  background: "rgba(0, 0, 0, 0.3)",
+                                  border: "1px solid var(--line)",
+                                  color: "#ffffff",
+                                  fontSize: 12,
+                                  fontFamily: "monospace",
+                                  outline: "none",
+                                  boxSizing: "border-box",
+                                }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ display: "block", fontSize: 11, color: "var(--mut)", marginBottom: 4 }}>
+                                Lot Size (Volume)
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                value={currentSetting.customLotSize ?? 0.01}
+                                onChange={(e) => {
+                                  const val = parseFloat(e.target.value);
+                                  setMt5StrategySettings((prev) => ({
+                                    ...prev,
+                                    [strat.id]: {
+                                      ...currentSetting,
+                                      customLotSize: isNaN(val) ? 0.01 : val,
+                                    },
+                                  }));
+                                }}
+                                style={{
+                                  width: "100%",
+                                  padding: "6px 10px",
+                                  borderRadius: 6,
+                                  background: "rgba(0, 0, 0, 0.3)",
+                                  border: "1px solid var(--line)",
+                                  color: "#ffffff",
+                                  fontSize: 12,
+                                  fontFamily: "monospace",
+                                  outline: "none",
+                                  boxSizing: "border-box",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Action Buttons & Handshake Test */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: 12,
+                    paddingTop: 16,
+                    borderTop: "1px solid var(--line)",
+                  }}
+                >
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <button
+                      type="submit"
+                      disabled={savingMt5}
+                      className="pill"
+                      style={{
+                        padding: "10px 22px",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        background: "#ffffff",
+                        color: "#000000",
+                        border: "none",
+                        cursor: savingMt5 ? "not-allowed" : "pointer",
+                        opacity: savingMt5 ? 0.7 : 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      {savingMt5 ? (
+                        <>
+                          <span className="chart-spinner" style={{ width: 14, height: 14 }} />
+                          Saving Settings...
+                        </>
+                      ) : (
+                        "Save MT5 VPS Settings"
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleTestMt5Handshake}
+                      disabled={testingMt5 || !mt5WebhookUrl}
+                      className="pill g"
+                      style={{
+                        padding: "10px 18px",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: testingMt5 || !mt5WebhookUrl ? "not-allowed" : "pointer",
+                        opacity: !mt5WebhookUrl ? 0.5 : 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      {testingMt5 ? (
+                        <>
+                          <span className="chart-spinner" style={{ width: 14, height: 14 }} />
+                          Pinging VPS...
+                        </>
+                      ) : (
+                        <>
+                          <span>⚡</span> Send Test Handshake to VPS
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {mt5Webhook?.lastTriggeredAt && (
+                    <div style={{ fontSize: 11.5, color: "var(--mut)" }}>
+                      Last Relay Dispatched:{" "}
+                      <span style={{ color: "#ffffff" }}>
+                        {formatDeliveryTime(mt5Webhook.lastTriggeredAt).formatted}
+                      </span>{" "}
+                      ({formatDeliveryTime(mt5Webhook.lastTriggeredAt).relative})
+                    </div>
+                  )}
+                </div>
+
+                {/* Test Result Callout */}
+                {testMt5Result && (
+                  <div
+                    style={{
+                      marginTop: 16,
+                      padding: "12px 16px",
+                      borderRadius: 8,
+                      fontSize: 13,
+                      background: testMt5Result.ok ? "rgba(34, 197, 94, 0.1)" : "rgba(239, 68, 68, 0.1)",
+                      border: `1px solid ${testMt5Result.ok ? "rgba(34, 197, 94, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
+                      color: testMt5Result.ok ? "#22c55e" : "#ef4444",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <span>{testMt5Result.ok ? "✓" : "⚠️"}</span>
+                    <span>{testMt5Result.message}</span>
+                  </div>
+                )}
+              </form>
+
+              {/* Recent MT5 VPS Relays Audit Log */}
+              <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid var(--line)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div>
+                    <h4 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 2px", color: "#ffffff" }}>
+                      Recent MT5 VPS Relays (Audit Log)
+                    </h4>
+                    <div style={{ fontSize: 12, color: "var(--mut)" }}>
+                      Live log of trade execution signals dispatched from StratMarket to your MT5 VPS endpoint.
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: "2px 8px",
+                      borderRadius: 20,
+                      background: "rgba(56, 189, 248, 0.1)",
+                      color: "#38bdf8",
+                      border: "1px solid rgba(56, 189, 248, 0.2)",
+                    }}
+                  >
+                    Auto-Order Dispatcher
+                  </span>
+                </div>
+
+                {mt5Webhook?.recentRelays && mt5Webhook.recentRelays.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {mt5Webhook.recentRelays.slice(0, 10).map((relay) => {
+                      const timeInfo = formatDeliveryTime(relay.timestamp);
+                      return (
+                        <div
+                          key={relay.id}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: 10,
+                            padding: "10px 14px",
+                            background: "rgba(255, 255, 255, 0.015)",
+                            border: "1px solid var(--line)",
+                            borderRadius: 8,
+                            fontSize: 12.5,
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                            <span
+                              style={{
+                                fontSize: 10.5,
+                                fontWeight: 800,
+                                padding: "2px 6px",
+                                borderRadius: 4,
+                                background: relay.strategyId === "PS-01" ? "rgba(56, 189, 248, 0.15)" : "rgba(245, 158, 11, 0.15)",
+                                color: relay.strategyId === "PS-01" ? "#38bdf8" : "#f59e0b",
+                              }}
+                            >
+                              {relay.strategyId}
+                            </span>
+                            <span style={{ fontWeight: 700, color: "#ffffff" }}>
+                              {relay.signalType} {relay.direction}
+                            </span>
+                            <span style={{ color: "var(--mut)", fontFamily: "monospace" }}>
+                              @ ${relay.price?.toFixed(2)}
+                            </span>
+                          </div>
+
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            {relay.latencyMs !== undefined && (
+                              <span style={{ color: "var(--mut)", fontSize: 11, fontFamily: "monospace" }}>
+                                ⚡ {relay.latencyMs}ms
+                              </span>
+                            )}
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: relay.success ? "#22c55e" : "#ef4444",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 4,
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: "50%",
+                                  background: relay.success ? "#22c55e" : "#ef4444",
+                                }}
+                              />
+                              {relay.success ? (relay.statusCode ? `HTTP ${relay.statusCode}` : "RELAYED") : (relay.error || "FAILED")}
+                            </span>
+                            <span style={{ color: "var(--mut)", fontSize: 11 }}>
+                              {timeInfo.relative}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      padding: "20px",
+                      borderRadius: 8,
+                      border: "1px dashed var(--line)",
+                      background: "rgba(255, 255, 255, 0.01)",
+                      textAlign: "center",
+                      color: "var(--mut)",
+                      fontSize: 12.5,
+                    }}
+                  >
+                    No trades have been dispatched to your MT5 VPS yet. Once configured and enabled, live trade signals generated by StratMarket will appear here instantly.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* MT5 Python Bridge Script Modal */}
+            {showBridgeModal && (
+              <div
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  zIndex: 9999,
+                  background: "rgba(0, 0, 0, 0.8)",
+                  backdropFilter: "blur(6px)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 20,
+                }}
+              >
+                <div
+                  style={{
+                    background: "#09090b",
+                    border: "1px solid var(--line)",
+                    borderRadius: 16,
+                    maxWidth: 780,
+                    width: "100%",
+                    maxHeight: "90vh",
+                    display: "flex",
+                    flexDirection: "column",
+                    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.6)",
+                  }}
+                >
+                  {/* Modal Header */}
+                  <div
+                    style={{
+                      padding: "20px 24px",
+                      borderBottom: "1px solid var(--line)",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 16 }}>⚡</span>
+                        <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: "#ffffff" }}>
+                          MT5 VPS Python Bridge (Auto-Trader)
+                        </h3>
+                      </div>
+                      <div style={{ fontSize: 12, color: "var(--mut)" }}>
+                        Drop this script onto your Windows VPS where MetaTrader 5 is installed to receive & execute StratMarket trades.
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowBridgeModal(false)}
+                      style={{
+                        background: "rgba(255, 255, 255, 0.05)",
+                        border: "1px solid var(--line)",
+                        color: "var(--tx)",
+                        borderRadius: 8,
+                        padding: "6px 12px",
+                        cursor: "pointer",
+                        fontSize: 13,
+                      }}
+                    >
+                      ✕ Close
+                    </button>
+                  </div>
+
+                  {/* Modal Body */}
+                  <div style={{ padding: "20px 24px", overflowY: "auto", flex: 1 }}>
+                    {/* Setup Instructions */}
+                    <div
+                      style={{
+                        padding: "14px 16px",
+                        borderRadius: 8,
+                        background: "rgba(56, 189, 248, 0.06)",
+                        border: "1px solid rgba(56, 189, 248, 0.2)",
+                        marginBottom: 16,
+                        fontSize: 12.5,
+                        lineHeight: 1.6,
+                        color: "#e2e8f0",
+                      }}
+                    >
+                      <strong style={{ color: "#38bdf8" }}>3-Step Setup Instructions:</strong>
+                      <ol style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                        <li>Open MetaTrader 5 on your Windows VPS &rarr; Tools &rarr; Options &rarr; Expert Advisors &rarr; Check <strong>&ldquo;Allow algorithmic trading&rdquo;</strong>.</li>
+                        <li>Open PowerShell / Command Prompt on your VPS and install dependencies:<br />
+                          <code style={{ background: "rgba(0,0,0,0.5)", padding: "2px 6px", borderRadius: 4, color: "var(--lime)" }}>pip install MetaTrader5 flask requests waitress</code>
+                        </li>
+                        <li>Save the script below as <code style={{ color: "#38bdf8" }}>mt5_bridge.py</code> and run: <code style={{ background: "rgba(0,0,0,0.5)", padding: "2px 6px", borderRadius: 4, color: "var(--lime)" }}>python mt5_bridge.py</code>.<br />Then enter your VPS URL (e.g. <code>http://&lt;VPS_IP&gt;:5000/trade</code>) into StratMarket above.</li>
+                      </ol>
+                    </div>
+
+                    {/* Script Code Preview */}
+                    <div style={{ position: "relative" }}>
+                      <button
+                        type="button"
+                        onClick={handleCopyPythonScript}
+                        style={{
+                          position: "absolute",
+                          top: 10,
+                          right: 10,
+                          zIndex: 10,
+                          background: copiedScript ? "#22c55e" : "rgba(255, 255, 255, 0.12)",
+                          color: copiedScript ? "#000" : "#ffffff",
+                          border: "1px solid var(--line)",
+                          borderRadius: 6,
+                          padding: "6px 12px",
+                          fontSize: 11.5,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        {copiedScript ? "✓ Copied!" : "📋 Copy Python Script"}
+                      </button>
+                      <pre
+                        style={{
+                          background: "#000000",
+                          border: "1px solid var(--line)",
+                          borderRadius: 8,
+                          padding: "16px",
+                          color: "#38bdf8",
+                          fontSize: 12,
+                          fontFamily: "monospace",
+                          lineHeight: 1.5,
+                          overflowX: "auto",
+                          maxHeight: 380,
+                        }}
+                      >
+                        {pythonScriptCode || "Generating script..."}
+                      </pre>
+                    </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div
+                    style={{
+                      padding: "16px 24px",
+                      borderTop: "1px solid var(--line)",
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      gap: 10,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={handleCopyPythonScript}
+                      className="pill"
+                      style={{
+                        padding: "8px 18px",
+                        fontSize: 12.5,
+                        fontWeight: 700,
+                        background: copiedScript ? "#22c55e" : "#ffffff",
+                        color: "#000000",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {copiedScript ? "✓ Copied to Clipboard" : "Copy Python Bridge Code"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowBridgeModal(false)}
+                      className="pill g"
+                      style={{
+                        padding: "8px 16px",
+                        fontSize: 12.5,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 4. ACCOUNT SECURITY & PLAN TIERS */}
             <div
               style={{
                 display: "grid",
