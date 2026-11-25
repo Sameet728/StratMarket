@@ -1,6 +1,80 @@
 // Seed data for StratMarket - Elvaris Capital Algorithmic Trading Strategies
 // Incorporates the 10 real MT5 Single-Digit Drawdown Ensembles + 4 Pine Script strategies
 
+export interface PineParams {
+  bandLength: number;
+  bandMult: number;
+  emaMacroLen: number;
+  emaFastLen: number;
+  atrLen: number;
+  offsetVal: number;
+  crashFilterAtr: number;
+  rsiLen: number;
+  rsiLongThresh: number;
+  rsiShortThresh: number;
+  tpDist: number;
+  slDist: number;
+  sessionStart: number;
+  sessionEnd: number;
+  excludeHour12: boolean;
+  maxDailyLosses: number;
+  maxDailyTrades: number;
+}
+
+export interface ReportData {
+  subtitle?: string;
+  bigStats?: Array<{ val: string; label: string }>;
+  mechLede?: string;
+  mechRows?: Array<{
+    engine: string;
+    weight: string;
+    soloPnl: string;
+    soloPf: string;
+    soloDd: string;
+    role: string;
+  }>;
+  kpiLede?: string;
+  kpis?: Array<{ val: string; label: string }>;
+  payoff?: {
+    payoffRatio?: string;
+    avgWin?: string;
+    avgLoss?: string;
+    actualWinRate?: string;
+    breakevenWinRate?: string;
+    expectancy?: string;
+    totalPnl?: string;
+    maxConsecWins?: number;
+    maxConsecLosses?: number;
+  };
+  longStats?: { trades: string; pnl: string; winRate: string; pf: string };
+  shortStats?: { trades: string; pnl: string; winRate: string; pf: string };
+  regimes?: Array<{
+    name: string;
+    period: string;
+    trades: string | number;
+    pnl: string;
+    winRate: string;
+    pf: string;
+    dd: string;
+  }>;
+  yearly?: Array<{
+    year: string;
+    trades: string | number;
+    wl: string;
+    winRate: string;
+    returnPct?: string;
+    pnl?: string;
+  }>;
+  scriptData?: {
+    mx?: number;
+    years?: Array<[string, number]>;
+    pnl?: Record<string, Array<number | null>>;
+    cnt?: Record<string, number[]>;
+    tot?: Record<string, number>;
+    tc?: Record<string, number>;
+  };
+}
+
 export interface StrategySeedItem {
   id: string;
   slug: string;
@@ -18,6 +92,8 @@ export interface StrategySeedItem {
   ensembleFolder?: string;
   reportPath?: string;
   netProfitUsd?: string;
+  pineParams?: PineParams;
+  reportData?: ReportData;
   metrics: {
     netReturn: number;
     maxDrawdown: number;
@@ -245,6 +321,25 @@ const PINE_SCRIPT_STRATEGIES = [
     hypothesis: "Institutional mean-reversion with dynamic ATR flash crash filters, 200 EMA macro trend clearance, and Dual 10R/8R monthly consistency targets.",
     riskRules: "SL = $13.75, TP = $14.00. Max 1 loss/day, max 2 trades/day.",
     knownLimitations: "Sample covers verified live market cycles across 6,800 bars on XAUUSD M15.",
+    pineParams: {
+      bandLength: 28,
+      bandMult: 2.1,
+      emaMacroLen: 200,
+      emaFastLen: 50,
+      atrLen: 14,
+      offsetVal: 4.0,
+      crashFilterAtr: 1.25,
+      rsiLen: 14,
+      rsiLongThresh: 52,
+      rsiShortThresh: 48,
+      tpDist: 14.0,
+      slDist: 13.75,
+      sessionStart: 1,
+      sessionEnd: 20,
+      excludeHour12: true,
+      maxDailyLosses: 1,
+      maxDailyTrades: 2,
+    },
   },
   {
     num: 2,
@@ -263,6 +358,25 @@ const PINE_SCRIPT_STRATEGIES = [
     hypothesis: "Fades overextended momentum during the US afternoon window (14:00-22:00 UTC) capitalizing on late-day liquidity exhaustion.",
     riskRules: "SL = $13.75, TP = $18.00. Max 1 loss/day, max 2 trades/day.",
     knownLimitations: "Selective trading frequency during US afternoon session.",
+    pineParams: {
+      bandLength: 30,
+      bandMult: 2.0,
+      emaMacroLen: 200,
+      emaFastLen: 50,
+      atrLen: 14,
+      offsetVal: 2.0,
+      crashFilterAtr: 1.5,
+      rsiLen: 14,
+      rsiLongThresh: 52,
+      rsiShortThresh: 48,
+      tpDist: 18.0,
+      slDist: 13.75,
+      sessionStart: 14,
+      sessionEnd: 22,
+      excludeHour12: false,
+      maxDailyLosses: 1,
+      maxDailyTrades: 2,
+    },
   },
   {
     num: 3,
@@ -281,6 +395,25 @@ const PINE_SCRIPT_STRATEGIES = [
     hypothesis: "Captures European morning and early afternoon institutional expansions using 28-period 2.1-sigma envelope while excluding 12:00 UTC chop.",
     riskRules: "SL = $13.75, TP = $16.00. Max 1 loss/day, max 2 trades/day.",
     knownLimitations: "Trades strictly during active European & US overlap windows.",
+    pineParams: {
+      bandLength: 28,
+      bandMult: 2.1,
+      emaMacroLen: 200,
+      emaFastLen: 50,
+      atrLen: 14,
+      offsetVal: 3.0,
+      crashFilterAtr: 1.25,
+      rsiLen: 14,
+      rsiLongThresh: 52,
+      rsiShortThresh: 48,
+      tpDist: 16.0,
+      slDist: 13.75,
+      sessionStart: 4,
+      sessionEnd: 20,
+      excludeHour12: true,
+      maxDailyLosses: 1,
+      maxDailyTrades: 2,
+    },
   },
 ];
 
@@ -303,6 +436,7 @@ export const INITIAL_STRATEGIES: StrategySeedItem[] = [
       visibilityStatus: "PUBLIC" as const,
       trialEligibility: true,
       supportedUsageModes: ["chart", "alert", "broker"],
+      pineParams: ps.pineParams,
       metrics: {
         netReturn: ps.ret,
         maxDrawdown: ps.dd,

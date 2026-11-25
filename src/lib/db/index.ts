@@ -226,6 +226,7 @@ class RepositoryStore {
   orders: Map<string, any> = new Map();
   passwordResets: Map<string, PasswordResetRecord> = new Map();
   siteVisits: Map<string, SiteVisitRecord> = new Map();
+  deletedStrategyIds: Set<string> = new Set();
 
   private initialized = false;
 
@@ -459,6 +460,7 @@ if (!globalStore.connections) globalStore.connections = new Map();
 if (!globalStore.signals) globalStore.signals = new Map();
 if (!globalStore.auditEvents) globalStore.auditEvents = [];
 if (!globalStore.siteVisits) globalStore.siteVisits = new Map();
+if (!globalStore.deletedStrategyIds) globalStore.deletedStrategyIds = new Set();
 
 if (process.env.NODE_ENV !== "production") {
   (global as any).__stratMarketStore = globalStore;
@@ -866,6 +868,110 @@ export const db = {
   },
 
   // STRATEGY OPERATIONS
+  async loadMergedStrategies(): Promise<{
+    strategies: StrategySeedItem[];
+    knownIds: Set<string>;
+  }> {
+    const map = new Map<string, StrategySeedItem>();
+    const deletedIds = new Set<string>(
+      Array.from(globalStore.deletedStrategyIds || []) as string[]
+    );
+    const knownIds = new Set<string>();
+
+    // Start with in-memory strategies
+    for (const s of globalStore.strategies.values() as Iterable<StrategySeedItem>) {
+      if (!deletedIds.has(s.id)) {
+        map.set(s.id, { ...s });
+      }
+      knownIds.add(s.id);
+    }
+
+    // Seed INITIAL_STRATEGIES unless deleted or already present
+    INITIAL_STRATEGIES.forEach((s) => {
+      knownIds.add(s.id);
+      if (!deletedIds.has(s.id) && !map.has(s.id)) {
+        map.set(s.id, { ...s });
+      }
+    });
+
+    // Overlay authoritative MongoDB state when available
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        const docs = await mdb.collection("strategies").find({}).toArray();
+        for (const doc of docs as any[]) {
+          const docId = doc.id || doc._id?.toString();
+          if (!docId) continue;
+          knownIds.add(docId);
+
+          if (doc._deleted) {
+            deletedIds.add(docId);
+            globalStore.deletedStrategyIds.add(docId);
+            globalStore.strategies.delete(docId);
+            map.delete(docId);
+            continue;
+          }
+
+          const seedFallback = INITIAL_STRATEGIES.find((s) => s.id === docId);
+          const item: StrategySeedItem = {
+            id: docId,
+            slug: doc.slug || docId.toLowerCase(),
+            name: doc.name || seedFallback?.name || docId,
+            description: doc.description ?? seedFallback?.description ?? "",
+            implementationType: doc.implementationType || seedFallback?.implementationType || "PINE_SCRIPT",
+            instrument: doc.instrument || seedFallback?.instrument || "XAUUSD",
+            timeframe: doc.timeframe || seedFallback?.timeframe || "M15",
+            category: doc.category || seedFallback?.category || "Mean reversion",
+            currentVersion: doc.currentVersion || seedFallback?.currentVersion || "1.0.0",
+            visibilityStatus: doc.visibilityStatus || seedFallback?.visibilityStatus || "PRIVATE",
+            trialEligibility: doc.trialEligibility ?? seedFallback?.trialEligibility ?? true,
+            supportedUsageModes: doc.supportedUsageModes || seedFallback?.supportedUsageModes || ["chart", "alert", "broker"],
+            vpsStrategyRef: doc.vpsStrategyRef ?? seedFallback?.vpsStrategyRef,
+            ensembleFolder: doc.ensembleFolder ?? seedFallback?.ensembleFolder,
+            reportPath: doc.reportPath ?? seedFallback?.reportPath,
+            netProfitUsd: doc.netProfitUsd ?? seedFallback?.netProfitUsd,
+            pineParams: doc.pineParams ?? seedFallback?.pineParams,
+            reportData: doc.reportData ?? seedFallback?.reportData,
+            metrics: doc.metrics || seedFallback?.metrics || {
+              netReturn: 0,
+              maxDrawdown: 0,
+              profitFactor: 0,
+              winRate: 0,
+              totalTrades: 0,
+              averageTrade: 0,
+              sharpeRatio: 0,
+              backtestPeriod: "",
+              transactionCosts: "",
+              slippageAssumptions: "",
+              dataSource: "TradingView",
+              validationType: "BACKTESTED",
+              isDemo: false,
+            },
+            researchReport: doc.researchReport || seedFallback?.researchReport || {
+              hypothesis: "",
+              methodology: "",
+              riskRules: "",
+              knownLimitations: "",
+              dataCleaning: "",
+              executionProtocol: "",
+            },
+            equitySeries: doc.equitySeries || seedFallback?.equitySeries || [],
+            drawdownSeries: doc.drawdownSeries || seedFallback?.drawdownSeries || [],
+          };
+          map.set(docId, item);
+          globalStore.strategies.set(docId, item);
+        }
+      } catch (e) {
+        console.warn("[db] loadMergedStrategies mongo error, using memory:", e);
+      }
+    }
+
+    const strategies = Array.from(map.values()).sort(
+      (a, b) => getStrategySortOrder(a) - getStrategySortOrder(b)
+    );
+    return { strategies, knownIds };
+  },
+
   async getStrategies(filters?: {
     query?: string;
     instrument?: string;
@@ -875,21 +981,8 @@ export const db = {
     sort?: string;
     includeDrafts?: boolean;
   }): Promise<StrategySeedItem[]> {
-    // Ensure memory store stays synchronized with latest seed data
-    const validIds = new Set(INITIAL_STRATEGIES.map((s) => s.id));
-    for (const key of Array.from(globalStore.strategies.keys()) as string[]) {
-      if (!validIds.has(key)) {
-        globalStore.strategies.delete(key);
-      }
-    }
-    INITIAL_STRATEGIES.forEach((s) => {
-      const existing = globalStore.strategies.get(s.id);
-      if (!existing || existing.ensembleFolder !== s.ensembleFolder || existing.name !== s.name) {
-        globalStore.strategies.set(s.id, { ...s });
-      }
-    });
-
-    let list = Array.from(globalStore.strategies.values()) as StrategySeedItem[];
+    const { strategies } = await this.loadMergedStrategies();
+    let list = [...strategies];
 
     // Visibility filter
     if (!filters?.includeDrafts) {
@@ -964,28 +1057,18 @@ export const db = {
   },
 
   async getStrategyBySlug(slugOrId: string): Promise<StrategySeedItem | null> {
-    const validIds = new Set(INITIAL_STRATEGIES.map((s) => s.id));
-    for (const key of Array.from(globalStore.strategies.keys()) as string[]) {
-      if (!validIds.has(key)) {
-        globalStore.strategies.delete(key);
-      }
-    }
-    INITIAL_STRATEGIES.forEach((s) => {
-      const existing = globalStore.strategies.get(s.id);
-      if (!existing || existing.ensembleFolder !== s.ensembleFolder || existing.name !== s.name) {
-        globalStore.strategies.set(s.id, { ...s });
-      }
-    });
+    const { strategies } = await this.loadMergedStrategies();
+    const upper = slugOrId.trim().toUpperCase();
+    const lower = slugOrId.trim().toLowerCase();
 
-    const s =
-      globalStore.strategies.get(slugOrId.toUpperCase()) ||
-      Array.from(globalStore.strategies.values()).find(
-        (item: any) => item.slug === slugOrId.toLowerCase() || item.id === slugOrId.toUpperCase()
-      );
+    const s = strategies.find(
+      (item) =>
+        item.id.toUpperCase() === upper ||
+        item.slug.toLowerCase() === lower
+    );
     if (s) return { ...s };
 
-    const upper = slugOrId.toUpperCase();
-    if (upper === "PY-01" || upper === "PY01" || slugOrId.toLowerCase() === "py-01") {
+    if (upper === "PY-01" || upper === "PY01" || lower === "py-01") {
       return {
         id: "PY-01",
         slug: "py-01",
@@ -1005,7 +1088,7 @@ export const db = {
         drawdownSeries: [0, -1, -2],
       };
     }
-    if (upper === "PY-02" || upper === "PY02" || slugOrId.toLowerCase() === "py-02") {
+    if (upper === "PY-02" || upper === "PY02" || lower === "py-02") {
       return {
         id: "PY-02",
         slug: "py-02",
@@ -1032,11 +1115,195 @@ export const db = {
     id: string,
     visibility: "PUBLIC" | "PRIVATE" | "DRAFT" | "ARCHIVED"
   ): Promise<StrategySeedItem> {
-    const s = globalStore.strategies.get(id);
-    if (!s) throw new Error("STRATEGY_NOT_FOUND");
-    s.visibilityStatus = visibility;
-    globalStore.strategies.set(id, s);
-    return { ...s };
+    const existing = await this.getStrategyBySlug(id);
+    if (!existing) throw new Error("STRATEGY_NOT_FOUND");
+
+    const updated: StrategySeedItem = {
+      ...existing,
+      visibilityStatus: visibility,
+    };
+    globalStore.strategies.set(existing.id, updated);
+
+    // Upsert full record so even seed strategies persist across lambdas
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        await mdb.collection("strategies").updateOne(
+          { id: existing.id },
+          {
+            $set: { ...updated, updatedAt: new Date() },
+            $unset: { _deleted: "" },
+          },
+          { upsert: true }
+        );
+      } catch (e) {
+        console.error("[db] updateStrategyStatus mongo error:", e);
+      }
+    }
+    return { ...updated };
+  },
+
+  // Returns ALL strategies (including PRIVATE/DRAFT/ARCHIVED) — for admin use only
+  async getAllStrategiesAdmin(): Promise<StrategySeedItem[]> {
+    const { strategies } = await this.loadMergedStrategies();
+    return strategies;
+  },
+
+  // Create a new strategy (admin only)
+  async createStrategy(data: {
+    id?: string;
+    name: string;
+    slug: string;
+    implementationType: "PYTHON" | "PINE_SCRIPT";
+    instrument: string;
+    timeframe: string;
+    category: string;
+    description: string;
+    visibilityStatus: "PUBLIC" | "PRIVATE" | "DRAFT" | "ARCHIVED";
+    currentVersion: string;
+    trialEligibility: boolean;
+    netProfitUsd?: string;
+    metrics: StrategySeedItem["metrics"];
+    researchReport: StrategySeedItem["researchReport"];
+    pineParams?: StrategySeedItem["pineParams"];
+    reportData?: StrategySeedItem["reportData"];
+  }): Promise<StrategySeedItem> {
+    const { knownIds } = await this.loadMergedStrategies();
+    const prefix = data.implementationType === "PINE_SCRIPT" ? "PS" : "PY";
+
+    let id = data.id?.trim().toUpperCase();
+    if (!id) {
+      const nums = Array.from(knownIds)
+        .filter((k) => k.startsWith(prefix + "-"))
+        .map((k) => parseInt(k.split("-")[1], 10))
+        .filter((n) => !isNaN(n));
+      const nextNum = nums.length > 0 ? Math.max(...nums) + 1 : 4;
+      id = `${prefix}-${String(nextNum).padStart(2, "0")}`;
+    }
+
+    const { eq, dd } = (() => {
+      let v = 100;
+      const eq: number[] = [v];
+      for (let i = 1; i < 60; i++) {
+        v *= 1 + (Math.random() - 0.43) * 0.025 + 0.004;
+        eq.push(+v.toFixed(2));
+      }
+      let peak = 0;
+      const dd = eq.map((val) => {
+        peak = Math.max(peak, val);
+        return +((val / peak - 1) * 100).toFixed(2);
+      });
+      return { eq, dd };
+    })();
+
+    const cleanSlug = (data.slug || id.toLowerCase())
+      .toLowerCase()
+      .replace(/[^a-z0-9-]+/g, "-")
+      .replace(/^-|-$/g, "") || id.toLowerCase();
+
+    const newStrategy: StrategySeedItem = {
+      id,
+      slug: cleanSlug,
+      name: data.name,
+      description: data.description,
+      implementationType: data.implementationType,
+      instrument: data.instrument,
+      timeframe: data.timeframe,
+      category: data.category,
+      currentVersion: data.currentVersion,
+      visibilityStatus: data.visibilityStatus,
+      trialEligibility: data.trialEligibility,
+      supportedUsageModes: ["chart", "alert", "broker"],
+      netProfitUsd: data.netProfitUsd,
+      pineParams: data.pineParams,
+      reportData: data.reportData,
+      metrics: data.metrics,
+      researchReport: data.researchReport,
+      equitySeries: eq,
+      drawdownSeries: dd,
+    };
+
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        await mdb.collection("strategies").updateOne(
+          { id },
+          {
+            $set: { ...newStrategy, createdAt: new Date(), updatedAt: new Date() },
+            $unset: { _deleted: "" },
+          },
+          { upsert: true }
+        );
+      } catch (e) {
+        console.error("[db] createStrategy mongo error:", e);
+      }
+    }
+
+    globalStore.deletedStrategyIds.delete(id);
+    globalStore.strategies.set(id, newStrategy);
+    return { ...newStrategy };
+  },
+
+  // Update a strategy (admin only) — partial update
+  async updateStrategy(id: string, updates: Partial<StrategySeedItem>): Promise<StrategySeedItem> {
+    const existing = await this.getStrategyBySlug(id);
+    if (!existing) throw new Error("STRATEGY_NOT_FOUND");
+
+    const updated: StrategySeedItem = {
+      ...existing,
+      ...updates,
+      id: existing.id, // ID is immutable
+      metrics: updates.metrics ? { ...existing.metrics, ...updates.metrics } : existing.metrics,
+      researchReport: updates.researchReport
+        ? { ...existing.researchReport, ...updates.researchReport }
+        : existing.researchReport,
+      pineParams: updates.pineParams !== undefined ? (updates.pineParams || undefined) : existing.pineParams,
+      reportData: updates.reportData !== undefined
+        ? (updates.reportData ? { ...existing.reportData, ...updates.reportData } : undefined)
+        : existing.reportData,
+    };
+
+    globalStore.strategies.set(existing.id, updated);
+
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        await mdb.collection("strategies").updateOne(
+          { id: existing.id },
+          {
+            $set: { ...updated, updatedAt: new Date() },
+            $unset: { _deleted: "" },
+          },
+          { upsert: true }
+        );
+      } catch (e) {
+        console.error("[db] updateStrategy mongo error:", e);
+      }
+    }
+
+    return { ...updated };
+  },
+
+  // Delete a strategy (admin only)
+  async deleteStrategy(id: string): Promise<void> {
+    const existing = await this.getStrategyBySlug(id);
+    if (!existing) throw new Error("STRATEGY_NOT_FOUND");
+
+    globalStore.strategies.delete(existing.id);
+    globalStore.deletedStrategyIds.add(existing.id);
+
+    const mdb = await getMongoDb();
+    if (mdb) {
+      try {
+        await mdb.collection("strategies").updateOne(
+          { id: existing.id },
+          { $set: { id: existing.id, _deleted: true, deletedAt: new Date() } },
+          { upsert: true }
+        );
+      } catch (e) {
+        console.error("[db] deleteStrategy mongo error:", e);
+      }
+    }
   },
 
   // 7-DAY TRIAL SYSTEM (SERVER-ENFORCED, ATOMIC ACTIVATION)

@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/auth/session";
 import { StrategyReportView } from "@/components/StrategyReportView";
 import type { Metadata } from "next";
 
@@ -18,6 +20,7 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  await connection();
   const { slug } = await params;
   const strategy = await db.getStrategyBySlug(slug);
 
@@ -38,11 +41,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function StrategyReportPage({ params }: Props) {
+  await connection();
   const { slug } = await params;
   const strategy = await db.getStrategyBySlug(slug);
 
   if (!strategy) {
     notFound();
+  }
+
+  if (strategy.visibilityStatus !== "PUBLIC") {
+    const user = await getSession();
+    if (!user || user.role !== "ADMIN") {
+      notFound();
+    }
   }
 
   const jsonLd = {

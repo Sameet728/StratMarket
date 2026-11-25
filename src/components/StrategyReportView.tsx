@@ -15,11 +15,112 @@ interface Props {
 
 export function StrategyReportView({ strategy, initialSignals = [] }: Props) {
   const isPython = strategy.implementationType === "PYTHON";
-  
-  // Load rich quantitative report data
-  const reportData: any = isPython
-    ? (ensembleReportsData as any)[strategy.slug] || (ensembleReportsData as any)["py-01"]
-    : (pineReportsData as any)[strategy.slug] || (pineReportsData as any)["ps-01"];
+
+  const staticPreset: any = isPython
+    ? (ensembleReportsData as any)[strategy.slug]
+    : (pineReportsData as any)[strategy.slug];
+
+  const synthesizedReport: any = useMemo(() => {
+    const m = strategy.metrics;
+    const r = strategy.researchReport;
+    const p = strategy.pineParams;
+    const calmar = m.calmarRatio ?? (m.maxDrawdown > 0 ? +(m.netReturn / m.maxDrawdown).toFixed(2) : 0);
+    const ratio = p && p.slDist > 0 ? +(p.tpDist / p.slDist).toFixed(2) : 1.0;
+
+    const defaultMechRows = [
+      ...(r?.hypothesis
+        ? [
+            {
+              engine: `${strategy.name} Core Signal Engine`,
+              weight: "1.00× Allocation",
+              soloPnl: `+${m.netReturn}%`,
+              soloPf: String(m.profitFactor),
+              soloDd: `${m.maxDrawdown}%`,
+              role: r.hypothesis,
+            },
+          ]
+        : []),
+      ...(p
+        ? [
+            {
+              engine: `Volatility Envelope (${p.bandLength}, ${p.bandMult}σ) & EMA (${p.emaMacroLen} / ${p.emaFastLen})`,
+              weight: "Trend & Mean-Reversion",
+              soloPnl: "—",
+              soloPf: "—",
+              soloDd: "—",
+              role: `Bands calibrated to ${p.bandMult}σ with ${p.emaMacroLen} EMA macro filter ($${p.offsetVal.toFixed(2)} offset) and ${p.crashFilterAtr} ATR protective shield.`,
+            },
+            {
+              engine: `RSI (${p.rsiLen}) Momentum & Tradeify Session Guard`,
+              weight: "Risk Governance",
+              soloPnl: "—",
+              soloPf: "—",
+              soloDd: "—",
+              role: `Long RSI < ${p.rsiLongThresh}, Short RSI > ${p.rsiShortThresh}. Session ${String(p.sessionStart).padStart(2, "0")}:00–${String(p.sessionEnd).padStart(2, "0")}:00 UTC${p.excludeHour12 ? " (excl 12:00)" : ""}. Max ${p.maxDailyLosses} loss/day, ${p.maxDailyTrades} trades/day.`,
+            },
+          ]
+        : []),
+      ...(r?.riskRules
+        ? [
+            {
+              engine: "Risk Rules & Capital Governance",
+              weight: "Capital Shield",
+              soloPnl: "—",
+              soloPf: "—",
+              soloDd: "—",
+              role: r.riskRules,
+            },
+          ]
+        : []),
+    ];
+
+    const defaultKpis = [
+      { val: `+${m.netReturn}%`, label: "Realized Net Return" },
+      { val: String(m.profitFactor), label: "Profit Factor" },
+      { val: String(m.totalTrades), label: "Total Executed Trades" },
+      { val: `${m.winRate}%`, label: "Win Rate" },
+      { val: `${m.maxDrawdown}%`, label: "Max Drawdown" },
+      { val: String(calmar), label: "Calmar Ratio" },
+      { val: String(m.sharpeRatio), label: "Sharpe Ratio" },
+      { val: p ? `1 : ${ratio} ($${p.tpDist} TP / $${p.slDist} SL)` : `${m.averageTrade}R`, label: p ? "Payoff Ratio" : "Average Trade" },
+      { val: m.dataSource || "TradingView", label: "Authoritative Data Feed" },
+      { val: m.validationType || "BACKTESTED", label: "Validation Tier" },
+    ];
+
+    const defaultPayoff = {
+      payoffRatio: `${ratio.toFixed(2)}:1`,
+      avgWin: `+${ratio.toFixed(2)}R`,
+      avgLoss: "−1.00R",
+      actualWinRate: `${m.winRate}%`,
+      breakevenWinRate: `${((1 / (1 + ratio)) * 100).toFixed(1)}%`,
+      expectancy: `${((m.winRate / 100) * ratio - (1 - m.winRate / 100)).toFixed(2)}R / trade`,
+      totalPnl: `+${m.netReturn}%`,
+      maxConsecWins: 0,
+      maxConsecLosses: 0,
+    };
+
+    const base = staticPreset || {};
+    const custom = strategy.reportData || {};
+
+    return {
+      ...base,
+      ...custom,
+      subtitle: custom.subtitle || base.subtitle || strategy.description,
+      bigStats: custom.bigStats && custom.bigStats.length > 0 ? custom.bigStats : base.bigStats,
+      mechLede: custom.mechLede || base.mechLede || r?.methodology || strategy.description,
+      mechRows: custom.mechRows && custom.mechRows.length > 0 ? custom.mechRows : (base.mechRows || defaultMechRows),
+      kpiLede: custom.kpiLede || base.kpiLede || (m.backtestPeriod ? `Evaluated across ${m.backtestPeriod}. ${m.transactionCosts}` : "Audited quantitative telemetry."),
+      kpis: custom.kpis && custom.kpis.length > 0 ? custom.kpis : (base.kpis || defaultKpis),
+      payoff: custom.payoff ? { ...(base.payoff || defaultPayoff), ...custom.payoff } : (base.payoff || defaultPayoff),
+      longStats: custom.longStats || base.longStats,
+      shortStats: custom.shortStats || base.shortStats,
+      regimes: custom.regimes && custom.regimes.length > 0 ? custom.regimes : base.regimes,
+      yearly: custom.yearly && custom.yearly.length > 0 ? custom.yearly : base.yearly,
+      scriptData: custom.scriptData || base.scriptData,
+    };
+  }, [strategy, staticPreset]);
+
+  const reportData: any = synthesizedReport;
 
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("mech");
@@ -42,9 +143,16 @@ export function StrategyReportView({ strategy, initialSignals = [] }: Props) {
 
   // Reconstruct trades and extract STRICTLY the last 5 trades only for better UI
   const last5Trades = useMemo(() => {
-    const all = reconstructTrades(strategy.id, signals, []);
+    const all = reconstructTrades(
+      strategy.id,
+      signals,
+      [],
+      strategy.pineParams
+        ? { tpDist: strategy.pineParams.tpDist, slDist: strategy.pineParams.slDist }
+        : undefined
+    );
     return all.slice(0, 5); // STRICTLY 5 TRADES MAX FOR REPORT
-  }, [strategy.id, signals]);
+  }, [strategy.id, signals, strategy.pineParams]);
 
   // Synchronize active tab on scroll
   useEffect(() => {
@@ -448,6 +556,7 @@ export function StrategyReportView({ strategy, initialSignals = [] }: Props) {
       </section>
 
       {/* SECTION 4: LONG VERSUS SHORT (SEPARATED LUXURY CARDS WITH ZERO TEXT COLLISION) */}
+      {(reportData.longStats || reportData.shortStats) && (
       <section id="dir" className="report-section" style={{ marginTop: "56px", scrollMarginTop: "130px" }}>
         <h2 style={{ fontSize: "28px", marginBottom: "8px" }}>Long versus short performance</h2>
         <p className="lede" style={{ color: "var(--mut)", fontSize: "15px", marginBottom: "20px" }}>
@@ -526,8 +635,10 @@ export function StrategyReportView({ strategy, initialSignals = [] }: Props) {
           )}
         </div>
       </section>
+      )}
 
       {/* SECTION 5: THREE MARKET REGIMES (EXPLICIT MIN-WIDTHS & PADDING) */}
+      {reportData.regimes && reportData.regimes.length > 0 && (
       <section id="reg" className="report-section" style={{ marginTop: "56px", scrollMarginTop: "130px" }}>
         <h2 style={{ fontSize: "28px", marginBottom: "8px" }}>Three market regimes</h2>
         <p className="lede" style={{ color: "var(--mut)", fontSize: "15px", marginBottom: "20px" }}>
@@ -563,8 +674,10 @@ export function StrategyReportView({ strategy, initialSignals = [] }: Props) {
           </table>
         </div>
       </section>
+      )}
 
       {/* SECTION 6: YEAR BY YEAR */}
+      {reportData.yearly && reportData.yearly.length > 0 && (
       <section id="year" className="report-section" style={{ marginTop: "56px", scrollMarginTop: "130px" }}>
         <h2 style={{ fontSize: "28px", marginBottom: "8px" }}>Year by year</h2>
         <p className="lede" style={{ color: "var(--mut)", fontSize: "15px", marginBottom: "20px" }}>
@@ -617,8 +730,10 @@ export function StrategyReportView({ strategy, initialSignals = [] }: Props) {
           </div>
         </div>
       </section>
+      )}
 
       {/* SECTION 7: MONTHLY RETURN & TRADE COUNT HEATMAP */}
+      {scriptData.pnl && Object.keys(scriptData.pnl).length > 0 && (
       <section id="month" className="report-section" style={{ marginTop: "56px", scrollMarginTop: "130px" }}>
         <h2 style={{ fontSize: "28px", marginBottom: "8px" }}>Monthly return and trade count</h2>
         <p className="lede" style={{ color: "var(--mut)", fontSize: "15px", marginBottom: "20px" }}>
@@ -677,6 +792,7 @@ export function StrategyReportView({ strategy, initialSignals = [] }: Props) {
           </table>
         </div>
       </section>
+      )}
 
       {/* SECTION 8: RECENT EXECUTED TRADES (STRICTLY LAST 5 TRADES ONLY) */}
       <section id="trades" className="report-section" style={{ marginTop: "56px", scrollMarginTop: "130px" }}>

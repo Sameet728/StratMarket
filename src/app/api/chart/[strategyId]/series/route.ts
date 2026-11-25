@@ -36,6 +36,10 @@ export async function GET(request: NextRequest, { params }: Props) {
       );
     }
 
+    if (strategy.visibilityStatus !== "PUBLIC" && user.role !== "ADMIN") {
+      return NextResponse.json({ success: false, error: "Strategy is private" }, { status: 403 });
+    }
+
     // 2. Open Access: All authenticated traders have full access to live streaming data
     const { searchParams } = new URL(request.url);
     const count = parseInt(searchParams.get("count") || "1500", 10);

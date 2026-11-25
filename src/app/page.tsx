@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { StratMarketLogo } from "@/components/StratMarketLogo";
 import { TerrainCanvas } from "@/components/TerrainCanvas";
@@ -8,7 +9,10 @@ import { ThreeWaysSection } from "@/components/ThreeWaysSection";
 import { MarketTicker } from "@/components/MarketTicker";
 import { LiveExecutionStage } from "@/components/LiveExecutionStage";
 
+export const instant = false;
+
 export default async function HomePage() {
+  await connection();
   const strategies = await db.getStrategies({ includeDrafts: false });
 
   return (

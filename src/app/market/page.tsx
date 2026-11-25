@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { MarketplaceCatalogue } from "@/components/MarketplaceCatalogue";
 import type { Metadata } from "next";
+
+export const instant = false;
 
 export const metadata: Metadata = {
   title: "Strategy Marketplace — StratMarket by Elvaris Capital (elvariscapital.in)",
@@ -9,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function MarketPage() {
+  await connection();
   const strategies = await db.getStrategies({ includeDrafts: false });
 
   return (

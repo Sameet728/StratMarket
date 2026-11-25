@@ -84,10 +84,17 @@ export const STRATEGY_BASE_TRADES: Record<string, number> = {
 export function reconstructTrades(
   strategyId: string,
   signals: RawSignalItem[] = [],
-  tradeBoxes: TradeBoxItem[] = []
+  tradeBoxes: TradeBoxItem[] = [],
+  customParams?: { tpDist?: number; slDist?: number }
 ): TradeRecord[] {
   const normId = (strategyId || "PS-01").toUpperCase();
-  const cfg = STRATEGY_DEFAULTS[normId] || { tpDist: 16.0, slDist: 13.75, ratioR: "+1.16R" };
+  const baseCfg = STRATEGY_DEFAULTS[normId] || { tpDist: 16.0, slDist: 13.75, ratioR: "+1.16R" };
+  const tpDist = customParams?.tpDist ?? baseCfg.tpDist;
+  const slDist = customParams?.slDist ?? baseCfg.slDist;
+  const ratioR = customParams?.tpDist && customParams?.slDist
+    ? `+${(customParams.tpDist / customParams.slDist).toFixed(2)}R`
+    : baseCfg.ratioR;
+  const cfg = { tpDist, slDist, ratioR };
   const trades: TradeRecord[] = [];
   const seenIds = new Set<string>();
 

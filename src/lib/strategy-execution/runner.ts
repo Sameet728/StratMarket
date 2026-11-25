@@ -188,24 +188,25 @@ export class PrivateStrategyExecutionRunner {
   /**
    * Resolves calibrated strategy parameters
    */
-  private getStrategyConfig(strategyId: string): StrategyConfig {
-    const id = strategyId.toUpperCase().replace(/[^A-Z0-9-]/g, "");
+  private getStrategyConfig(strategy: StrategySeedItem): StrategyConfig {
+    const id = strategy.id.toUpperCase().replace(/[^A-Z0-9-]/g, "");
+    const p = strategy.pineParams;
 
     if (id === "PS-01") {
       // Champion_15M_Grandmaster_Dual10R_Oct8R_STRATEGY
       return {
-        tpDist: 14.0,
-        slDist: 13.75,
-        bandLen: 28,
-        bandMult: 2.1,
-        rsiFilter: 52,
+        tpDist: p?.tpDist ?? 14.0,
+        slDist: p?.slDist ?? 13.75,
+        bandLen: p?.bandLength ?? 28,
+        bandMult: p?.bandMult ?? 2.1,
+        rsiFilter: p?.rsiLongThresh ?? 52,
         wickMinRatio: 0.0,
-        emaFastLen: 50,
-        emaSlowLen: 200,
-        emaOffset: 4.0,
-        sessionStart: 1,
-        sessionEnd: 20,
-        excludeH12: true,
+        emaFastLen: p?.emaFastLen ?? 50,
+        emaSlowLen: p?.emaMacroLen ?? 200,
+        emaOffset: p?.offsetVal ?? 4.0,
+        sessionStart: p?.sessionStart ?? 1,
+        sessionEnd: p?.sessionEnd ?? 20,
+        excludeH12: p?.excludeHour12 ?? true,
         hudMetrics: [
           { label: "Win Rate", value: "80.00% (36W / 9L)", color: "#4ade80" },
           { label: "Realized R:R Ratio", value: "1 : 1.02 ($14.00 TP / $13.75 SL)", color: "#38bdf8" },
@@ -221,18 +222,18 @@ export class PrivateStrategyExecutionRunner {
     if (id === "PS-02") {
       // Champion_15M_US_Momentum_STRATEGY (US Afternoon Reversal)
       return {
-        tpDist: 18.0,
-        slDist: 13.75,
-        bandLen: 30,
-        bandMult: 2.0,
-        rsiFilter: 52,
+        tpDist: p?.tpDist ?? 18.0,
+        slDist: p?.slDist ?? 13.75,
+        bandLen: p?.bandLength ?? 30,
+        bandMult: p?.bandMult ?? 2.0,
+        rsiFilter: p?.rsiLongThresh ?? 52,
         wickMinRatio: 0.0,
-        emaFastLen: 50,
-        emaSlowLen: 200,
-        emaOffset: 2.0,
-        sessionStart: 14,
-        sessionEnd: 22,
-        excludeH12: false,
+        emaFastLen: p?.emaFastLen ?? 50,
+        emaSlowLen: p?.emaMacroLen ?? 200,
+        emaOffset: p?.offsetVal ?? 2.0,
+        sessionStart: p?.sessionStart ?? 14,
+        sessionEnd: p?.sessionEnd ?? 22,
+        excludeH12: p?.excludeHour12 ?? false,
         hudMetrics: [
           { label: "Win Rate", value: "83.33% (15W / 3L)", color: "#4ade80" },
           { label: "Profit Factor", value: "6.55", color: "#4ade80" },
@@ -248,18 +249,18 @@ export class PrivateStrategyExecutionRunner {
     if (id === "PS-03") {
       // Champion_15M_London_Core_STRATEGY (London Core Expansion)
       return {
-        tpDist: 16.0,
-        slDist: 13.75,
-        bandLen: 28,
-        bandMult: 2.1,
-        rsiFilter: 52,
+        tpDist: p?.tpDist ?? 16.0,
+        slDist: p?.slDist ?? 13.75,
+        bandLen: p?.bandLength ?? 28,
+        bandMult: p?.bandMult ?? 2.1,
+        rsiFilter: p?.rsiLongThresh ?? 52,
         wickMinRatio: 0.0,
-        emaFastLen: 50,
-        emaSlowLen: 200,
-        emaOffset: 3.0,
-        sessionStart: 4,
-        sessionEnd: 20,
-        excludeH12: true,
+        emaFastLen: p?.emaFastLen ?? 50,
+        emaSlowLen: p?.emaMacroLen ?? 200,
+        emaOffset: p?.offsetVal ?? 3.0,
+        sessionStart: p?.sessionStart ?? 4,
+        sessionEnd: p?.sessionEnd ?? 20,
+        excludeH12: p?.excludeHour12 ?? true,
         hudMetrics: [
           { label: "Win Rate", value: "80.00% (20W / 5L)", color: "#4ade80" },
           { label: "Profit Factor", value: "4.65", color: "#4ade80" },
@@ -268,6 +269,32 @@ export class PrivateStrategyExecutionRunner {
           { label: "Max Closed Drawdown", value: "1.00R ($13.75)", color: "#f87171" },
           { label: "Calmar Ratio", value: "25.58 (97.26 Annualized)", color: "#38bdf8" },
           { label: "Session Window", value: "London & Core EU (04:00 - 20:00 UTC excl 12)", color: "#ffffff" },
+        ],
+      };
+    }
+
+    if (p) {
+      const ratio = p.slDist > 0 ? (p.tpDist / p.slDist).toFixed(2) : "1.00";
+      return {
+        tpDist: p.tpDist,
+        slDist: p.slDist,
+        bandLen: p.bandLength,
+        bandMult: p.bandMult,
+        rsiFilter: p.rsiLongThresh,
+        wickMinRatio: 0.0,
+        emaFastLen: p.emaFastLen,
+        emaSlowLen: p.emaMacroLen,
+        emaOffset: p.offsetVal,
+        sessionStart: p.sessionStart,
+        sessionEnd: p.sessionEnd,
+        excludeH12: p.excludeHour12,
+        hudMetrics: [
+          { label: "Win Rate", value: `${strategy.metrics.winRate}%`, color: "#4ade80" },
+          { label: "Profit Factor", value: `${strategy.metrics.profitFactor}`, color: "#4ade80" },
+          { label: "Realized R:R Ratio", value: `1 : ${ratio} ($${p.tpDist.toFixed(2)} TP / $${p.slDist.toFixed(2)} SL)`, color: "#38bdf8" },
+          { label: "Total Net Return", value: `+${strategy.metrics.netReturn}%`, color: "#4ade80" },
+          { label: "Max Drawdown", value: `${strategy.metrics.maxDrawdown}%`, color: "#f87171" },
+          { label: "Session Window", value: `${String(p.sessionStart).padStart(2, "0")}:00 - ${String(p.sessionEnd).padStart(2, "0")}:00 UTC${p.excludeHour12 ? " (excl 12)" : ""}`, color: "#ffffff" },
         ],
       };
     }
@@ -302,7 +329,7 @@ export class PrivateStrategyExecutionRunner {
     candles: MarketCandle[]
   ): StrategyChartContract {
     const hasScript = this.hasPrivateScript(strategy.id);
-    const config = this.getStrategyConfig(strategy.id);
+    const config = this.getStrategyConfig(strategy);
 
     const series: StrategyLineSeries[] = [];
     const markers: StrategyMarker[] = [];

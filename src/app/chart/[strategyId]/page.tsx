@@ -15,6 +15,7 @@ interface Props {
 export const instant = false;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  await connection();
   const { strategyId } = await params;
   const strategy = await db.getStrategyBySlug(strategyId);
 
@@ -43,6 +44,10 @@ export default async function ChartPage({ params }: Props) {
   const user = await getSession();
   if (!user) {
     redirect(`/signin?redirect=/chart/${encodeURIComponent(strategy.id)}`);
+  }
+
+  if (strategy.visibilityStatus !== "PUBLIC" && user.role !== "ADMIN") {
+    notFound();
   }
 
   // 2. Open Access: All authenticated traders receive instant full access

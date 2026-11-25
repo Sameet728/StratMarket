@@ -92,4 +92,40 @@ export class VpsSignalDispatcher {
       error: lastError,
     };
   }
+
+  /**
+   * Fetches currently active PUBLIC Pine Script strategies & params from the marketplace API
+   */
+  public async fetchActivePineStrategies(): Promise<{
+    success: boolean;
+    strategies?: any[];
+    error?: string;
+  }> {
+    const strategiesUrl = this.apiEndpoint.replace(/\/api\/internal\/signals\/?$/, "/api/internal/vps-strategies");
+    const timestamp = Date.now().toString();
+    const signature = this.generateSignature("", timestamp);
+
+    try {
+      const response = await fetch(strategiesUrl, {
+        method: "GET",
+        headers: {
+          "x-vps-timestamp": timestamp,
+          "x-vps-signature": signature,
+        },
+      });
+      const data = (await response.json().catch(() => ({}))) as any;
+      if (response.ok && data.success && Array.isArray(data.strategies)) {
+        return { success: true, strategies: data.strategies };
+      }
+      return {
+        success: false,
+        error: data.error || `HTTP ${response.status}`,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || "Network error fetching VPS strategies",
+      };
+    }
+  }
 }

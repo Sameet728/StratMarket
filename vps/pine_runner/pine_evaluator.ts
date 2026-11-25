@@ -12,6 +12,7 @@ export interface PineStrategyDefinition {
   name: string;
   instrument: string;
   timeframe: string;
+  version?: string;
   bandLength: number;
   bandMult: number;
   emaMacroLen: number;
@@ -213,6 +214,9 @@ export class PineStrategyRunner {
   private states: Map<string, StrategyState> = new Map();
   private stateFilePath: string;
   private isRunning: boolean = false;
+  private activeStrategies: PineStrategyDefinition[] = [...PINE_STRATEGIES];
+  private lastSyncTime: number = 0;
+  private syncIntervalMs: number = 60000;
 
   constructor(dispatcher: VpsSignalDispatcher) {
     this.dispatcher = dispatcher;
@@ -226,9 +230,19 @@ export class PineStrategyRunner {
       }
     } catch (_) {}
 
-    for (const strat of PINE_STRATEGIES) {
-      const existing = savedStates[strat.id];
-      this.states.set(strat.id, existing || {
+    for (const [id, st] of Object.entries(savedStates)) {
+      this.states.set(id, st);
+    }
+
+    for (const strat of this.activeStrategies) {
+      this.ensureState(strat.id);
+    }
+  }
+
+  private ensureState(strategyId: string): StrategyState {
+    let st = this.states.get(strategyId);
+    if (!st) {
+      st = {
         position: 0,
         entryPrice: 0,
         entryTime: 0,
@@ -238,7 +252,83 @@ export class PineStrategyRunner {
         currentUtcDay: -1,
         dayTradeCount: 0,
         dayLossCount: 0,
-      });
+      };
+      this.states.set(strategyId, st);
+    }
+    return st;
+  }
+
+  /**
+   * Synchronizes active PUBLIC Pine strategies from the marketplace DB every 60s.
+   * Newly published strategies start running 24x7 automatically; private/deleted ones stop.
+   */
+  public async syncStrategiesFromServer(force: boolean = false): Promise<void> {
+    const now = Date.now();
+    if (!force && now - this.lastSyncTime < this.syncIntervalMs) {
+      return;
+    }
+    this.lastSyncTime = now;
+
+    const res = await this.dispatcher.fetchActivePineStrategies();
+    if (!res.success || !Array.isArray(res.strategies)) {
+      console.warn(`[VPS Pine] Strategy sync failed (${res.error || "unknown"}), keeping ${this.activeStrategies.length} cached strategies.`);
+      return;
+    }
+
+    const prevIds = new Set(this.activeStrategies.map((s) => s.id));
+    const nextStrategies: PineStrategyDefinition[] = res.strategies.map((s: any) => ({
+      id: s.id,
+      slug: s.slug || s.id.toLowerCase(),
+      name: s.name,
+      instrument: s.instrument || "XAUUSD",
+      timeframe: String(s.timeframe || "15"),
+      version: s.version || "1.0.0",
+      bandLength: Number(s.bandLength ?? 28),
+      bandMult: Number(s.bandMult ?? 2.1),
+      emaMacroLen: Number(s.emaMacroLen ?? 200),
+      emaFastLen: Number(s.emaFastLen ?? 50),
+      atrLen: Number(s.atrLen ?? 14),
+      offsetVal: Number(s.offsetVal ?? 4.0),
+      crashFilterAtr: Number(s.crashFilterAtr ?? 1.25),
+      rsiLen: Number(s.rsiLen ?? 14),
+      rsiLongThresh: Number(s.rsiLongThresh ?? 52),
+      rsiShortThresh: Number(s.rsiShortThresh ?? 48),
+      tpDist: Number(s.tpDist ?? 14.0),
+      slDist: Number(s.slDist ?? 13.75),
+      sessionStart: Number(s.sessionStart ?? 1),
+      sessionEnd: Number(s.sessionEnd ?? 20),
+      excludeHour12: Boolean(s.excludeHour12 ?? false),
+      maxDailyLosses: Number(s.maxDailyLosses ?? 1),
+      maxDailyTrades: Number(s.maxDailyTrades ?? 2),
+    }));
+
+    const nextIds = new Set(nextStrategies.map((s) => s.id));
+    const added = nextStrategies.filter((s) => !prevIds.has(s.id));
+    const removed = this.activeStrategies.filter((s) => !nextIds.has(s.id));
+
+    let stateChanged = false;
+    for (const s of nextStrategies) {
+      if (!this.states.has(s.id)) {
+        this.ensureState(s.id);
+        stateChanged = true;
+      }
+    }
+    if (stateChanged) {
+      this.saveState();
+    }
+
+    const prevJson = JSON.stringify(this.activeStrategies);
+    const nextJson = JSON.stringify(nextStrategies);
+    this.activeStrategies = nextStrategies;
+
+    if (added.length > 0) {
+      console.log(`[VPS Pine] + Auto-registered PUBLIC Pine strategies: ${added.map((s) => `${s.id} (${s.name})`).join(", ")}`);
+    }
+    if (removed.length > 0) {
+      console.log(`[VPS Pine] - Deactivated PRIVATE/deleted Pine strategies: ${removed.map((s) => `${s.id} (${s.name})`).join(", ")}`);
+    }
+    if (added.length === 0 && removed.length === 0 && prevJson !== nextJson) {
+      console.log(`[VPS Pine] ↻ Hot-reloaded updated parameters for active Pine strategies (${nextStrategies.map((s) => s.id).join(", ")}).`);
     }
   }
 
@@ -256,7 +346,7 @@ export class PineStrategyRunner {
    * Evaluates a single Pine Script strategy against newly confirmed bars
    */
   public async evaluateStrategy(strat: PineStrategyDefinition): Promise<void> {
-    const state = this.states.get(strat.id)!;
+    const state = this.ensureState(strat.id);
 
     try {
       // 1. Fetch latest institutional market candles from TradingView
@@ -503,11 +593,14 @@ export class PineStrategyRunner {
     if (this.isRunning) return;
     this.isRunning = true;
     console.log(`[VPS Pine] 24x7 Champion Pine Script Strategy Runner active.`);
-    console.log(`[VPS Pine] Active Strategies: ${PINE_STRATEGIES.map((s) => `${s.id} (${s.name})`).join(", ")}`);
+
+    await this.syncStrategiesFromServer(true);
+    console.log(`[VPS Pine] Active Strategies: ${this.activeStrategies.map((s) => `${s.id} (${s.name})`).join(", ") || "None"}`);
 
     const loop = async () => {
       if (!this.isRunning) return;
-      for (const strat of PINE_STRATEGIES) {
+      await this.syncStrategiesFromServer(false);
+      for (const strat of this.activeStrategies) {
         await this.evaluateStrategy(strat);
       }
       setTimeout(loop, intervalMs);

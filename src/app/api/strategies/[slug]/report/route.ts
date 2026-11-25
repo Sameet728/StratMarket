@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/auth/session";
 
 export async function GET(
   request: NextRequest,
@@ -11,6 +12,13 @@ export async function GET(
 
     if (!strategy) {
       return NextResponse.json({ error: "Strategy not found" }, { status: 404 });
+    }
+
+    if (strategy.visibilityStatus !== "PUBLIC") {
+      const user = await getSession();
+      if (!user || user.role !== "ADMIN") {
+        return NextResponse.json({ error: "Strategy not accessible" }, { status: 403 });
+      }
     }
 
     return NextResponse.json({
