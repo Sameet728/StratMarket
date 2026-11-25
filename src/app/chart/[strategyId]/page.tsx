@@ -25,6 +25,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  if (strategy.visibilityStatus !== "PUBLIC") {
+    const user = await getSession();
+    if (!user || user.role !== "ADMIN") {
+      return {
+        title: "Strategy Chart — StratMarket by Elvaris Capital",
+      };
+    }
+  }
+
   return {
     title: `${strategy.name} (${strategy.id}) Live Chart — StratMarket by Elvaris Capital (elvariscapital.in)`,
     description: `Interactive LuxAlgo Vela charting terminal with live market data and private Pine Script execution overlays for ${strategy.name} (${strategy.instrument} ${strategy.timeframe}) by Elvaris Capital (https://elvariscapital.in).`,

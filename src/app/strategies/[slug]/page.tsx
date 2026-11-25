@@ -30,6 +30,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  if (strategy.visibilityStatus !== "PUBLIC") {
+    const user = await getSession();
+    if (!user || user.role !== "ADMIN") {
+      return {
+        title: "Strategy Not Found — StratMarket by Elvaris Capital",
+      };
+    }
+  }
+
   return {
     title: `${strategy.name} (${strategy.id}) Performance Report — StratMarket by Elvaris Capital (elvariscapital.in)`,
     description: `${strategy.description} Researched by Elvaris Capital (https://elvariscapital.in). Audited institutional metrics: Net Return +${strategy.metrics.netReturn}%, Max Drawdown ${strategy.metrics.maxDrawdown}%, Profit Factor ${strategy.metrics.profitFactor}, Sharpe Ratio ${strategy.metrics.sharpeRatio}.`,
