@@ -126,7 +126,48 @@ describe("Admin Strategy Management & VPS Auto-Sync", () => {
     expect(synced.tpDist).toBe(17.5);
     expect(synced.timeframe).toBe("15");
 
-    // 5. Delete strategy -> removed everywhere
+    // 4b. Verify chart execution & signal/alert dispatch for dynamic PUBLIC strategy
+    const { strategyExecutionRunner } = await import("@/lib/strategy-execution");
+    const mockCandles = Array.from({ length: 240 }, (_, i) => ({
+      time: 1700000000000 + i * 900000,
+      open: 3500,
+      high: 3505,
+      low: 3495,
+      close: 3502,
+      volume: 100,
+    }));
+    const contract = strategyExecutionRunner.execute(updated, mockCandles);
+    expect(contract.strategyId).toBe(created.id);
+    expect(contract.series.length).toBeGreaterThanOrEqual(5);
+
+    const sigPublic = await db.ingestVpsSignal({
+      sourceEventId: `vitest_pub_${Date.now()}`,
+      strategyId: created.id,
+      instrument: "XAUUSD",
+      timeframe: "M15",
+      signalType: "ENTRY",
+      direction: "LONG",
+      entryPrice: 3502.5,
+      stopLoss: 3490.5,
+      targetPrice: 3520.0,
+    });
+    expect(sigPublic.notifiedUsersCount).toBeGreaterThan(0);
+    expect(sigPublic.subscriberEmails.length).toBeGreaterThan(0);
+
+    // 5. Set PRIVATE and verify signal ingestion stops alerting users, then delete
+    await db.updateStrategyStatus(created.id, "PRIVATE");
+    const sigPrivate = await db.ingestVpsSignal({
+      sourceEventId: `vitest_priv_${Date.now()}`,
+      strategyId: created.id,
+      instrument: "XAUUSD",
+      timeframe: "M15",
+      signalType: "ENTRY",
+      direction: "SHORT",
+      entryPrice: 3510.0,
+    });
+    expect(sigPrivate.notifiedUsersCount).toBe(0);
+    expect(sigPrivate.subscriberEmails.length).toBe(0);
+
     await db.deleteStrategy(created.id);
     const afterDelete = await db.getStrategyBySlug(created.id);
     expect(afterDelete).toBeNull();
