@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { StratMarketLogo } from "@/components/StratMarketLogo";
 import { StrategySeedItem, PineParams, ReportData } from "@/lib/db/seed-data";
+import { extractPineMetadata } from "@/lib/pine/pine-interpreter";
 import pineReportsData from "@/lib/data/pineReports.json";
 import ensembleReportsData from "@/lib/data/ensembleReports.json";
 
@@ -68,11 +69,12 @@ const DEFAULT_PINE_PARAMS: PineParams = {
 };
 
 type ModalMode = "create" | "edit" | null;
-type ModalTab = "basic" | "metrics" | "report" | "breakdown" | "pine";
+type OptionalTab = "metrics" | "report" | "breakdown" | "params";
 
 interface StrategyFormData {
   name: string;
   slug: string;
+  pineScriptCode: string;
   implementationType: "PYTHON" | "PINE_SCRIPT";
   instrument: string;
   timeframe: string;
@@ -82,7 +84,7 @@ interface StrategyFormData {
   currentVersion: string;
   trialEligibility: boolean;
   netProfitUsd: string;
-  // Core Metrics
+  // Optional Core Metrics
   netReturn: string;
   maxDrawdown: string;
   profitFactor: string;
@@ -96,14 +98,14 @@ interface StrategyFormData {
   slippageAssumptions: string;
   dataSource: string;
   validationType: "BACKTESTED" | "SIMULATED" | "PAPER_TRADED" | "FORWARD_TESTED" | "LIVE";
-  // Research Report
+  // Optional Research Report
   hypothesis: string;
   methodology: string;
   riskRules: string;
   knownLimitations: string;
   dataCleaning: string;
   executionProtocol: string;
-  // Full ReportData (Strategy Report view sections)
+  // Optional Full ReportData sections
   reportSubtitle: string;
   bigStats: Array<{ val: string; label: string }>;
   mechLede: string;
@@ -124,7 +126,6 @@ interface StrategyFormData {
   regimes: Array<{ name: string; period: string; trades: string; pnl: string; winRate: string; pf: string; dd: string }>;
   yearly: Array<{ year: string; trades: string; wl: string; winRate: string; returnPct: string }>;
   scriptDataJson: string;
-  // Pine Params
   pineParams: PineParams;
 }
 
@@ -132,12 +133,13 @@ function blankForm(): StrategyFormData {
   return {
     name: "",
     slug: "",
+    pineScriptCode: "",
     implementationType: "PINE_SCRIPT",
     instrument: "XAUUSD",
     timeframe: "M15",
     category: "Mean reversion",
     description: "",
-    visibilityStatus: "PRIVATE",
+    visibilityStatus: "PUBLIC",
     currentVersion: "1.0.0",
     trialEligibility: true,
     netProfitUsd: "",
@@ -150,16 +152,16 @@ function blankForm(): StrategyFormData {
     averageTrade: "",
     sharpeRatio: "",
     backtestPeriod: "",
-    transactionCosts: "Spread $0.20/oz, slippage $0.05/oz",
-    slippageAssumptions: "Next-bar-open execution",
+    transactionCosts: "",
+    slippageAssumptions: "",
     dataSource: "TradingView",
     validationType: "BACKTESTED",
     hypothesis: "",
     methodology: "",
     riskRules: "",
     knownLimitations: "",
-    dataCleaning: "Filtered for weekend rollover gaps and illiquid hours.",
-    executionProtocol: "Automated 24x7 VPS Pine Script evaluator with HMAC webhooks.",
+    dataCleaning: "",
+    executionProtocol: "",
     reportSubtitle: "",
     bigStats: [],
     mechLede: "",
@@ -194,6 +196,7 @@ function strategyToForm(s: StrategySeedItem): StrategyFormData {
   return {
     name: s.name,
     slug: s.slug,
+    pineScriptCode: s.pineScriptCode || "",
     implementationType: s.implementationType,
     instrument: s.instrument,
     timeframe: s.timeframe,
@@ -261,7 +264,7 @@ const inputStyle: React.CSSProperties = {
   background: "var(--bg)",
   border: "1px solid var(--line)",
   borderRadius: "6px",
-  padding: "7px 10px",
+  padding: "8px 10px",
   color: "#fff",
   fontSize: "13px",
   outline: "none",
@@ -272,7 +275,7 @@ const labelStyle: React.CSSProperties = {
   fontSize: "11px",
   color: "var(--muted, #888)",
   display: "block",
-  marginBottom: "3px",
+  marginBottom: "4px",
   fontWeight: 600,
   textTransform: "uppercase",
   letterSpacing: "0.04em",
@@ -353,64 +356,6 @@ function FormField({
   );
 }
 
-function PineParamsSection({
-  params,
-  onChange,
-}: {
-  params: PineParams;
-  onChange: (p: PineParams) => void;
-}) {
-  const set = (key: keyof PineParams, val: string) => {
-    const numVal = parseFloat(val);
-    onChange({ ...params, [key]: isNaN(numVal) ? 0 : numVal });
-  };
-  return (
-    <div>
-      <div
-        style={{
-          fontWeight: 700,
-          fontSize: "13px",
-          borderBottom: "1px solid var(--line)",
-          paddingBottom: "8px",
-          marginBottom: "10px",
-          color: "var(--lime, #a3e635)",
-        }}
-      >
-        🌲 24x7 VPS Pine Script Execution Parameters
-      </div>
-      <p className="note" style={{ fontSize: "12px", marginBottom: "12px" }}>
-        When visibility is set to <b>PUBLIC</b>, the 24x7 VPS runner automatically polls and executes these exact Pine parameters on live TradingView candles within 60 seconds.
-      </p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
-        <FormField label="Band Length" value={params.bandLength} onChange={(v) => set("bandLength", v)} type="number" />
-        <FormField label="Band Mult" value={params.bandMult} onChange={(v) => set("bandMult", v)} type="number" step="0.01" />
-        <FormField label="EMA Macro Len" value={params.emaMacroLen} onChange={(v) => set("emaMacroLen", v)} type="number" />
-        <FormField label="EMA Fast Len" value={params.emaFastLen} onChange={(v) => set("emaFastLen", v)} type="number" />
-        <FormField label="ATR Len" value={params.atrLen} onChange={(v) => set("atrLen", v)} type="number" />
-        <FormField label="Offset Val" value={params.offsetVal} onChange={(v) => set("offsetVal", v)} type="number" step="0.01" />
-        <FormField label="Crash Filter ATR" value={params.crashFilterAtr} onChange={(v) => set("crashFilterAtr", v)} type="number" step="0.01" />
-        <FormField label="RSI Len" value={params.rsiLen} onChange={(v) => set("rsiLen", v)} type="number" />
-        <FormField label="RSI Long Thresh" value={params.rsiLongThresh} onChange={(v) => set("rsiLongThresh", v)} type="number" />
-        <FormField label="RSI Short Thresh" value={params.rsiShortThresh} onChange={(v) => set("rsiShortThresh", v)} type="number" />
-        <FormField label="TP Dist ($)" value={params.tpDist} onChange={(v) => set("tpDist", v)} type="number" step="0.01" />
-        <FormField label="SL Dist ($)" value={params.slDist} onChange={(v) => set("slDist", v)} type="number" step="0.01" />
-        <FormField label="Session Start (UTC H)" value={params.sessionStart} onChange={(v) => set("sessionStart", v)} type="number" />
-        <FormField label="Session End (UTC H)" value={params.sessionEnd} onChange={(v) => set("sessionEnd", v)} type="number" />
-        <FormField label="Max Daily Losses" value={params.maxDailyLosses} onChange={(v) => set("maxDailyLosses", v)} type="number" />
-        <FormField label="Max Daily Trades" value={params.maxDailyTrades} onChange={(v) => set("maxDailyTrades", v)} type="number" />
-        <div style={{ gridColumn: "span 3", marginTop: "4px" }}>
-          <FormField
-            label="Exclude Hour 12 (noon UTC)"
-            value={params.excludeHour12}
-            onChange={(v) => onChange({ ...params, excludeHour12: v === "true" })}
-            type="checkbox"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function AdminClient() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [vpsHealth, setVpsHealth] = useState<VpsRuntimeHealth | null>(null);
@@ -420,8 +365,10 @@ export function AdminClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"strategies" | "runtime" | "customers" | "audit">("strategies");
+
   const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [modalTab, setModalTab] = useState<ModalTab>("basic");
+  const [showOptional, setShowOptional] = useState(false);
+  const [optionalTab, setOptionalTab] = useState<OptionalTab>("metrics");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<StrategyFormData>(blankForm());
   const [saving, setSaving] = useState(false);
@@ -429,6 +376,11 @@ export function AdminClient() {
   const [statusBanner, setStatusBanner] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const router = useRouter();
+
+  const pinePreview = useMemo(() => {
+    if (!form.pineScriptCode.trim()) return null;
+    return extractPineMetadata(form.pineScriptCode);
+  }, [form.pineScriptCode]);
 
   const refreshAdminData = useCallback(async () => {
     try {
@@ -488,8 +440,8 @@ export function AdminClient() {
         setStrategies((prev) => prev.map((item) => (item.id === s.id ? { ...item, visibilityStatus: newStatus } : item)));
         setStatusBanner(
           newStatus === "PUBLIC"
-            ? `${s.id} (${s.name}) is now PUBLIC — visible to traders, enabled for alerts, and will auto-sync to the 24x7 VPS within 60s.`
-            : `${s.id} (${s.name}) is now PRIVATE — hidden from users and stopped from VPS alerts.`
+            ? `${s.id} (${s.name}) is now PUBLIC — visible to users, alerts enabled, and running 24x7 on VPS within 60s.`
+            : `${s.id} (${s.name}) is now PRIVATE — hidden from users, alerts disabled, and stopped from VPS.`
         );
         refreshAdminData();
       }
@@ -502,7 +454,7 @@ export function AdminClient() {
     setForm(blankForm());
     setEditingId(null);
     setSaveError(null);
-    setModalTab("basic");
+    setShowOptional(false);
     setModalMode("create");
   };
 
@@ -510,7 +462,7 @@ export function AdminClient() {
     setForm(strategyToForm(s));
     setEditingId(s.id);
     setSaveError(null);
-    setModalTab("basic");
+    setShowOptional(false);
     setModalMode("edit");
   };
 
@@ -523,15 +475,42 @@ export function AdminClient() {
   const setF = (key: keyof StrategyFormData, val: any) =>
     setForm((prev) => ({ ...prev, [key]: val }));
 
+  const handlePineCodeChange = (code: string) => {
+    const meta = code.trim() ? extractPineMetadata(code) : null;
+    setForm((prev) => {
+      const next = { ...prev, pineScriptCode: code };
+      if (meta) {
+        if (!prev.name && meta.detectedTitle) next.name = meta.detectedTitle;
+        if (meta.detectedInstrument) next.instrument = meta.detectedInstrument;
+        if (meta.detectedTimeframe) next.timeframe = meta.detectedTimeframe;
+        if (!prev.winRate && meta.detectedWinRate !== undefined) next.winRate = String(meta.detectedWinRate);
+        if (!prev.profitFactor && meta.detectedProfitFactor !== undefined) next.profitFactor = String(meta.detectedProfitFactor);
+        if (!prev.maxDrawdown && meta.detectedMaxDrawdown !== undefined) next.maxDrawdown = String(meta.detectedMaxDrawdown);
+        if (!prev.netReturn && meta.detectedNetReturn !== undefined) next.netReturn = String(meta.detectedNetReturn);
+        if (!prev.totalTrades && meta.detectedTotalTrades !== undefined) next.totalTrades = String(meta.detectedTotalTrades);
+      }
+      return next;
+    });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    handlePineCodeChange(text);
+    if (!form.name.trim()) {
+      setF("name", file.name.replace(/\.(pine|txt)$/i, "").replace(/[_-]+/g, " "));
+    }
+  };
+
   const handleSave = async () => {
     if (!form.name.trim() || form.name.trim().length < 2) {
-      setSaveError("Strategy Name must be at least 2 characters.");
-      setModalTab("basic");
+      setSaveError("Please enter a Strategy Name (at least 2 characters).");
       return;
     }
-    if (!form.description.trim()) {
-      setSaveError("Description is required.");
-      setModalTab("basic");
+
+    if (form.pineScriptCode.trim() && pinePreview && !pinePreview.parseValid) {
+      setSaveError(`Pine Script syntax error: ${pinePreview.parseError}`);
       return;
     }
 
@@ -540,8 +519,7 @@ export function AdminClient() {
       try {
         parsedScriptData = JSON.parse(form.scriptDataJson);
       } catch {
-        setSaveError("Monthly Heatmap / ScriptData JSON is invalid. Please fix JSON syntax or leave blank.");
-        setModalTab("breakdown");
+        setSaveError("Monthly Heatmap JSON is invalid. Please fix JSON syntax or clear that field.");
         return;
       }
     }
@@ -553,74 +531,109 @@ export function AdminClient() {
       const hasPayoffFields =
         form.payoffRatio || form.avgWin || form.avgLoss || form.actualWinRate || form.breakevenWinRate || form.expectancy || form.totalPnl;
 
-      const reportData: ReportData = {
-        subtitle: form.reportSubtitle || undefined,
-        bigStats: form.bigStats.filter((b) => b.val.trim() || b.label.trim()),
-        mechLede: form.mechLede || undefined,
-        mechRows: form.mechRows.filter((r) => r.engine.trim()),
-        kpiLede: form.kpiLede || undefined,
-        kpis: form.kpis.filter((k) => k.val.trim() || k.label.trim()),
-        payoff: hasPayoffFields
-          ? {
-              payoffRatio: form.payoffRatio || undefined,
-              avgWin: form.avgWin || undefined,
-              avgLoss: form.avgLoss || undefined,
-              actualWinRate: form.actualWinRate || undefined,
-              breakevenWinRate: form.breakevenWinRate || undefined,
-              expectancy: form.expectancy || undefined,
-              totalPnl: form.totalPnl || undefined,
-              maxConsecWins: form.maxConsecWins ? parseInt(form.maxConsecWins, 10) : undefined,
-              maxConsecLosses: form.maxConsecLosses ? parseInt(form.maxConsecLosses, 10) : undefined,
-            }
-          : undefined,
-        longStats: form.longStats.trades || form.longStats.pnl ? form.longStats : undefined,
-        shortStats: form.shortStats.trades || form.shortStats.pnl ? form.shortStats : undefined,
-        regimes: form.regimes.filter((r) => r.name.trim()),
-        yearly: form.yearly.filter((y) => y.year.trim()),
-        scriptData: parsedScriptData,
-      };
+      const hasReportOverrides =
+        form.reportSubtitle ||
+        form.bigStats.length > 0 ||
+        form.mechLede ||
+        form.mechRows.length > 0 ||
+        form.kpiLede ||
+        form.kpis.length > 0 ||
+        hasPayoffFields ||
+        form.longStats.trades ||
+        form.shortStats.trades ||
+        form.regimes.length > 0 ||
+        form.yearly.length > 0 ||
+        parsedScriptData;
 
-      const cleanSlug = (form.slug || form.name.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "")) || "strategy";
+      const reportData: ReportData | undefined = hasReportOverrides
+        ? {
+            subtitle: form.reportSubtitle || undefined,
+            bigStats: form.bigStats.filter((b) => b.val.trim() || b.label.trim()),
+            mechLede: form.mechLede || undefined,
+            mechRows: form.mechRows.filter((r) => r.engine.trim()),
+            kpiLede: form.kpiLede || undefined,
+            kpis: form.kpis.filter((k) => k.val.trim() || k.label.trim()),
+            payoff: hasPayoffFields
+              ? {
+                  payoffRatio: form.payoffRatio || undefined,
+                  avgWin: form.avgWin || undefined,
+                  avgLoss: form.avgLoss || undefined,
+                  actualWinRate: form.actualWinRate || undefined,
+                  breakevenWinRate: form.breakevenWinRate || undefined,
+                  expectancy: form.expectancy || undefined,
+                  totalPnl: form.totalPnl || undefined,
+                  maxConsecWins: form.maxConsecWins ? parseInt(form.maxConsecWins, 10) : undefined,
+                  maxConsecLosses: form.maxConsecLosses ? parseInt(form.maxConsecLosses, 10) : undefined,
+                }
+              : undefined,
+            longStats: form.longStats.trades || form.longStats.pnl ? form.longStats : undefined,
+            shortStats: form.shortStats.trades || form.shortStats.pnl ? form.shortStats : undefined,
+            regimes: form.regimes.filter((r) => r.name.trim()),
+            yearly: form.yearly.filter((y) => y.year.trim()),
+            scriptData: parsedScriptData,
+          }
+        : undefined;
 
-      const payload = {
+      const cleanSlug =
+        form.slug.trim() ||
+        form.name
+          .toLowerCase()
+          .replace(/[^a-z0-9-]+/g, "-")
+          .replace(/^-|-$/g, "") ||
+        "strategy";
+
+      const hasAnyMetric =
+        form.netReturn || form.maxDrawdown || form.profitFactor || form.winRate || form.totalTrades || form.sharpeRatio;
+
+      const payload: any = {
         name: form.name.trim(),
         slug: cleanSlug,
+        pineScriptCode: form.pineScriptCode.trim() || undefined,
         implementationType: form.implementationType,
         instrument: form.instrument,
         timeframe: form.timeframe,
-        category: form.category,
-        description: form.description.trim(),
+        category: form.category || undefined,
+        description: form.description.trim() || undefined,
         visibilityStatus: form.visibilityStatus,
         currentVersion: form.currentVersion.trim() || "1.0.0",
         trialEligibility: form.trialEligibility,
         netProfitUsd: form.netProfitUsd || undefined,
-        metrics: {
+        reportData,
+      };
+
+      if (hasAnyMetric || modalMode === "edit") {
+        payload.metrics = {
           netReturn: parseFloat(form.netReturn) || 0,
           maxDrawdown: parseFloat(form.maxDrawdown) || 0,
-          profitFactor: parseFloat(form.profitFactor) || 0,
+          profitFactor: parseFloat(form.profitFactor) || 1.0,
           winRate: parseFloat(form.winRate) || 0,
           calmarRatio: form.calmarRatio ? parseFloat(form.calmarRatio) : undefined,
           totalTrades: parseInt(form.totalTrades, 10) || 0,
           averageTrade: parseFloat(form.averageTrade) || 0,
           sharpeRatio: parseFloat(form.sharpeRatio) || 0,
-          backtestPeriod: form.backtestPeriod,
-          transactionCosts: form.transactionCosts,
-          slippageAssumptions: form.slippageAssumptions,
+          backtestPeriod: form.backtestPeriod || "Live Forward + Historical",
+          transactionCosts: form.transactionCosts || "Standard spread",
+          slippageAssumptions: form.slippageAssumptions || "Confirmed bar-close execution",
           dataSource: form.dataSource || "TradingView",
           validationType: form.validationType,
           isDemo: false,
-        },
-        researchReport: {
-          hypothesis: form.hypothesis,
-          methodology: form.methodology,
-          riskRules: form.riskRules,
-          knownLimitations: form.knownLimitations,
-          dataCleaning: form.dataCleaning,
-          executionProtocol: form.executionProtocol,
-        },
-        pineParams: form.implementationType === "PINE_SCRIPT" ? form.pineParams : undefined,
-        reportData,
-      };
+        };
+      }
+
+      if (form.hypothesis || form.methodology || form.riskRules || form.knownLimitations || form.executionProtocol || modalMode === "edit") {
+        payload.researchReport = {
+          hypothesis: form.hypothesis || "",
+          methodology: form.methodology || "",
+          riskRules: form.riskRules || "",
+          knownLimitations: form.knownLimitations || "",
+          dataCleaning: form.dataCleaning || "",
+          executionProtocol: form.executionProtocol || "",
+        };
+      }
+
+      if (showOptional && form.implementationType === "PINE_SCRIPT") {
+        payload.pineParams = form.pineParams;
+      }
 
       let res: Response;
       if (modalMode === "create") {
@@ -645,9 +658,9 @@ export function AdminClient() {
 
       const savedStrat = data.strategy;
       setStatusBanner(
-        modalMode === "create"
-          ? `Created strategy ${savedStrat.id} (${savedStrat.name}) as ${savedStrat.visibilityStatus}.`
-          : `Updated strategy ${savedStrat.id} (${savedStrat.name}).`
+        savedStrat.visibilityStatus === "PUBLIC"
+          ? `${savedStrat.id} (${savedStrat.name}) saved as PUBLIC — visible to users, alerts enabled, and syncing to 24x7 VPS.`
+          : `${savedStrat.id} (${savedStrat.name}) saved as PRIVATE — hidden from users and not running on VPS.`
       );
       await refreshAdminData();
       closeModal();
@@ -665,7 +678,7 @@ export function AdminClient() {
       if (data.success) {
         setStrategies((prev) => prev.filter((s) => s.id !== id));
         setDeleteConfirmId(null);
-        setStatusBanner(`Deleted strategy ${id}. Removed from marketplace and VPS rotation.`);
+        setStatusBanner(`Deleted strategy ${id}. Removed from website, alerts, and VPS.`);
         refreshAdminData();
       }
     } catch (err) {
@@ -696,7 +709,7 @@ export function AdminClient() {
   const overlayStyle: React.CSSProperties = {
     position: "fixed",
     inset: 0,
-    background: "rgba(0,0,0,0.8)",
+    background: "rgba(0,0,0,0.82)",
     zIndex: 1000,
     display: "flex",
     alignItems: "flex-start",
@@ -742,7 +755,7 @@ export function AdminClient() {
             <span>StratMarket Administration</span>
           </h1>
           <p className="note" style={{ fontSize: "14px", marginTop: "4px" }}>
-            Full strategy lifecycle management, report editing, 24x7 VPS auto-sync, customer entitlements, and security audits.
+            Paste Pine Script strategies, toggle PUBLIC/PRIVATE visibility, and auto-deploy 24x7 alerts to the VPS.
           </p>
         </div>
         <div>
@@ -816,9 +829,9 @@ export function AdminClient() {
         <div className="card" style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
             <div>
-              <h3 style={{ margin: 0 }}>Catalogue Inventory &amp; Publication</h3>
+              <h3 style={{ margin: 0 }}>Strategies &amp; 24x7 VPS Auto-Sync</h3>
               <p className="note" style={{ marginTop: "4px" }}>
-                Add, edit, or delete strategies with complete report sections. Publishing a Pine strategy to <b>PUBLIC</b> automatically adds it to users, alerts, and the 24x7 VPS runner within 60s.
+                <b>PUBLIC</b> = visible to users, alerts active, and runs 24x7 on VPS. <b>PRIVATE</b> = hidden from users, no alerts, not running on VPS.
               </p>
             </div>
             <button
@@ -827,7 +840,7 @@ export function AdminClient() {
               onClick={openCreate}
               style={{ background: "rgba(163, 230, 53, 0.15)", borderColor: "rgba(163, 230, 53, 0.5)", color: "var(--lime)", fontWeight: 700, touchAction: "manipulation" }}
             >
-              + Add New Strategy
+              + Add New Strategy (Paste Pine Code)
             </button>
           </div>
 
@@ -853,19 +866,19 @@ export function AdminClient() {
                       {s.implementationType === "PINE_SCRIPT" ? "PINE" : "PYTHON"}
                     </span>
                     <b>{s.id}: {s.name}</b>
-                    {s.pineParams && (
-                      <span style={{ fontSize: "10px", background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.3)", borderRadius: "4px", padding: "1px 6px", color: "var(--lime)" }}>
-                        VPS Params ✓
+                    {s.pineScriptCode && (
+                      <span style={{ fontSize: "10px", background: "rgba(163,230,53,0.12)", border: "1px solid rgba(163,230,53,0.35)", borderRadius: "4px", padding: "1px 6px", color: "var(--lime)" }}>
+                        Pine Code Uploaded ✓
                       </span>
                     )}
                     {s.visibilityStatus === "PUBLIC" && s.implementationType === "PINE_SCRIPT" && (
                       <span style={{ fontSize: "10px", background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", borderRadius: "4px", padding: "1px 6px", color: "#38bdf8" }}>
-                        24x7 Alerts Active
+                        VPS 24x7 Active
                       </span>
                     )}
                   </div>
                   <div className="note" style={{ marginTop: "4px" }}>
-                    {s.instrument} · {s.timeframe} · {s.category} · Return: {s.metrics.netReturn}% · Max DD: {s.metrics.maxDrawdown}% · WR: {s.metrics.winRate}% · PF: {s.metrics.profitFactor}
+                    {s.instrument} · {s.timeframe} · Return: {s.metrics.netReturn}% · Max DD: {s.metrics.maxDrawdown}% · WR: {s.metrics.winRate}% · PF: {s.metrics.profitFactor}
                   </div>
                 </div>
 
@@ -890,7 +903,7 @@ export function AdminClient() {
                     onClick={() => openEdit(s)}
                     style={{ touchAction: "manipulation" }}
                   >
-                    Edit
+                    Edit / Code
                   </button>
                   {deleteConfirmId === s.id ? (
                     <span style={{ display: "flex", gap: "6px", alignItems: "center" }}>
@@ -918,7 +931,6 @@ export function AdminClient() {
             <p className="note" style={{ marginBottom: "16px" }}>
               Direct integration boundary with the Elvaris Capital execution environment. VPS polls <code>/api/internal/vps-strategies</code> every 60s.
             </p>
-
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px" }}>
               <div style={{ border: "1px solid var(--line)", borderRadius: "10px", padding: "14px", background: "var(--bg)" }}>
                 <span className="note">VPS Endpoint</span>
@@ -943,10 +955,6 @@ export function AdminClient() {
                 </b>
               </div>
             </div>
-
-            <div className="note" style={{ marginTop: "16px", padding: "12px", border: "1px dashed var(--line)", borderRadius: "8px" }}>
-              VPS polls <code>GET /api/internal/vps-strategies</code> every 60s using HMAC SHA-256 authentication. Publishing a new Pine strategy to PUBLIC automatically adds it to the VPS 24x7 loop and activates email + Telegram alerts.
-            </div>
           </div>
         </div>
       )}
@@ -955,11 +963,7 @@ export function AdminClient() {
       {activeTab === "customers" && (
         <div className="card" style={{ padding: "24px" }}>
           <h3>Customer Entitlements &amp; Accounts</h3>
-          <p className="note" style={{ marginBottom: "16px" }}>
-            Audit active trials and broker connection scopes for registered users.
-          </p>
-
-          <div style={{ display: "grid", gap: "10px" }}>
+          <div style={{ display: "grid", gap: "10px", marginTop: "12px" }}>
             {users.map((u) => (
               <div
                 key={u.id}
@@ -998,11 +1002,7 @@ export function AdminClient() {
       {activeTab === "audit" && (
         <div className="card" style={{ padding: "24px" }}>
           <h3>Security &amp; Operational Audit Trail</h3>
-          <p className="note" style={{ marginBottom: "16px" }}>
-            Immutable event log tracking logins, trial activations, webhook signals, and administrative mutations.
-          </p>
-
-          <div style={{ display: "grid", gap: "8px" }}>
+          <div style={{ display: "grid", gap: "8px", marginTop: "12px" }}>
             {auditLogs.map((log) => (
               <div
                 key={log.id}
@@ -1028,7 +1028,7 @@ export function AdminClient() {
         </div>
       )}
 
-      {/* Strategy Create / Edit Modal */}
+      {/* Strategy Create / Edit Modal — SIMPLE MAIN VIEW + COLLAPSIBLE OPTIONAL REPORT */}
       {modalMode && (
         <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && closeModal()}>
           <div style={modalStyle}>
@@ -1037,258 +1037,263 @@ export function AdminClient() {
               <button type="button" onClick={closeModal} style={{ background: "none", border: "none", color: "#888", fontSize: "20px", cursor: "pointer" }}>×</button>
             </div>
 
-            {/* Modal Sub-Tabs */}
-            <div className="chips" style={{ marginBottom: "18px", flexWrap: "wrap" }}>
-              <button type="button" className={`chip ${modalTab === "basic" ? "on" : ""}`} onClick={() => setModalTab("basic")}>
-                1. Basic &amp; Visibility
-              </button>
-              <button type="button" className={`chip ${modalTab === "metrics" ? "on" : ""}`} onClick={() => setModalTab("metrics")}>
-                2. Metrics &amp; Payoff
-              </button>
-              <button type="button" className={`chip ${modalTab === "report" ? "on" : ""}`} onClick={() => setModalTab("report")}>
-                3. Architecture &amp; Report
-              </button>
-              <button type="button" className={`chip ${modalTab === "breakdown" ? "on" : ""}`} onClick={() => setModalTab("breakdown")}>
-                4. Regimes &amp; Monthly
-              </button>
-              {form.implementationType === "PINE_SCRIPT" && (
-                <button type="button" className={`chip ${modalTab === "pine" ? "on" : ""}`} onClick={() => setModalTab("pine")}>
-                  5. Pine VPS Params
-                </button>
-              )}
-            </div>
-
-            <div style={{ display: "grid", gap: "14px" }}>
-              {/* TAB 1: BASIC */}
-              {modalTab === "basic" && (
-                <>
-                  <div style={grid2}>
-                    <FormField
-                      label="Strategy Name"
-                      value={form.name}
-                      onChange={(v) => {
-                        setF("name", v);
-                        if (modalMode === "create" && (!form.slug || form.slug === form.name.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, ""))) {
-                          setF("slug", v.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, ""));
-                        }
-                      }}
-                      placeholder="e.g. Asian Gold Breakout"
-                    />
-                    <FormField label="Slug (URL)" value={form.slug} onChange={(v) => setF("slug", v)} placeholder="e.g. ps-04 or asian-gold" />
-                  </div>
-                  <div style={grid3}>
-                    <FormField label="Type" value={form.implementationType} onChange={(v) => setF("implementationType", v)} as="select" options={["PINE_SCRIPT", "PYTHON"]} />
-                    <FormField label="Instrument" value={form.instrument} onChange={(v) => setF("instrument", v)} as="select" options={["XAUUSD", "NAS100", "EURUSD", "GBPUSD", "US30", "BTCUSD"]} />
-                    <FormField label="Timeframe" value={form.timeframe} onChange={(v) => setF("timeframe", v)} as="select" options={["M5", "M15", "M30", "H1", "H4", "D1"]} />
-                  </div>
-                  <div style={grid3}>
-                    <FormField label="Category" value={form.category} onChange={(v) => setF("category", v)} as="select" options={["Mean reversion", "Trend", "Momentum", "Breakout", "Volatility", "Scalping"]} />
-                    <FormField label="Visibility" value={form.visibilityStatus} onChange={(v) => setF("visibilityStatus", v)} as="select" options={["PRIVATE", "PUBLIC", "DRAFT", "ARCHIVED"]} />
-                    <FormField label="Version" value={form.currentVersion} onChange={(v) => setF("currentVersion", v)} />
-                  </div>
-                  <FormField label="Description" value={form.description} onChange={(v) => setF("description", v)} as="textarea" placeholder="Summary shown in marketplace card & report hero" />
-                  <FormField
-                    label="Eligible for Free Trial"
-                    value={form.trialEligibility}
-                    onChange={(v) => setF("trialEligibility", v === "true")}
-                    type="checkbox"
-                  />
-                </>
-              )}
-
-              {/* TAB 2: METRICS & PAYOFF */}
-              {modalTab === "metrics" && (
-                <>
-                  <div style={grid3}>
-                    <FormField label="Net Return (%)" value={form.netReturn} onChange={(v) => setF("netReturn", v)} type="number" step="0.01" />
-                    <FormField label="Max Drawdown (%)" value={form.maxDrawdown} onChange={(v) => setF("maxDrawdown", v)} type="number" step="0.01" />
-                    <FormField label="Profit Factor" value={form.profitFactor} onChange={(v) => setF("profitFactor", v)} type="number" step="0.01" />
-                    <FormField label="Win Rate (%)" value={form.winRate} onChange={(v) => setF("winRate", v)} type="number" step="0.01" />
-                    <FormField label="Calmar Ratio" value={form.calmarRatio} onChange={(v) => setF("calmarRatio", v)} type="number" step="0.01" />
-                    <FormField label="Sharpe Ratio" value={form.sharpeRatio} onChange={(v) => setF("sharpeRatio", v)} type="number" step="0.01" />
-                    <FormField label="Total Trades" value={form.totalTrades} onChange={(v) => setF("totalTrades", v)} type="number" />
-                    <FormField label="Avg Trade (R)" value={form.averageTrade} onChange={(v) => setF("averageTrade", v)} type="number" step="0.01" />
-                    <FormField label="Net Profit (USD)" value={form.netProfitUsd} onChange={(v) => setF("netProfitUsd", v)} placeholder="+$12,500.00" />
-                  </div>
-                  <div style={grid2}>
-                    <FormField label="Backtest Period" value={form.backtestPeriod} onChange={(v) => setF("backtestPeriod", v)} placeholder="2026-08-02 to 2026-11-09 (6,800 bars)" />
-                    <FormField label="Data Source" value={form.dataSource} onChange={(v) => setF("dataSource", v)} />
-                    <FormField label="Transaction Costs" value={form.transactionCosts} onChange={(v) => setF("transactionCosts", v)} />
-                    <FormField label="Slippage Assumptions" value={form.slippageAssumptions} onChange={(v) => setF("slippageAssumptions", v)} />
-                  </div>
-                  <div style={grid2}>
-                    <FormField label="Validation Type" value={form.validationType} onChange={(v) => setF("validationType", v)} as="select" options={["BACKTESTED", "SIMULATED", "PAPER_TRADED", "FORWARD_TESTED", "LIVE"]} />
-                    <FormField label="Report Hero Subtitle" value={form.reportSubtitle} onChange={(v) => setF("reportSubtitle", v)} placeholder="Optional custom subtitle for tear sheet hero" />
-                  </div>
-
-                  {/* Hero Big Stats */}
-                  <div style={{ borderTop: "1px solid var(--line)", paddingTop: "10px", marginTop: "4px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                      <span style={{ ...labelStyle, marginBottom: 0 }}>Hero Stat Cards (up to 4)</span>
-                      <button type="button" className="chip" onClick={() => setF("bigStats", [...form.bigStats, { val: "", label: "" }])}>+ Add Stat Card</button>
-                    </div>
-                    {form.bigStats.map((bs, idx) => (
-                      <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "8px", marginBottom: "6px" }}>
-                        <input style={inputStyle} placeholder="Value (e.g. +28.67R)" value={bs.val} onChange={(e) => { const next = [...form.bigStats]; next[idx] = { ...bs, val: e.target.value }; setF("bigStats", next); }} />
-                        <input style={inputStyle} placeholder="Label (e.g. Net Return)" value={bs.label} onChange={(e) => { const next = [...form.bigStats]; next[idx] = { ...bs, label: e.target.value }; setF("bigStats", next); }} />
-                        <button type="button" className="chip" style={{ color: "var(--dn)" }} onClick={() => setF("bigStats", form.bigStats.filter((_, i) => i !== idx))}>×</button>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Payoff Structure */}
-                  <div style={{ borderTop: "1px solid var(--line)", paddingTop: "10px" }}>
-                    <span style={{ ...labelStyle, marginBottom: "8px" }}>Payoff Structure &amp; Mathematical Edge</span>
-                    <div style={grid3}>
-                      <FormField label="Payoff Ratio" value={form.payoffRatio} onChange={(v) => setF("payoffRatio", v)} placeholder="1.02:1" />
-                      <FormField label="Avg Win" value={form.avgWin} onChange={(v) => setF("avgWin", v)} placeholder="+1.02R" />
-                      <FormField label="Avg Loss" value={form.avgLoss} onChange={(v) => setF("avgLoss", v)} placeholder="-1.00R" />
-                      <FormField label="Actual Win Rate" value={form.actualWinRate} onChange={(v) => setF("actualWinRate", v)} placeholder="80.43%" />
-                      <FormField label="Breakeven Win Rate" value={form.breakevenWinRate} onChange={(v) => setF("breakevenWinRate", v)} placeholder="49.5%" />
-                      <FormField label="Expectancy" value={form.expectancy} onChange={(v) => setF("expectancy", v)} placeholder="+0.62R / trade" />
-                      <FormField label="Cumulative PnL Label" value={form.totalPnl} onChange={(v) => setF("totalPnl", v)} placeholder="+28.67R" />
-                      <FormField label="Max Consec Wins" value={form.maxConsecWins} onChange={(v) => setF("maxConsecWins", v)} type="number" />
-                      <FormField label="Max Consec Losses" value={form.maxConsecLosses} onChange={(v) => setF("maxConsecLosses", v)} type="number" />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* TAB 3: ARCHITECTURE & RESEARCH REPORT */}
-              {modalTab === "report" && (
-                <>
-                  <FormField label="Hypothesis" value={form.hypothesis} onChange={(v) => setF("hypothesis", v)} as="textarea" />
-                  <FormField label="Methodology" value={form.methodology} onChange={(v) => setF("methodology", v)} as="textarea" />
-                  <FormField label="Risk Rules" value={form.riskRules} onChange={(v) => setF("riskRules", v)} as="textarea" />
-                  <div style={grid2}>
-                    <FormField label="Known Limitations" value={form.knownLimitations} onChange={(v) => setF("knownLimitations", v)} as="textarea" />
-                    <FormField label="Data Cleaning" value={form.dataCleaning} onChange={(v) => setF("dataCleaning", v)} as="textarea" />
-                  </div>
-                  <FormField label="Execution Protocol" value={form.executionProtocol} onChange={(v) => setF("executionProtocol", v)} as="textarea" />
-
-                  {/* Architecture Subsystems (mechRows) */}
-                  <div style={{ borderTop: "1px solid var(--line)", paddingTop: "10px" }}>
-                    <FormField label="Architecture Lede (How Strategy Works)" value={form.mechLede} onChange={(v) => setF("mechLede", v)} as="textarea" />
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "10px 0 6px" }}>
-                      <span style={{ ...labelStyle, marginBottom: 0 }}>Quantitative Subsystems Table</span>
-                      <button type="button" className="chip" onClick={() => setF("mechRows", [...form.mechRows, { engine: "", weight: "1.00×", soloPnl: "—", soloPf: "—", soloDd: "—", role: "" }])}>+ Add Subsystem</button>
-                    </div>
-                    {form.mechRows.map((row, idx) => (
-                      <div key={idx} style={{ border: "1px solid var(--line)", borderRadius: "8px", padding: "8px", marginBottom: "8px", display: "grid", gap: "6px" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto", gap: "6px" }}>
-                          <input style={inputStyle} placeholder="Engine name" value={row.engine} onChange={(e) => { const n = [...form.mechRows]; n[idx] = { ...row, engine: e.target.value }; setF("mechRows", n); }} />
-                          <input style={inputStyle} placeholder="Weight" value={row.weight} onChange={(e) => { const n = [...form.mechRows]; n[idx] = { ...row, weight: e.target.value }; setF("mechRows", n); }} />
-                          <input style={inputStyle} placeholder="Solo PnL" value={row.soloPnl} onChange={(e) => { const n = [...form.mechRows]; n[idx] = { ...row, soloPnl: e.target.value }; setF("mechRows", n); }} />
-                          <input style={inputStyle} placeholder="Solo PF" value={row.soloPf} onChange={(e) => { const n = [...form.mechRows]; n[idx] = { ...row, soloPf: e.target.value }; setF("mechRows", n); }} />
-                          <input style={inputStyle} placeholder="Solo DD" value={row.soloDd} onChange={(e) => { const n = [...form.mechRows]; n[idx] = { ...row, soloDd: e.target.value }; setF("mechRows", n); }} />
-                          <button type="button" className="chip" style={{ color: "var(--dn)" }} onClick={() => setF("mechRows", form.mechRows.filter((_, i) => i !== idx))}>×</button>
-                        </div>
-                        <input style={inputStyle} placeholder="Portfolio Function & Role" value={row.role} onChange={(e) => { const n = [...form.mechRows]; n[idx] = { ...row, role: e.target.value }; setF("mechRows", n); }} />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Custom Report KPIs */}
-                  <div style={{ borderTop: "1px solid var(--line)", paddingTop: "10px" }}>
-                    <FormField label="KPI Section Lede" value={form.kpiLede} onChange={(v) => setF("kpiLede", v)} />
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "10px 0 6px" }}>
-                      <span style={{ ...labelStyle, marginBottom: 0 }}>Custom Core KPI Tiles</span>
-                      <button type="button" className="chip" onClick={() => setF("kpis", [...form.kpis, { val: "", label: "" }])}>+ Add KPI Tile</button>
-                    </div>
-                    {form.kpis.map((k, idx) => (
-                      <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "8px", marginBottom: "6px" }}>
-                        <input style={inputStyle} placeholder="Value (e.g. 14.33)" value={k.val} onChange={(e) => { const n = [...form.kpis]; n[idx] = { ...k, val: e.target.value }; setF("kpis", n); }} />
-                        <input style={inputStyle} placeholder="Label (e.g. Calmar Ratio)" value={k.label} onChange={(e) => { const n = [...form.kpis]; n[idx] = { ...k, label: e.target.value }; setF("kpis", n); }} />
-                        <button type="button" className="chip" style={{ color: "var(--dn)" }} onClick={() => setF("kpis", form.kpis.filter((_, i) => i !== idx))}>×</button>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {/* TAB 4: LONG/SHORT, REGIMES, YEARLY & MONTHLY */}
-              {modalTab === "breakdown" && (
-                <>
-                  <div style={grid2}>
-                    <div style={{ border: "1px solid var(--line)", borderRadius: "8px", padding: "10px" }}>
-                      <span style={labelStyle}>Long Trades Stats</span>
-                      <div style={grid2}>
-                        <input style={inputStyle} placeholder="Trades (e.g. 25)" value={form.longStats.trades} onChange={(e) => setF("longStats", { ...form.longStats, trades: e.target.value })} />
-                        <input style={inputStyle} placeholder="Net Return (+15.4R)" value={form.longStats.pnl} onChange={(e) => setF("longStats", { ...form.longStats, pnl: e.target.value })} />
-                        <input style={inputStyle} placeholder="Win Rate (80.0%)" value={form.longStats.winRate} onChange={(e) => setF("longStats", { ...form.longStats, winRate: e.target.value })} />
-                        <input style={inputStyle} placeholder="Profit Factor (4.10)" value={form.longStats.pf} onChange={(e) => setF("longStats", { ...form.longStats, pf: e.target.value })} />
-                      </div>
-                    </div>
-                    <div style={{ border: "1px solid var(--line)", borderRadius: "8px", padding: "10px" }}>
-                      <span style={labelStyle}>Short Trades Stats</span>
-                      <div style={grid2}>
-                        <input style={inputStyle} placeholder="Trades (e.g. 21)" value={form.shortStats.trades} onChange={(e) => setF("shortStats", { ...form.shortStats, trades: e.target.value })} />
-                        <input style={inputStyle} placeholder="Net Return (+13.2R)" value={form.shortStats.pnl} onChange={(e) => setF("shortStats", { ...form.shortStats, pnl: e.target.value })} />
-                        <input style={inputStyle} placeholder="Win Rate (80.9%)" value={form.shortStats.winRate} onChange={(e) => setF("shortStats", { ...form.shortStats, winRate: e.target.value })} />
-                        <input style={inputStyle} placeholder="Profit Factor (4.29)" value={form.shortStats.pf} onChange={(e) => setF("shortStats", { ...form.shortStats, pf: e.target.value })} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Regimes */}
-                  <div style={{ borderTop: "1px solid var(--line)", paddingTop: "10px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                      <span style={{ ...labelStyle, marginBottom: 0 }}>Market Regimes Table</span>
-                      <button type="button" className="chip" onClick={() => setF("regimes", [...form.regimes, { name: "", period: "", trades: "", pnl: "", winRate: "", pf: "", dd: "" }])}>+ Add Regime</button>
-                    </div>
-                    {form.regimes.map((reg, idx) => (
-                      <div key={idx} style={{ display: "grid", gridTemplateColumns: "1.5fr 1.2fr 0.6fr 0.8fr 0.7fr 0.6fr 0.7fr auto", gap: "6px", marginBottom: "6px" }}>
-                        <input style={inputStyle} placeholder="Regime" value={reg.name} onChange={(e) => { const n = [...form.regimes]; n[idx] = { ...reg, name: e.target.value }; setF("regimes", n); }} />
-                        <input style={inputStyle} placeholder="Period" value={reg.period} onChange={(e) => { const n = [...form.regimes]; n[idx] = { ...reg, period: e.target.value }; setF("regimes", n); }} />
-                        <input style={inputStyle} placeholder="Trades" value={reg.trades} onChange={(e) => { const n = [...form.regimes]; n[idx] = { ...reg, trades: e.target.value }; setF("regimes", n); }} />
-                        <input style={inputStyle} placeholder="PnL" value={reg.pnl} onChange={(e) => { const n = [...form.regimes]; n[idx] = { ...reg, pnl: e.target.value }; setF("regimes", n); }} />
-                        <input style={inputStyle} placeholder="WR" value={reg.winRate} onChange={(e) => { const n = [...form.regimes]; n[idx] = { ...reg, winRate: e.target.value }; setF("regimes", n); }} />
-                        <input style={inputStyle} placeholder="PF" value={reg.pf} onChange={(e) => { const n = [...form.regimes]; n[idx] = { ...reg, pf: e.target.value }; setF("regimes", n); }} />
-                        <input style={inputStyle} placeholder="DD" value={reg.dd} onChange={(e) => { const n = [...form.regimes]; n[idx] = { ...reg, dd: e.target.value }; setF("regimes", n); }} />
-                        <button type="button" className="chip" style={{ color: "var(--dn)" }} onClick={() => setF("regimes", form.regimes.filter((_, i) => i !== idx))}>×</button>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Yearly Breakdown */}
-                  <div style={{ borderTop: "1px solid var(--line)", paddingTop: "10px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                      <span style={{ ...labelStyle, marginBottom: 0 }}>Year-by-Year Breakdown</span>
-                      <button type="button" className="chip" onClick={() => setF("yearly", [...form.yearly, { year: "2026", trades: "", wl: "", winRate: "", returnPct: "" }])}>+ Add Year</button>
-                    </div>
-                    {form.yearly.map((y, idx) => (
-                      <div key={idx} style={{ display: "grid", gridTemplateColumns: "0.8fr 0.8fr 1fr 0.9fr 1fr auto", gap: "6px", marginBottom: "6px" }}>
-                        <input style={inputStyle} placeholder="Year" value={y.year} onChange={(e) => { const n = [...form.yearly]; n[idx] = { ...y, year: e.target.value }; setF("yearly", n); }} />
-                        <input style={inputStyle} placeholder="Trades" value={y.trades} onChange={(e) => { const n = [...form.yearly]; n[idx] = { ...y, trades: e.target.value }; setF("yearly", n); }} />
-                        <input style={inputStyle} placeholder="W / L" value={y.wl} onChange={(e) => { const n = [...form.yearly]; n[idx] = { ...y, wl: e.target.value }; setF("yearly", n); }} />
-                        <input style={inputStyle} placeholder="Win Rate" value={y.winRate} onChange={(e) => { const n = [...form.yearly]; n[idx] = { ...y, winRate: e.target.value }; setF("yearly", n); }} />
-                        <input style={inputStyle} placeholder="Net Return" value={y.returnPct} onChange={(e) => { const n = [...form.yearly]; n[idx] = { ...y, returnPct: e.target.value }; setF("yearly", n); }} />
-                        <button type="button" className="chip" style={{ color: "var(--dn)" }} onClick={() => setF("yearly", form.yearly.filter((_, i) => i !== idx))}>×</button>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Monthly Heatmap JSON */}
-                  <div style={{ borderTop: "1px solid var(--line)", paddingTop: "10px" }}>
-                    <label style={labelStyle}>Monthly Heatmap &amp; ScriptData JSON (Optional)</label>
-                    <textarea
-                      rows={5}
-                      value={form.scriptDataJson}
-                      onChange={(e) => setF("scriptDataJson", e.target.value)}
-                      placeholder='{"mx":30,"years":[["2026",28.67]],"pnl":{"2026":[null,null,null,null,null,null,null,9.2,9.2,7.2,3.07,null]},"cnt":{"2026":[0,0,0,0,0,0,0,15,14,12,5,0]},"tot":{"2026":28.67},"tc":{"2026":46}}'
-                      style={{ ...inputStyle, fontFamily: "JetBrains Mono, monospace", fontSize: "12px", resize: "vertical" }}
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* TAB 5: PINE VPS PARAMS */}
-              {modalTab === "pine" && form.implementationType === "PINE_SCRIPT" && (
-                <PineParamsSection
-                  params={form.pineParams}
-                  onChange={(p) => setF("pineParams", p)}
+            <div style={{ display: "grid", gap: "16px" }}>
+              {/* 1. REQUIRED: Strategy Name & Visibility */}
+              <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "12px", alignItems: "end" }}>
+                <FormField
+                  label="Strategy Name *"
+                  value={form.name}
+                  onChange={(v) => {
+                    setF("name", v);
+                    if (modalMode === "create") {
+                      setF("slug", v.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, ""));
+                    }
+                  }}
+                  placeholder="e.g. London Keltner Champion"
                 />
-              )}
+
+                <div>
+                  <label style={labelStyle}>Visibility &amp; VPS Alerts</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                    <button
+                      type="button"
+                      onClick={() => setF("visibilityStatus", "PUBLIC")}
+                      style={{
+                        padding: "8px 10px",
+                        borderRadius: "6px",
+                        border: form.visibilityStatus === "PUBLIC" ? "1px solid #a3e635" : "1px solid var(--line)",
+                        background: form.visibilityStatus === "PUBLIC" ? "rgba(163, 230, 53, 0.16)" : "var(--bg)",
+                        color: form.visibilityStatus === "PUBLIC" ? "#a3e635" : "#888",
+                        fontWeight: 700,
+                        fontSize: "12px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      PUBLIC (Live + VPS)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setF("visibilityStatus", "PRIVATE")}
+                      style={{
+                        padding: "8px 10px",
+                        borderRadius: "6px",
+                        border: form.visibilityStatus === "PRIVATE" ? "1px solid #f59e0b" : "1px solid var(--line)",
+                        background: form.visibilityStatus === "PRIVATE" ? "rgba(245, 158, 11, 0.15)" : "var(--bg)",
+                        color: form.visibilityStatus === "PRIVATE" ? "#fbbf24" : "#888",
+                        fontWeight: 700,
+                        fontSize: "12px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      PRIVATE (Hidden)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. MAIN BOX: Paste Pine Script Code */}
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                  <label style={{ ...labelStyle, marginBottom: 0 }}>
+                    Paste Pine Script Code (//@version=5 / v6) — Runs 24x7 on VPS when PUBLIC
+                  </label>
+                  <label
+                    style={{
+                      fontSize: "11px",
+                      color: "var(--lime, #a3e635)",
+                      cursor: "pointer",
+                      border: "1px solid rgba(163, 230, 53, 0.35)",
+                      padding: "3px 10px",
+                      borderRadius: "99px",
+                    }}
+                  >
+                    Upload .pine File
+                    <input type="file" accept=".pine,.txt" onChange={handleFileUpload} style={{ display: "none" }} />
+                  </label>
+                </div>
+
+                <textarea
+                  rows={11}
+                  value={form.pineScriptCode}
+                  onChange={(e) => handlePineCodeChange(e.target.value)}
+                  placeholder={`//@version=5\nstrategy("My Strategy", overlay=true)\n\n// Paste your full Pine Script strategy code here...\n// Everything else below is OPTIONAL — Name + Code + PUBLIC/PRIVATE is enough!`}
+                  style={{
+                    ...inputStyle,
+                    fontFamily: "JetBrains Mono, Consolas, monospace",
+                    fontSize: "12px",
+                    lineHeight: 1.5,
+                    resize: "vertical",
+                    background: "#090a0d",
+                  }}
+                />
+
+                {/* Live Auto-Parse Feedback */}
+                {pinePreview && (
+                  <div
+                    style={{
+                      marginTop: "6px",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      border: pinePreview.parseValid
+                        ? "1px solid rgba(163, 230, 53, 0.35)"
+                        : "1px solid rgba(239, 68, 68, 0.5)",
+                      background: pinePreview.parseValid
+                        ? "rgba(163, 230, 53, 0.08)"
+                        : "rgba(239, 68, 68, 0.1)",
+                      color: pinePreview.parseValid ? "#d9f99d" : "#fca5a5",
+                    }}
+                  >
+                    {pinePreview.parseValid ? (
+                      <>
+                        ✓ Valid Pine Script {pinePreview.pineVersion || ""} · Instrument:{" "}
+                        <b>{pinePreview.detectedInstrument || form.instrument}</b> · Timeframe:{" "}
+                        <b>{pinePreview.detectedTimeframe || form.timeframe}</b>
+                        {pinePreview.detectedIndicators.length > 0 && (
+                          <> · Indicators: <b>{pinePreview.detectedIndicators.join(", ")}</b></>
+                        )}
+                        {(pinePreview.detectedTpDist || pinePreview.detectedSlDist) && (
+                          <> · TP/SL: <b>${pinePreview.detectedTpDist ?? "?"} / ${pinePreview.detectedSlDist ?? "?"}</b></>
+                        )}
+                      </>
+                    ) : (
+                      <>Syntax Warning: {pinePreview.parseError}</>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Compact Instrument / Timeframe Bar (auto-filled from Pine code, editable if desired) */}
+              <div style={grid3}>
+                <FormField label="Instrument (Optional)" value={form.instrument} onChange={(v) => setF("instrument", v)} as="select" options={["XAUUSD", "NAS100", "EURUSD", "GBPUSD", "US30", "BTCUSD"]} />
+                <FormField label="Timeframe (Optional)" value={form.timeframe} onChange={(v) => setF("timeframe", v)} as="select" options={["M5", "M15", "M30", "H1", "H4", "D1"]} />
+                <FormField label="Engine Type" value={form.implementationType} onChange={(v) => setF("implementationType", v)} as="select" options={["PINE_SCRIPT", "PYTHON"]} />
+              </div>
+
+              {/* 3. COLLAPSIBLE OPTIONAL SECTION (Report, Metrics & Overrides) */}
+              <div style={{ border: "1px solid var(--line)", borderRadius: "10px", overflow: "hidden" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowOptional(!showOptional)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    background: "rgba(255,255,255,0.03)",
+                    border: "none",
+                    color: "#d4d4d8",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                  }}
+                >
+                  <span>Optional: Add / Edit Strategy Report Details, Metrics &amp; Regimes</span>
+                  <span>{showOptional ? "▲ Hide Optional Fields" : "▼ Expand Optional Fields"}</span>
+                </button>
+
+                {showOptional && (
+                  <div style={{ padding: "16px", borderTop: "1px solid var(--line)", display: "grid", gap: "12px" }}>
+                    <div className="chips">
+                      <button type="button" className={`chip ${optionalTab === "metrics" ? "on" : ""}`} onClick={() => setOptionalTab("metrics")}>Metrics &amp; Payoff</button>
+                      <button type="button" className={`chip ${optionalTab === "report" ? "on" : ""}`} onClick={() => setOptionalTab("report")}>Report &amp; Architecture</button>
+                      <button type="button" className={`chip ${optionalTab === "breakdown" ? "on" : ""}`} onClick={() => setOptionalTab("breakdown")}>Regimes &amp; Monthly</button>
+                      <button type="button" className={`chip ${optionalTab === "params" ? "on" : ""}`} onClick={() => setOptionalTab("params")}>URL Slug &amp; Fallback Params</button>
+                    </div>
+
+                    {optionalTab === "metrics" && (
+                      <>
+                        <FormField label="Description" value={form.description} onChange={(v) => setF("description", v)} as="textarea" placeholder="Optional description shown in marketplace & report" />
+                        <div style={grid3}>
+                          <FormField label="Net Return (%)" value={form.netReturn} onChange={(v) => setF("netReturn", v)} type="number" step="0.01" />
+                          <FormField label="Max Drawdown (%)" value={form.maxDrawdown} onChange={(v) => setF("maxDrawdown", v)} type="number" step="0.01" />
+                          <FormField label="Profit Factor" value={form.profitFactor} onChange={(v) => setF("profitFactor", v)} type="number" step="0.01" />
+                          <FormField label="Win Rate (%)" value={form.winRate} onChange={(v) => setF("winRate", v)} type="number" step="0.01" />
+                          <FormField label="Calmar Ratio" value={form.calmarRatio} onChange={(v) => setF("calmarRatio", v)} type="number" step="0.01" />
+                          <FormField label="Sharpe Ratio" value={form.sharpeRatio} onChange={(v) => setF("sharpeRatio", v)} type="number" step="0.01" />
+                          <FormField label="Total Trades" value={form.totalTrades} onChange={(v) => setF("totalTrades", v)} type="number" />
+                          <FormField label="Avg Trade (R)" value={form.averageTrade} onChange={(v) => setF("averageTrade", v)} type="number" step="0.01" />
+                          <FormField label="Net Profit (USD)" value={form.netProfitUsd} onChange={(v) => setF("netProfitUsd", v)} placeholder="+$12,500.00" />
+                        </div>
+                        <div style={grid2}>
+                          <FormField label="Backtest Period" value={form.backtestPeriod} onChange={(v) => setF("backtestPeriod", v)} />
+                          <FormField label="Report Hero Subtitle" value={form.reportSubtitle} onChange={(v) => setF("reportSubtitle", v)} />
+                        </div>
+                        <div style={grid3}>
+                          <FormField label="Payoff Ratio" value={form.payoffRatio} onChange={(v) => setF("payoffRatio", v)} placeholder="1.20:1" />
+                          <FormField label="Avg Win" value={form.avgWin} onChange={(v) => setF("avgWin", v)} placeholder="+1.20R" />
+                          <FormField label="Avg Loss" value={form.avgLoss} onChange={(v) => setF("avgLoss", v)} placeholder="-1.00R" />
+                        </div>
+                      </>
+                    )}
+
+                    {optionalTab === "report" && (
+                      <>
+                        <FormField label="Hypothesis" value={form.hypothesis} onChange={(v) => setF("hypothesis", v)} as="textarea" />
+                        <FormField label="Methodology" value={form.methodology} onChange={(v) => setF("methodology", v)} as="textarea" />
+                        <FormField label="Risk Rules" value={form.riskRules} onChange={(v) => setF("riskRules", v)} as="textarea" />
+                        <FormField label="Execution Protocol" value={form.executionProtocol} onChange={(v) => setF("executionProtocol", v)} as="textarea" />
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ ...labelStyle, marginBottom: 0 }}>Subsystems Table Rows</span>
+                          <button type="button" className="chip" onClick={() => setF("mechRows", [...form.mechRows, { engine: "", weight: "1.00×", soloPnl: "—", soloPf: "—", soloDd: "—", role: "" }])}>+ Add Row</button>
+                        </div>
+                        {form.mechRows.map((row, idx) => (
+                          <div key={idx} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 2fr auto", gap: "6px" }}>
+                            <input style={inputStyle} placeholder="Engine" value={row.engine} onChange={(e) => { const n = [...form.mechRows]; n[idx] = { ...row, engine: e.target.value }; setF("mechRows", n); }} />
+                            <input style={inputStyle} placeholder="Weight" value={row.weight} onChange={(e) => { const n = [...form.mechRows]; n[idx] = { ...row, weight: e.target.value }; setF("mechRows", n); }} />
+                            <input style={inputStyle} placeholder="Role" value={row.role} onChange={(e) => { const n = [...form.mechRows]; n[idx] = { ...row, role: e.target.value }; setF("mechRows", n); }} />
+                            <button type="button" className="chip" style={{ color: "var(--dn)" }} onClick={() => setF("mechRows", form.mechRows.filter((_, i) => i !== idx))}>×</button>
+                          </div>
+                        ))}
+                      </>
+                    )}
+
+                    {optionalTab === "breakdown" && (
+                      <>
+                        <div style={grid2}>
+                          <div>
+                            <label style={labelStyle}>Long Stats (Trades / PnL / WR / PF)</label>
+                            <div style={grid2}>
+                              <input style={inputStyle} placeholder="Trades" value={form.longStats.trades} onChange={(e) => setF("longStats", { ...form.longStats, trades: e.target.value })} />
+                              <input style={inputStyle} placeholder="PnL" value={form.longStats.pnl} onChange={(e) => setF("longStats", { ...form.longStats, pnl: e.target.value })} />
+                              <input style={inputStyle} placeholder="Win Rate" value={form.longStats.winRate} onChange={(e) => setF("longStats", { ...form.longStats, winRate: e.target.value })} />
+                              <input style={inputStyle} placeholder="PF" value={form.longStats.pf} onChange={(e) => setF("longStats", { ...form.longStats, pf: e.target.value })} />
+                            </div>
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Short Stats (Trades / PnL / WR / PF)</label>
+                            <div style={grid2}>
+                              <input style={inputStyle} placeholder="Trades" value={form.shortStats.trades} onChange={(e) => setF("shortStats", { ...form.shortStats, trades: e.target.value })} />
+                              <input style={inputStyle} placeholder="PnL" value={form.shortStats.pnl} onChange={(e) => setF("shortStats", { ...form.shortStats, pnl: e.target.value })} />
+                              <input style={inputStyle} placeholder="Win Rate" value={form.shortStats.winRate} onChange={(e) => setF("shortStats", { ...form.shortStats, winRate: e.target.value })} />
+                              <input style={inputStyle} placeholder="PF" value={form.shortStats.pf} onChange={(e) => setF("shortStats", { ...form.shortStats, pf: e.target.value })} />
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Monthly Heatmap &amp; ScriptData JSON</label>
+                          <textarea
+                            rows={3}
+                            value={form.scriptDataJson}
+                            onChange={(e) => setF("scriptDataJson", e.target.value)}
+                            placeholder='{"mx":30,"years":[["2026",28.67]],"pnl":{"2026":[...]},"cnt":{"2026":[...]}}'
+                            style={{ ...inputStyle, fontFamily: "JetBrains Mono, monospace", fontSize: "12px" }}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {optionalTab === "params" && (
+                      <div style={grid3}>
+                        <FormField label="URL Slug" value={form.slug} onChange={(v) => setF("slug", v)} />
+                        <FormField label="Category" value={form.category} onChange={(v) => setF("category", v)} as="select" options={["Mean reversion", "Trend", "Momentum", "Breakout", "Volatility", "Scalping", "Systematic"]} />
+                        <FormField label="Version" value={form.currentVersion} onChange={(v) => setF("currentVersion", v)} />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {saveError && (
                 <div style={{ padding: "10px", border: "1px solid var(--dn)", borderRadius: "8px", color: "var(--dn)", fontSize: "13px" }}>
@@ -1296,11 +1301,11 @@ export function AdminClient() {
                 </div>
               )}
 
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px", marginTop: "8px", borderTop: "1px solid var(--line)", paddingTop: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px", borderTop: "1px solid var(--line)", paddingTop: "14px", flexWrap: "wrap" }}>
                 <span className="note" style={{ fontSize: "12px" }}>
                   {form.visibilityStatus === "PUBLIC"
-                    ? "Will be visible to users & alerts (+ auto-synced to 24x7 VPS if Pine)"
-                    : "Saved as PRIVATE (hidden from users & alerts)"}
+                    ? "PUBLIC: Shown to users, Alerts ON & runs 24x7 on VPS automatically."
+                    : "PRIVATE: Hidden from users, Alerts OFF & NOT running on VPS."}
                 </span>
                 <div style={{ display: "flex", gap: "10px" }}>
                   <button type="button" className="chip" onClick={closeModal} style={{ touchAction: "manipulation" }}>Cancel</button>
@@ -1309,9 +1314,9 @@ export function AdminClient() {
                     className="pill g"
                     onClick={handleSave}
                     disabled={saving}
-                    style={{ background: "rgba(163, 230, 53, 0.15)", borderColor: "rgba(163, 230, 53, 0.5)", color: "var(--lime)", fontWeight: 700, touchAction: "manipulation" }}
+                    style={{ background: "rgba(163, 230, 53, 0.16)", borderColor: "rgba(163, 230, 53, 0.55)", color: "var(--lime)", fontWeight: 700, touchAction: "manipulation" }}
                   >
-                    {saving ? "Saving..." : modalMode === "create" ? "Create Strategy" : "Save Changes"}
+                    {saving ? "Saving..." : modalMode === "create" ? "Save Strategy" : "Save Changes"}
                   </button>
                 </div>
               </div>

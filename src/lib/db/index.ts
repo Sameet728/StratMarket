@@ -930,6 +930,7 @@ export const db = {
             ensembleFolder: doc.ensembleFolder ?? seedFallback?.ensembleFolder,
             reportPath: doc.reportPath ?? seedFallback?.reportPath,
             netProfitUsd: doc.netProfitUsd ?? seedFallback?.netProfitUsd,
+            pineScriptCode: doc.pineScriptCode ?? seedFallback?.pineScriptCode,
             pineParams: doc.pineParams ?? seedFallback?.pineParams,
             reportData: doc.reportData ?? seedFallback?.reportData,
             metrics: doc.metrics || seedFallback?.metrics || {
@@ -1153,7 +1154,7 @@ export const db = {
   async createStrategy(data: {
     id?: string;
     name: string;
-    slug: string;
+    slug?: string;
     implementationType: "PYTHON" | "PINE_SCRIPT";
     instrument: string;
     timeframe: string;
@@ -1163,6 +1164,7 @@ export const db = {
     currentVersion: string;
     trialEligibility: boolean;
     netProfitUsd?: string;
+    pineScriptCode?: string;
     metrics: StrategySeedItem["metrics"];
     researchReport: StrategySeedItem["researchReport"];
     pineParams?: StrategySeedItem["pineParams"];
@@ -1215,6 +1217,7 @@ export const db = {
       trialEligibility: data.trialEligibility,
       supportedUsageModes: ["chart", "alert", "broker"],
       netProfitUsd: data.netProfitUsd,
+      pineScriptCode: data.pineScriptCode,
       pineParams: data.pineParams,
       reportData: data.reportData,
       metrics: data.metrics,
@@ -1257,6 +1260,10 @@ export const db = {
       researchReport: updates.researchReport
         ? { ...existing.researchReport, ...updates.researchReport }
         : existing.researchReport,
+      pineScriptCode:
+        updates.pineScriptCode !== undefined
+          ? (updates.pineScriptCode || undefined)
+          : existing.pineScriptCode,
       pineParams: updates.pineParams !== undefined ? (updates.pineParams || undefined) : existing.pineParams,
       reportData: updates.reportData !== undefined
         ? (updates.reportData ? { ...existing.reportData, ...updates.reportData } : undefined)

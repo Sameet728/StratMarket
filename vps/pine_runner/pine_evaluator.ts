@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { getCandles } from "@mathieuc/tradingview/data";
 import { VpsSignalDispatcher, SignalPayload } from "../dispatcher";
+import { executePineScript, PineCandle } from "./pine_interpreter";
 
 export interface PineStrategyDefinition {
   id: string;
@@ -13,6 +14,7 @@ export interface PineStrategyDefinition {
   instrument: string;
   timeframe: string;
   version?: string;
+  pineScriptCode?: string;
   bandLength: number;
   bandMult: number;
   emaMacroLen: number;
@@ -283,6 +285,7 @@ export class PineStrategyRunner {
       instrument: s.instrument || "XAUUSD",
       timeframe: String(s.timeframe || "15"),
       version: s.version || "1.0.0",
+      pineScriptCode: s.pineScriptCode || undefined,
       bandLength: Number(s.bandLength ?? 28),
       bandMult: Number(s.bandMult ?? 2.1),
       emaMacroLen: Number(s.emaMacroLen ?? 200),
@@ -374,8 +377,8 @@ export class PineStrategyRunner {
         } catch (_) {}
       }
 
-      if (candles.length < 220) {
-        return; // Need sufficient history for EMA 200 convergence
+      if (candles.length < 50) {
+        return;
       }
 
       // 2. Identify the last confirmed closed bar (second to last element)
@@ -386,6 +389,71 @@ export class PineStrategyRunner {
       if (barTime <= state.lastProcessedBarTime) {
         // Bar has already been evaluated
         return;
+      }
+
+      // If this strategy has pasted Pine Script code from the Admin Panel, execute it via the Pine AST interpreter!
+      if (strat.pineScriptCode && strat.pineScriptCode.trim()) {
+        const prevBarTime = state.lastProcessedBarTime;
+        const confirmedCandles: PineCandle[] = candles.slice(0, confirmedIdx + 1).map((c: any) => ({
+          time: c.time < 10000000000 ? c.time * 1000 : c.time,
+          open: Number(c.open),
+          high: Number(c.high),
+          low: Number(c.low),
+          close: Number(c.close),
+          volume: Number(c.volume || 0),
+        }));
+
+        const res = executePineScript(strat.pineScriptCode, confirmedCandles, {
+          instrument: strat.instrument,
+          timeframe: strat.timeframe,
+        });
+
+        if (!res.success) {
+          console.error(`[VPS Pine] Custom Pine script error for ${strat.id}:`, res.error);
+          return;
+        }
+
+        state.lastProcessedBarTime = barTime;
+        state.position = res.finalPosition.size > 0 ? 1 : res.finalPosition.size < 0 ? -1 : 0;
+        state.entryPrice = res.finalPosition.entryPrice;
+        state.entryTime = res.finalPosition.entryTime;
+        state.currTP = res.finalPosition.currTP ?? 0;
+        state.currSL = res.finalPosition.currSL ?? 0;
+
+        // Determine newly triggered events on confirmed closed bars (never spam historical events on initial bootstrap)
+        const isFirstBootstrap = prevBarTime === 0;
+        const freshEvents = res.events.filter((ev) => {
+          if (isFirstBootstrap) {
+            // Only dispatch on initial attach if an event fired on the very latest confirmed bar within 20 minutes
+            return ev.barTime === barTime && Date.now() - ev.barTime <= 20 * 60 * 1000;
+          }
+          return ev.barTime > prevBarTime && ev.barTime <= barTime;
+        });
+
+        for (const ev of freshEvents) {
+          const dispatchRes = await this.dispatcher.dispatchSignal({
+            sourceEventId: `vps_pine_${strat.id.toLowerCase()}_${ev.signalType.toLowerCase()}_${ev.barTime}`,
+            strategyId: strat.id,
+            strategyVersion: strat.version || "1.0.0",
+            instrument: strat.instrument,
+            timeframe: strat.timeframe === "1D" ? "D1" : strat.timeframe === "60" ? "H1" : strat.timeframe === "240" ? "H4" : `M${strat.timeframe}`,
+            signalType: ev.signalType,
+            direction: ev.direction,
+            timestamp: new Date(ev.barTime).toISOString(),
+            entryPrice: ev.entryPrice,
+            stopLoss: ev.stopLoss,
+            targetPrice: ev.targetPrice,
+            signalProvenance: "VPS_PINE_CUSTOM_SCRIPT_RUNNER",
+          });
+          console.log(`[VPS Pine] ⚡ Custom ${strat.id} (${strat.name}) ${ev.direction} ${ev.signalType} dispatched:`, dispatchRes);
+        }
+
+        this.saveState();
+        return;
+      }
+
+      if (candles.length < 220) {
+        return; // Need sufficient history for EMA 200 convergence on built-in PS-01..03
       }
 
       state.lastProcessedBarTime = barTime;

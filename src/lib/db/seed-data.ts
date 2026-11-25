@@ -92,6 +92,7 @@ export interface StrategySeedItem {
   ensembleFolder?: string;
   reportPath?: string;
   netProfitUsd?: string;
+  pineScriptCode?: string;
   pineParams?: PineParams;
   reportData?: ReportData;
   metrics: {

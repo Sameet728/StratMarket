@@ -154,6 +154,14 @@ describe("Admin Strategy Management & VPS Auto-Sync", () => {
     expect(sigPublic.notifiedUsersCount).toBeGreaterThan(0);
     expect(sigPublic.subscriberEmails.length).toBeGreaterThan(0);
 
+    // 4c. Verify custom pasted pineScriptCode execution in chart runner
+    const customCodeStrategy = await db.updateStrategy(created.id, {
+      pineScriptCode: `//@version=5\nstrategy("Vitest Custom", overlay=true)\nfast = ta.ema(close, 5)\nslow = ta.ema(close, 15)\nif ta.crossover(fast, slow) and strategy.position_size == 0\n    strategy.entry("Long", strategy.long)\n    strategy.exit("Exit Long", "Long", limit=close + 5, stop=close - 5)\nplot(fast, "Fast")`,
+    });
+    const customContract = strategyExecutionRunner.execute(customCodeStrategy, mockCandles);
+    expect(customContract.series.length).toBeGreaterThanOrEqual(1);
+    expect(customContract.executionStatus).toBe("ACTIVE");
+
     // 5. Set PRIVATE and verify signal ingestion stops alerting users, then delete
     await db.updateStrategyStatus(created.id, "PRIVATE");
     const sigPrivate = await db.ingestVpsSignal({

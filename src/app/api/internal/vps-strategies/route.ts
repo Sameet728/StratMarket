@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
       instrument: s.instrument,
       timeframe: toTradingViewTimeframe(s.timeframe),
       version: s.currentVersion || "1.0.0",
+      pineScriptCode: s.pineScriptCode || undefined,
       bandLength: s.pineParams?.bandLength ?? 28,
       bandMult: s.pineParams?.bandMult ?? 2.1,
       emaMacroLen: s.pineParams?.emaMacroLen ?? 200,

@@ -4,6 +4,7 @@
 
 import { StrategySeedItem } from "@/lib/db/seed-data";
 import { MarketCandle } from "@/lib/market-data";
+import { executePineScript } from "@/lib/pine/pine-interpreter";
 import {
   StrategyChartContract,
   StrategyHudMetric,
@@ -328,6 +329,11 @@ export class PrivateStrategyExecutionRunner {
     strategy: StrategySeedItem,
     candles: MarketCandle[]
   ): StrategyChartContract {
+    // If admin pasted custom Pine Script code on this strategy, execute the pasted Pine code directly!
+    if (strategy.pineScriptCode && strategy.pineScriptCode.trim()) {
+      return this.executeCustomPineScript(strategy, candles);
+    }
+
     const hasScript = this.hasPrivateScript(strategy.id);
     const config = this.getStrategyConfig(strategy);
 
@@ -794,6 +800,141 @@ export class PrivateStrategyExecutionRunner {
           label: `Monitoring M15 Volatility Extrema (Upper: $${bands.upper[bands.upper.length - 1] ?? "—"} | Lower: $${bands.lower[bands.lower.length - 1] ?? "—"})`,
         } : null),
         hudMetrics: config.hudMetrics,
+      },
+    };
+  }
+
+  private executeCustomPineScript(
+    strategy: StrategySeedItem,
+    candles: MarketCandle[]
+  ): StrategyChartContract {
+    const pineRes = executePineScript(
+      strategy.pineScriptCode || "",
+      candles.map((c) => ({
+        time: c.time,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+        volume: c.volume,
+      })),
+      { instrument: strategy.instrument, timeframe: strategy.timeframe }
+    );
+
+    const palette = ["#ffffff", "#a1a1aa", "#71717a", "#e4e4e7", "#38bdf8", "#a3e635"];
+    const series: StrategyLineSeries[] = pineRes.plots.slice(0, 6).map((p, idx) => ({
+      id: `pine-plot-${idx}`,
+      name: p.name || `Plot ${idx + 1}`,
+      kind: "line",
+      color: palette[idx % palette.length],
+      overlay: true,
+      points: candles.map((c, i) => ({
+        time: c.time,
+        value: p.values[i] ?? null,
+      })),
+    }));
+
+    const markers: StrategyMarker[] = pineRes.events.slice(-60).map((ev) => ({
+      id: `pm_${ev.barIndex}_${ev.signalType}`,
+      time: ev.barTime,
+      position: ev.direction === "LONG" ? "belowBar" : "aboveBar",
+      shape: ev.signalType === "ENTRY" ? (ev.direction === "LONG" ? "arrowUp" : "arrowDown") : "circle",
+      color: ev.signalType === "STOP_LOSS" ? "#ef4444" : ev.signalType === "TAKE_PROFIT" ? "#a3e635" : ev.direction === "LONG" ? "#10b981" : "#f59e0b",
+      text: `${ev.signalType === "ENTRY" ? ev.direction : ev.signalType} $${(ev.exitPrice ?? ev.entryPrice ?? 0).toFixed(2)}`,
+    }));
+
+    const tradeBoxes: StrategyTradeBox[] = pineRes.closedTrades.map((t, idx) => ({
+      id: `tb_${t.entryTime}_${idx}`,
+      type: t.direction,
+      entryTime: t.entryTime,
+      exitTime: t.exitTime,
+      entryPrice: t.entryPrice,
+      exitPrice: t.exitPrice,
+      tpPrice: t.tpPrice ?? (t.direction === "LONG" ? Math.max(t.entryPrice, t.exitPrice) : Math.min(t.entryPrice, t.exitPrice)),
+      slPrice: t.slPrice ?? (t.direction === "LONG" ? Math.min(t.entryPrice, t.exitPrice) : Math.max(t.entryPrice, t.exitPrice)),
+      profitUsd: t.profit,
+      isWin: t.profit > 0,
+      entryBadge: `${t.direction} $${t.entryPrice.toFixed(2)}`,
+      exitBadge: `${t.outcome} ($${t.exitPrice.toFixed(2)})`,
+    }));
+
+    const latestCandle = candles[candles.length - 1];
+    const latestClose = latestCandle?.close || 0;
+    const priceLevels: StrategyPriceLevel[] = [];
+
+    if (pineRes.finalPosition.size !== 0 && latestCandle) {
+      const fp = pineRes.finalPosition;
+      const isL = fp.size > 0;
+      if (fp.currTP !== undefined) {
+        priceLevels.push({ name: "Active Target Payoff (TP)", price: fp.currTP, color: "#10b981", style: "dashed", isActiveTrade: true });
+      }
+      priceLevels.push({ name: "Active Entry Price", price: fp.entryPrice, color: "#ffffff", style: "solid", isActiveTrade: true });
+      if (fp.currSL !== undefined) {
+        priceLevels.push({ name: "Active Stop Loss", price: fp.currSL, color: "#ef4444", style: "dashed", isActiveTrade: true });
+      }
+      tradeBoxes.push({
+        id: "tb-active",
+        type: isL ? "LONG" : "SHORT",
+        entryTime: fp.entryTime,
+        exitTime: latestCandle.time + 15 * 60 * 1000 * 2,
+        entryPrice: fp.entryPrice,
+        exitPrice: latestClose,
+        tpPrice: fp.currTP ?? latestClose,
+        slPrice: fp.currSL ?? latestClose,
+        profitUsd: isL ? latestClose - fp.entryPrice : fp.entryPrice - latestClose,
+        isWin: isL ? latestClose >= fp.entryPrice : latestClose <= fp.entryPrice,
+        entryBadge: `ACTIVE ${isL ? "LONG" : "SHORT"} @ $${fp.entryPrice.toFixed(2)}`,
+        exitBadge: "ACTIVE (IN PROGRESS)",
+      });
+    } else if (latestClose > 0) {
+      priceLevels.push({ name: `Market Price (${latestClose.toFixed(2)})`, price: latestClose, color: "#a1a1aa", style: "solid", isActiveTrade: false });
+    }
+
+    const wins = pineRes.closedTrades.filter((t) => t.profit > 0).length;
+    const total = pineRes.closedTrades.length;
+    const wr = total > 0 ? ((wins / total) * 100).toFixed(1) : String(strategy.metrics.winRate);
+
+    return {
+      strategyId: strategy.id,
+      name: strategy.name,
+      symbol: strategy.instrument,
+      timeframe: strategy.timeframe,
+      category: strategy.category,
+      implementationType: strategy.implementationType,
+      dataStatus: candles.length > 0 ? "LIVE" : "CONNECTING",
+      executionStatus: pineRes.success ? "ACTIVE" : "STANDBY_FOR_SOURCE",
+      computedAt: Date.now(),
+      candleCount: candles.length,
+      series,
+      markers,
+      priceLevels,
+      nativeIndicators: [],
+      tradeBoxes,
+      sovereignGuards: [
+        { label: "Pine Engine", value: "Live AST Interpreter (Confirmed Bar Close)", color: "#ffffff" },
+        { label: "Detected Trades (Sample)", value: `${total} (${wr}% WR)`, color: "#a3e635" },
+      ],
+      summary: {
+        state: "Active (Executing Admin-Uploaded Pine Script)",
+        description: strategy.description,
+        riskParameters: {
+          stopLoss: strategy.pineParams ? `-$${strategy.pineParams.slDist}` : "Pine Script Dynamic",
+          takeProfit: strategy.pineParams ? `+$${strategy.pineParams.tpDist}` : "Pine Script Dynamic",
+          rules: strategy.researchReport?.riskRules || "Defined inside Pine Script strategy code.",
+        },
+        latestSignal:
+          pineRes.finalPosition.size !== 0
+            ? {
+                direction: pineRes.finalPosition.size > 0 ? "BUY" : "SELL",
+                timestamp: pineRes.finalPosition.entryTime,
+                price: pineRes.finalPosition.entryPrice,
+                label: `Active ${pineRes.finalPosition.size > 0 ? "LONG" : "SHORT"} @ $${pineRes.finalPosition.entryPrice.toFixed(2)}`,
+              }
+            : null,
+        hudMetrics: [
+          { label: "Sample Win Rate", value: `${wr}% (${wins}W / ${total - wins}L)`, color: "#4ade80" },
+          { label: "Instrument / TF", value: `${strategy.instrument} · ${strategy.timeframe}`, color: "#38bdf8" },
+        ],
       },
     };
   }

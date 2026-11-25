@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { extractPineMetadata } from "@/lib/pine/pine-interpreter";
 import { z } from "zod";
 
 export const PineParamsSchema = z.object({
@@ -93,43 +94,47 @@ export const ReportDataSchema = z.object({
     .optional(),
 });
 
+// Minimal-required schema: Name is required; everything else (metrics, description, report, slug, params) is optional!
 const CreateStrategySchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(2),
-  slug: z.string().min(2),
-  implementationType: z.enum(["PYTHON", "PINE_SCRIPT"]),
-  instrument: z.string().min(1),
-  timeframe: z.string().min(1),
-  category: z.string().min(1),
-  description: z.string().min(1),
+  name: z.string().min(2, "Strategy name is required (min 2 chars)"),
+  slug: z.string().optional(),
+  pineScriptCode: z.string().optional(),
+  implementationType: z.enum(["PYTHON", "PINE_SCRIPT"]).default("PINE_SCRIPT"),
+  instrument: z.string().optional(),
+  timeframe: z.string().optional(),
+  category: z.string().optional(),
+  description: z.string().optional(),
   visibilityStatus: z.enum(["PUBLIC", "PRIVATE", "DRAFT", "ARCHIVED"]).default("PRIVATE"),
-  currentVersion: z.string().default("1.0.0"),
-  trialEligibility: z.boolean().default(true),
+  currentVersion: z.string().optional().default("1.0.0"),
+  trialEligibility: z.boolean().optional().default(true),
   netProfitUsd: z.string().optional(),
-  metrics: z.object({
-    netReturn: z.number(),
-    maxDrawdown: z.number(),
-    profitFactor: z.number(),
-    winRate: z.number(),
-    calmarRatio: z.number().optional(),
-    totalTrades: z.number().int(),
-    averageTrade: z.number(),
-    sharpeRatio: z.number(),
-    backtestPeriod: z.string().default(""),
-    transactionCosts: z.string().default(""),
-    slippageAssumptions: z.string().default(""),
-    dataSource: z.string().default("TradingView"),
-    validationType: z.enum(["BACKTESTED", "SIMULATED", "PAPER_TRADED", "FORWARD_TESTED", "LIVE"]).default("BACKTESTED"),
-    isDemo: z.boolean().default(false),
-  }),
+  metrics: z
+    .object({
+      netReturn: z.number().optional(),
+      maxDrawdown: z.number().optional(),
+      profitFactor: z.number().optional(),
+      winRate: z.number().optional(),
+      calmarRatio: z.number().optional(),
+      totalTrades: z.number().int().optional(),
+      averageTrade: z.number().optional(),
+      sharpeRatio: z.number().optional(),
+      backtestPeriod: z.string().optional(),
+      transactionCosts: z.string().optional(),
+      slippageAssumptions: z.string().optional(),
+      dataSource: z.string().optional(),
+      validationType: z.enum(["BACKTESTED", "SIMULATED", "PAPER_TRADED", "FORWARD_TESTED", "LIVE"]).optional(),
+      isDemo: z.boolean().optional(),
+    })
+    .optional(),
   researchReport: z
     .object({
-      hypothesis: z.string().default(""),
-      methodology: z.string().default(""),
-      riskRules: z.string().default(""),
-      knownLimitations: z.string().default(""),
-      dataCleaning: z.string().default(""),
-      executionProtocol: z.string().default(""),
+      hypothesis: z.string().optional(),
+      methodology: z.string().optional(),
+      riskRules: z.string().optional(),
+      knownLimitations: z.string().optional(),
+      dataCleaning: z.string().optional(),
+      executionProtocol: z.string().optional(),
     })
     .optional(),
   pineParams: PineParamsSchema.optional(),
@@ -151,7 +156,7 @@ export async function GET() {
   }
 }
 
-// POST /api/admin/strategies — create a new strategy
+// POST /api/admin/strategies — create a new strategy (Name + optional Pine Code + optional Report)
 export async function POST(request: NextRequest) {
   try {
     const admin = await requireAdmin();
@@ -163,28 +168,81 @@ export async function POST(request: NextRequest) {
     }
 
     const data = parsed.data;
+    const pineCode = data.pineScriptCode?.trim() || undefined;
+    const meta = pineCode ? extractPineMetadata(pineCode) : null;
+
+    if (pineCode && meta && !meta.parseValid) {
+      return NextResponse.json(
+        { error: `Pine Script syntax error: ${meta.parseError || "Unable to parse code"}` },
+        { status: 400 }
+      );
+    }
+
+    const instrument = (data.instrument && data.instrument.trim()) || meta?.detectedInstrument || "XAUUSD";
+    const timeframe = (data.timeframe && data.timeframe.trim()) || meta?.detectedTimeframe || "M15";
+    const category = (data.category && data.category.trim()) || "Systematic";
+    const cleanSlug =
+      (data.slug && data.slug.trim()) ||
+      data.name
+        .toLowerCase()
+        .replace(/[^a-z0-9-]+/g, "-")
+        .replace(/^-|-$/g, "");
+
+    const indicatorsDesc =
+      meta && meta.detectedIndicators.length > 0 ? ` (${meta.detectedIndicators.join(", ")})` : "";
+    const description =
+      (data.description && data.description.trim()) ||
+      `Automated ${data.implementationType === "PINE_SCRIPT" ? "Pine Script" : "Python"} strategy on ${instrument} ${timeframe}${indicatorsDesc}.`;
+
+    const metrics = {
+      netReturn: data.metrics?.netReturn ?? meta?.detectedNetReturn ?? 0,
+      maxDrawdown: data.metrics?.maxDrawdown ?? meta?.detectedMaxDrawdown ?? 0,
+      profitFactor: data.metrics?.profitFactor ?? meta?.detectedProfitFactor ?? 1.0,
+      winRate: data.metrics?.winRate ?? meta?.detectedWinRate ?? 0,
+      calmarRatio: data.metrics?.calmarRatio,
+      totalTrades: data.metrics?.totalTrades ?? meta?.detectedTotalTrades ?? 0,
+      averageTrade: data.metrics?.averageTrade ?? 0,
+      sharpeRatio: data.metrics?.sharpeRatio ?? 0,
+      backtestPeriod: data.metrics?.backtestPeriod || "Live Forward + Historical",
+      transactionCosts: data.metrics?.transactionCosts || "Standard institutional spread",
+      slippageAssumptions: data.metrics?.slippageAssumptions || "Confirmed bar-close execution",
+      dataSource: data.metrics?.dataSource || "TradingView",
+      validationType: data.metrics?.validationType || "BACKTESTED",
+      isDemo: data.metrics?.isDemo ?? false,
+    };
+
+    const researchReport = {
+      hypothesis: data.researchReport?.hypothesis || description,
+      methodology:
+        data.researchReport?.methodology ||
+        `Evaluated live 24x7 on VPS using confirmed ${instrument} ${timeframe} candles${indicatorsDesc}.`,
+      riskRules:
+        data.researchReport?.riskRules ||
+        (meta?.detectedTpDist || meta?.detectedSlDist
+          ? `TP: $${meta.detectedTpDist ?? "Dynamic"} / SL: $${meta.detectedSlDist ?? "Dynamic"}`
+          : "Defined inside Pine Script order management rules."),
+      knownLimitations: data.researchReport?.knownLimitations || "",
+      dataCleaning: data.researchReport?.dataCleaning || "Confirmed bar-close execution without lookahead.",
+      executionProtocol:
+        data.researchReport?.executionProtocol || "24x7 Oracle VPS Pine Script Runtime + Instant Email & Telegram Alerts.",
+    };
+
     const strategy = await db.createStrategy({
       id: data.id,
-      name: data.name,
-      slug: data.slug,
+      name: data.name.trim(),
+      slug: cleanSlug,
       implementationType: data.implementationType,
-      instrument: data.instrument,
-      timeframe: data.timeframe,
-      category: data.category,
-      description: data.description,
+      instrument,
+      timeframe,
+      category,
+      description,
       visibilityStatus: data.visibilityStatus,
       currentVersion: data.currentVersion,
       trialEligibility: data.trialEligibility,
       netProfitUsd: data.netProfitUsd,
-      metrics: data.metrics,
-      researchReport: data.researchReport || {
-        hypothesis: "",
-        methodology: "",
-        riskRules: "",
-        knownLimitations: "",
-        dataCleaning: "",
-        executionProtocol: "",
-      },
+      pineScriptCode: pineCode,
+      metrics,
+      researchReport,
       pineParams: data.pineParams,
       reportData: data.reportData,
     });
@@ -198,10 +256,11 @@ export async function POST(request: NextRequest) {
         name: strategy.name,
         type: strategy.implementationType,
         visibility: strategy.visibilityStatus,
+        hasPineCode: Boolean(pineCode),
       }),
     });
 
-    return NextResponse.json({ success: true, strategy }, { status: 201 });
+    return NextResponse.json({ success: true, strategy, detected: meta }, { status: 201 });
   } catch (error: any) {
     if (error.message === "UNAUTHORIZED" || error.message === "FORBIDDEN") {
       return NextResponse.json({ error: "Administrator authorization required" }, { status: 403 });

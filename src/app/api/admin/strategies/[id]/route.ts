@@ -4,9 +4,12 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { PineParamsSchema, ReportDataSchema } from "../route";
 
+import { extractPineMetadata } from "@/lib/pine/pine-interpreter";
+
 const UpdateStrategySchema = z.object({
   name: z.string().min(2).optional(),
   slug: z.string().min(2).optional(),
+  pineScriptCode: z.string().optional().nullable(),
   implementationType: z.enum(["PYTHON", "PINE_SCRIPT"]).optional(),
   instrument: z.string().min(1).optional(),
   timeframe: z.string().min(1).optional(),
@@ -82,6 +85,16 @@ export async function PATCH(
 
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid strategy data", details: parsed.error.flatten() }, { status: 400 });
+    }
+
+    if (parsed.data.pineScriptCode && parsed.data.pineScriptCode.trim()) {
+      const meta = extractPineMetadata(parsed.data.pineScriptCode.trim());
+      if (!meta.parseValid) {
+        return NextResponse.json(
+          { error: `Pine Script syntax error: ${meta.parseError || "Unable to parse code"}` },
+          { status: 400 }
+        );
+      }
     }
 
     const updated = await db.updateStrategy(id, parsed.data as any);
