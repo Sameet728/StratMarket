@@ -260,7 +260,7 @@ export async function POST(request: NextRequest) {
 
       // 5. Automated Real Trading Execution: Dispatch webhook relays to connected user MT5 VPSs (only for fresh signals)
       if (isPublicOnUi && isFreshSignal && !isCooldownActive) {
-        dispatchMt5WebhookRelays({
+        await dispatchMt5WebhookRelays({
           strategyId: parsed.data.strategyId,
           strategyName,
           action: parsed.data.signalType,
@@ -281,7 +281,7 @@ export async function POST(request: NextRequest) {
 
       // 6. Automated Telegram Instant Alerts: Dispatch to connected Telegram users (only for fresh signals)
       if (isPublicOnUi && isFreshSignal && !isCooldownActive) {
-        dispatchTelegramSignalAlert({
+        await dispatchTelegramSignalAlert({
           strategyName,
           strategyId: parsed.data.strategyId,
           instrument: parsed.data.instrument,
